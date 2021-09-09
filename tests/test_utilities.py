@@ -5,7 +5,7 @@ from icv7.utilities import ClientsObject
 from moncli.entities import MondayClient
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def clients_object():
     return ClientsObject()
 
