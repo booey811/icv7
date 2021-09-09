@@ -16,7 +16,7 @@ class BaseItem:
         self.id = str(item_id)
         self.name = self.moncli_obj.name
 
-        self.columns = create_column_collection(self.moncli_obj)
+        self.columns = BaseColumnCollection(self.moncli_obj.board['id'])
 
     def stage_changes(self, changes_list: list[str, (int,str)]):
 

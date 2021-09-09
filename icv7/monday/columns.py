@@ -1,9 +1,12 @@
 from moncli.entities import column_value
 
+from mappings import MappingObject
+
 
 class BaseColumnCollection:
-    def __init__(self):
-        self.column_id_mappings = {}
+    def __init__(self, board_id):
+
+        self._mapper = MappingObject(board_id)
 
         self.staged_changes = {}
 
@@ -32,6 +35,7 @@ COLUMN_VALUE may be a string (text column), an integer (number column), a dictio
         :param new_value: the value to set the column to
         """
         pass
+
 
 class TextColumn(BaseColumnValue):
     def __init__(self, moncli_column_value):
