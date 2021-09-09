@@ -92,6 +92,10 @@ class PeopleColumn(BaseColumnValue):
         super().__init__(moncli_column_value)
 
 
+def create_column_collection(board_id) -> BaseColumnCollection:
+    pass
+
+
 # Dictionary to convert moncli column values to Eric column values
 COLUMN_TYPE_MAPPINGS = {
     column_value.TextValue: TextColumn,

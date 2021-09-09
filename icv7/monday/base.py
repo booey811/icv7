@@ -1,5 +1,5 @@
 from icv7.utilities import clients
-from .columns import BaseColumnCollection
+from icv7.monday.columns import BaseColumnCollection
 
 system = clients.monday.system
 
@@ -10,14 +10,11 @@ board = system.get_boards('name', 'items.name', ids=[test_board_id])[0]
 test_item_id = 1139943185
 
 
-def create_column_collection(board_id) -> BaseColumnCollection:
-    pass
-
-
 class BaseItem:
     def __init__(self, item_id):
         self.moncli_obj = clients.monday.system.get_items(get_column_values=True, ids=[item_id])[0]
         self.id = str(item_id)
+        self.name = self.moncli_obj.name
 
         self.columns = create_column_collection(self.moncli_obj)
 
@@ -42,3 +39,14 @@ class BaseItem:
         pass
 
 
+
+class ModuleTest:
+    def __init__(self, monday_id):
+        self.create_item(monday_id)
+
+    def create_item(self, monday_id):
+        item = BaseItem(monday_id)
+        return item
+
+
+ModuleTest(1649471278)
