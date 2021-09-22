@@ -1,3 +1,4 @@
+import moncli.entities
 from moncli.entities import column_value
 
 from .config import BOARD_MAPPING_DICT
@@ -20,12 +21,20 @@ class MappingObject:
         :return: eric_col_val: eric col_val to be assigned as item attribute
         """
 
-        try:
-            eric_col_val = COLUMN_TYPE_MAPPINGS[type(moncli_col_val)](moncli_col_val, staged_changes)
-            return eric_col_val
+        # Check whether the column supplied is from an item (i.e. has a value) or from the board (has no value)
+        if type(moncli_col_val) == moncli.entities.Column:
+            try:
+                eric_col_val = COLUMN_TYPE_MAPPINGS[moncli_col_val.type](moncli_col_val, staged_changes,
+                                                                         from_item=False)
+            except KeyError:
+                raise Exception(f'COLUMN_TYPE_MAPPINGS does not contain a key for {moncli_col_val.type}')
+        else:
+            try:
+                eric_col_val = COLUMN_TYPE_MAPPINGS[type(moncli_col_val)](moncli_col_val, staged_changes)
+            except KeyError:
+                raise Exception(f'COLUMN_TYPE_MAPPINGS does not contain a key for {type(moncli_col_val)}')
 
-        except KeyError:
-            raise Exception(f'COLUMN_TYPE_MAPPINGS does not contain a key for {type(moncli_col_val)}')
+        return eric_col_val
 
 
 class BaseColumnValue:
@@ -56,10 +65,10 @@ COLUMN_VALUE may be a string (text column), an integer (number column), a dictio
 
 
 class TextColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
-
-        self._value = moncli_column_value.text
+        if from_item:
+            self._value = moncli_column_value.text
 
     @property
     def value(self):
@@ -79,66 +88,77 @@ class TextColumn(BaseColumnValue):
 
 
 class LongTextColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class StatusColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class DropdownColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class NumberColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class DateColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class LinkColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class FileColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class CheckboxColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class HourColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 class PeopleColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value, staged_changes):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
 
 # Dictionary to convert moncli column values to Eric column values
 COLUMN_TYPE_MAPPINGS = {
     column_value.TextValue: TextColumn,
+    'text': TextColumn,
     column_value.LongTextValue: LongTextColumn,
+    'long-text': LongTextColumn,
     column_value.StatusValue: StatusColumn,
+    'color': StatusColumn,
     column_value.DropdownValue: DropdownColumn,
+    'dropdown': DropdownColumn,
     column_value.NumberValue: NumberColumn,
+    'numeric': NumberColumn,
     column_value.DateValue: DateColumn,
+    'date': DateColumn,
     column_value.LinkValue: LinkColumn,
+    'link': LinkColumn,
     column_value.FileValue: FileColumn,
+    'file': FileColumn,
     column_value.CheckboxValue: CheckboxColumn,
+    'boolean': CheckboxColumn,
     column_value.HourValue: HourColumn,
-    column_value.PeopleValue: PeopleColumn
+    'hour': HourColumn,
+    column_value.PeopleValue: PeopleColumn,
+    'multiple-person': PeopleColumn
 }
