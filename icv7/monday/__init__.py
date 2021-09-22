@@ -1,1 +1,1 @@
-from base import BaseItem
+from .base import BaseItem

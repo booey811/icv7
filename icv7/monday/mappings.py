@@ -1,16 +1,15 @@
 from moncli.entities import column_value
 
 from icv7.utilities import clients
-import config
-
+from .config import BOARD_MAPPING_DICT
 
 class MappingObject:
     def __init__(self, board_id):
 
-        if str(board_id) not in config.BOARD_MAPPING_DICT:
+        if str(board_id) not in BOARD_MAPPING_DICT:
             raise Exception(f'Board ID {board_id} does not exist in MAPPING_DICT')
 
-        self._raw_mapping_dict = config.BOARD_MAPPING_DICT[str(board_id)]
+        self._raw_mapping_dict = BOARD_MAPPING_DICT[str(board_id)]
 
     @staticmethod
     def process_column(moncli_col_val):

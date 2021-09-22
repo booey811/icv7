@@ -1,21 +1,19 @@
 from typing import Union
 
 from icv7.utilities import clients
-from icv7.monday.columns import BaseColumnCollection
-from mappings import MappingObject
-import config
+from .mappings import MappingObject
+from .config import BOARD_MAPPING_DICT
 
 system = clients.monday.system
 
 test_board_id = 1139943160
-
-board = system.get_boards('name', 'items.name', ids=[test_board_id])[0]
 
 test_item_id = 1139943185
 
 
 class BaseItemStructure:
     def __init__(self, item_id: Union[str, int] = '', board_id: Union[str, int] = ''):
+        print('making item')
         self._moncli_obj = None
         self._moncli_board_obj = None
         self._board_id = board_id
@@ -44,12 +42,11 @@ class BaseItem(BaseItemStructure):
 
             for mon_col in self._moncli_obj.column_values:
                 try:
-                    name = config.BOARD_MAPPING_DICT[self._board_id]['columns'][mon_col.id]
+                    name = BOARD_MAPPING_DICT[self._board_id]['columns'][mon_col.id]
                     column = self._mapper.process_column(mon_col)
                     setattr(self, name, column)
                 except KeyError:
                     print(f'Column ID "{mon_col.id}" not found in config.COLUMN_MAPPINGS[{self._board_id}]')
-
 
         elif board_id:
             self._board_id = str(board_id)
@@ -85,14 +82,3 @@ class BaseItem(BaseItemStructure):
     def commit_changes(self):
         pass
 
-
-class ModuleTest:
-    def __init__(self, monday_id):
-        self.create_item(monday_id)
-
-    def create_item(self, monday_id):
-        item = BaseItem(monday_id)
-        return item
-
-
-item = BaseItem(1649471278)
