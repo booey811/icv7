@@ -45,7 +45,6 @@ class BaseItem(BaseItemStructure):
             # Iterate through moncli columns with mapping object to instantiate columns on BaseItem
             for mon_col in self._moncli_obj.column_values:
                 try:
-                    print(f'from loop - column {mon_col.title}:{mon_col.id}')
                     name = BOARD_MAPPING_DICT[self._board_id]['columns'][mon_col.id]
                     column = self._mapper.process_column(mon_col, self._staged_changes)
                     setattr(self, name, column)

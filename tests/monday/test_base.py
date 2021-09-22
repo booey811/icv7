@@ -9,12 +9,16 @@ from icv7.utilities import clients
 def system_client_test_moncli_item(dev_test_board_system_item_id):
     return clients.monday.system.get_items(ids=[dev_test_board_system_item_id])[0]
 
+
 @pytest.fixture(scope='class')
 def example_item_from_item_id(dev_test_board_system_item_id):
+    print('INIT FROMID')
     return base.BaseItem(dev_test_board_system_item_id)
+
 
 @pytest.fixture(scope='class')
 def example_item_from_board_id(dev_test_board_id):
+    print('INIT FROM BOARD')
     return base.BaseItem(board_id=dev_test_board_id)
 
 
@@ -36,7 +40,6 @@ class TestItemFromItemID:
         assert example_item_from_item_id._staged_changes == {}
 
 
-
 class TestItemFromBoardID:
 
     def test_board_id_is_correct(self, example_item_from_board_id, dev_test_board_id):
@@ -49,3 +52,11 @@ class TestItemFromBoardID:
 class TestItemsAreSimilarObjects:
     pass
 
+
+class TestGenericBoardAttributes:
+
+    def test_one(self, example_item_from_item_id, example_item_from_board_id):
+        print('test one results')
+
+    def test_two(self, example_item_from_item_id, example_item_from_board_id):
+        print('test two results')
