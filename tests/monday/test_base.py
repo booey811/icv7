@@ -55,37 +55,6 @@ class TestItemAttributesFromItemID:
     def test_no_column_changes_are_staged_after_instantiation(self, example_item_from_item_id):
         assert example_item_from_item_id._staged_changes == {}
 
-    @pytest.mark.parametrize('attribute', [
-        'text',
-        'numbers',
-        'status',
-        'dropdown',
-        'date',
-        'people',
-        'subitems',
-        'checkbox',
-        # 'connect_boards',  ====== NOT YET DEVELOPED
-        # 'linked_status',
-        # 'linked_dropdown',
-        # 'linked_text',     ====== NOT YET DEVELOPED
-        'longtext',
-        'hour',
-        'link'
-    ])
-    def test_all_mapped_columns_are_converted(self, example_item_from_item_id, attribute):
-        '''
-
-        :param example_item_from_item_id:
-        :param attribute:
-        :return:
-        '''
-
-        attribute = getattr(example_item_from_item_id, attribute)
-
-        assert attribute
-
-
-
 
 class TestItemAttributesFromBoardID:
 
