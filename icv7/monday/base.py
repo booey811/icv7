@@ -27,23 +27,25 @@ class BaseItemStructure:
 
 class BaseItem(BaseItemStructure):
 
-    def __init__(self, item_id_or_mon_item: (str, int) = None, moncli_obj: moncli.entities.Item = None, board_id: (str, int) = None,
+    def __init__(self,
+                 item_id_or_mon_item: Union[str, int, moncli.entities.Item] = None,
+                 board_id: Union[str, int] = None,
                  get_column_values=True):
         super().__init__(item_id_or_mon_item, board_id)
 
         # Check input is correct
-        if not item_id_or_mon_item and not board_id and not moncli_obj:
+        if not item_id_or_mon_item and not board_id:
             raise Exception('Cannot Instantiate BaseItem without item_id or mon_item or board_id')
 
         # Check instantiation type via input keywords
         elif item_id_or_mon_item:
-            # Check if input is mon_item or item_id via type
-            if type(item_id_or_mon_item) in (str, int):
+            # Check if input is mon_item or item_id via try/except
+            try:
                 # Set basic info and private variables from item_id
                 self._moncli_obj = clients.monday.system.get_items(get_column_values=get_column_values, ids=[item_id_or_mon_item])[0]
-            else:
-                # Set basic info and private variables from mon_item
-                self._moncli_obj =item_id_or_mon_item
+            except TypeError:
+                # Set basic info and private variables from mon_item, triggers if input is not int or str
+                self._moncli_obj = item_id_or_mon_item
 
             # Set derived basic info
             self.id = str(self._moncli_obj.id)
