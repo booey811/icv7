@@ -52,9 +52,11 @@ class BaseItem(BaseItemStructure):
                 except KeyError:
                     print(f'Column ID "{mon_col.id}" not found in config.COLUMN_MAPPINGS[{self._board_id}]')
 
-
         elif board_id:
+
             self._board_id = str(board_id)
+            self._moncli_board_obj = clients.monday.system.get_boards(ids=[self._board_id])[0]
+
 
         else:
             raise Exception('Unexpected Inputs for BaseItem.__init__')
