@@ -1,7 +1,7 @@
 from moncli.entities import column_value
 
-from icv7.utilities import clients
 from .config import BOARD_MAPPING_DICT
+
 
 class MappingObject:
     def __init__(self, board_id):
@@ -12,15 +12,16 @@ class MappingObject:
         self._raw_mapping_dict = BOARD_MAPPING_DICT[str(board_id)]
 
     @staticmethod
-    def process_column(moncli_col_val):
+    def process_column(moncli_col_val, staged_changes):
         """
         Returns the appropriate column value from the supplied moncli column value
+        :param staged_changes: changes dictionary from Item instance
         :param moncli_col_val: moncli_column_value to be processed
         :return: eric_col_val: eric col_val to be assigned as item attribute
         """
 
         try:
-            eric_col_val = COLUMN_TYPE_MAPPINGS[type(moncli_col_val)](moncli_col_val)
+            eric_col_val = COLUMN_TYPE_MAPPINGS[type(moncli_col_val)](moncli_col_val, staged_changes)
             return eric_col_val
 
         except KeyError:
@@ -28,11 +29,12 @@ class MappingObject:
 
 
 class BaseColumnValue:
-    def __init__(self, moncli_column_value):
+    def __init__(self, moncli_column_value, staged_changes):
+        self._staged_changes = staged_changes
         self._moncli_value = moncli_column_value
         self.id = moncli_column_value.id
         self.title = moncli_column_value.title
-        self.value = None
+        self._value = None
 
     @property
     def value(self):
@@ -41,7 +43,7 @@ class BaseColumnValue:
 
     @value.setter
     def value(self, value):
-        print('setting value')
+        print(f'setting value :: {self.id} to {value}')
         self._value = value
 
     def stage(self, new_value: (str, int)) -> list:
@@ -54,10 +56,10 @@ COLUMN_VALUE may be a string (text column), an integer (number column), a dictio
 
 
 class TextColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
-        self.value = moncli_column_value.text
+        self._value = moncli_column_value.text
 
     @property
     def value(self):
@@ -66,58 +68,64 @@ class TextColumn(BaseColumnValue):
 
     @value.setter
     def value(self, value):
-        print('setting text value')
-        self._value = value
+        print(f'setting text value :: {self.id} to {value}')
+        if self.id in self._staged_changes:
+            raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
+        self._value = str(value)
+        self._stage_change(value)
+
+    def _stage_change(self, value):
+        self._staged_changes[self.id] = str(value)
 
 
 class LongTextColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class StatusColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class DropdownColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class NumberColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class DateColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class LinkColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class FileColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class CheckboxColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class HourColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 class PeopleColumn(BaseColumnValue):
-    def __init__(self, moncli_column_value):
-        super().__init__(moncli_column_value)
+    def __init__(self, moncli_column_value, staged_changes):
+        super().__init__(moncli_column_value, staged_changes)
 
 
 # Dictionary to convert moncli column values to Eric column values

@@ -13,10 +13,10 @@ test_item_id = 1139943185
 
 class BaseItemStructure:
     def __init__(self, item_id: Union[str, int] = '', board_id: Union[str, int] = ''):
-        print('making item')
         self._moncli_obj = None
         self._moncli_board_obj = None
         self._board_id = board_id
+        self._staged_changes = {}
 
         self._id = item_id
         self.name = ''
@@ -40,45 +40,27 @@ class BaseItem(BaseItemStructure):
             # Initialise mapping object for relevant board
             self._mapper = MappingObject(self._board_id)
 
+            # Iterate through moncli columns with mapping object to instantiate columns on BaseItem
             for mon_col in self._moncli_obj.column_values:
                 try:
+                    print(f'from loop - column {mon_col.title}:{mon_col.id}')
                     name = BOARD_MAPPING_DICT[self._board_id]['columns'][mon_col.id]
-                    column = self._mapper.process_column(mon_col)
+                    column = self._mapper.process_column(mon_col, self._staged_changes)
                     setattr(self, name, column)
                 except KeyError:
                     print(f'Column ID "{mon_col.id}" not found in config.COLUMN_MAPPINGS[{self._board_id}]')
 
         elif board_id:
             self._board_id = str(board_id)
+
         else:
             raise Exception('Unexpected Inputs for BaseItem.__init__')
 
-        def _process_column_value(moncli_col_val=None):
-            """
-            Returns an eric column value that can is assigned to the item during init
-            :param moncli_col_val: column value to imprint the value of, providing column name and value
-            :return: eric_col_val: eric's column value that provides column specific functionality
-            """
-            pass
+    def commit(self):
 
+        if not self._staged_changes:
+            raise Exception('Attempting to Commit Changes with no Staged Changes')
 
+        result = self._moncli_obj.change_multiple_column_values(self._staged_changes)
 
-    def stage_changes(self, changes_list: list[str, (int, str)]):
-
-        # Validate input and convert to list of lists (if not provided in this format)
-        if len(changes_list) == 2:
-            to_change = [changes_list]
-        elif len(changes_list) == 1:
-            raise Exception(f'stage_changes provided with only list of length 1: {changes_list[0]} - requires column '
-                            f'AND value to change to')
-        else:
-            to_change = changes_list
-
-        for column_pair in to_change:
-            column_id = column_pair[0]
-            desired_value = column_pair[1]
-            self.columns.stage_change(column_id, desired_value)
-
-    def commit_changes(self):
-        pass
-
+        return result
