@@ -5,4 +5,6 @@ test_board_id = 1139943160
 
 test_item_id = 1139943185
 
-item = BaseItem(board_id=test_board_id)
+b_item = BaseItem(board_id=test_board_id)
+
+i_item = BaseItem(test_item_id)

@@ -8,15 +8,18 @@ BOARD_MAPPING_DICT = {
             'dropdown3': 'dropdown',
             'date': 'date',
             'people': 'people',
-            'subitems': 'subitems',
+            'subitems9': 'subitems',
             'checkbox': 'checkbox',
-            'connect_boards': 'connect_boards',
-            'status49': 'linked_status',
-            'dup__of_status': 'linked_dropdown',
-            'dup__of_dup__of_status': 'linked_text',
+            # 'connect_boards': 'connect_boards',           ====== NOT YET DEVELOPED
+            # 'status49': 'linked_status',
+            # 'dup__of_status': 'linked_dropdown',
+            # 'dup__of_dup__of_status': 'linked_text',      ====== NOT YET DEVELOPED
             'long_text': 'longtext',
             'hour': 'hour',
-            'link': 'link'
+            'link7': 'link',
+            'button': 'button',
+            'item_id': 'item_id',
+            'files': 'files'
         }
     }
 }

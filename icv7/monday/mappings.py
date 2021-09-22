@@ -2,6 +2,7 @@ import moncli.entities
 from moncli.entities import column_value
 
 from .config import BOARD_MAPPING_DICT
+from icv7.monday import exceptions
 
 
 class MappingObject:
@@ -27,12 +28,12 @@ class MappingObject:
                 eric_col_val = COLUMN_TYPE_MAPPINGS[moncli_col_val.type](moncli_col_val, staged_changes,
                                                                          from_item=False)
             except KeyError:
-                raise Exception(f'COLUMN_TYPE_MAPPINGS does not contain a key for {moncli_col_val.type}')
+                eric_col_val = ReadOnlyColumn(moncli_col_val, staged_changes, from_item=False)
         else:
             try:
                 eric_col_val = COLUMN_TYPE_MAPPINGS[type(moncli_col_val)](moncli_col_val, staged_changes)
             except KeyError:
-                raise Exception(f'COLUMN_TYPE_MAPPINGS does not contain a key for {type(moncli_col_val)}')
+                eric_col_val = ReadOnlyColumn(moncli_col_val, staged_changes)
 
         return eric_col_val
 
@@ -133,6 +134,11 @@ class HourColumn(BaseColumnValue):
 
 
 class PeopleColumn(BaseColumnValue):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
+        super().__init__(moncli_column_value, staged_changes)
+
+
+class ReadOnlyColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
 
