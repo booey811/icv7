@@ -1,5 +1,7 @@
 from typing import Union
 
+import moncli.entities
+
 from icv7.utilities import clients
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
@@ -24,7 +26,7 @@ class BaseItemStructure:
 
 class BaseItem(BaseItemStructure):
 
-    def __init__(self, item_id: (str, int) = None, board_id: (str, int) = None, get_column_values=True):
+    def __init__(self, item_id: (str, int) = None, moncli_obj: moncli.entities.Item = None, board_id: (str, int) = None, get_column_values=True):
         super().__init__(item_id, board_id)
 
         if not item_id and not board_id:
@@ -50,6 +52,7 @@ class BaseItem(BaseItemStructure):
                 except KeyError:
                     print(f'Column ID "{mon_col.id}" not found in config.COLUMN_MAPPINGS[{self._board_id}]')
 
+
         elif board_id:
             self._board_id = str(board_id)
 
@@ -62,5 +65,7 @@ class BaseItem(BaseItemStructure):
             raise Exception('Attempting to Commit Changes with no Staged Changes')
 
         result = self._moncli_obj.change_multiple_column_values(self._staged_changes)
+
+        self._staged_changes = {}
 
         return result
