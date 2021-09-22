@@ -7,7 +7,6 @@ from icv7.utilities import clients
 
 @pytest.fixture()
 def system_client_test_moncli_item(dev_test_board_system_item_id):
-    print('getting moncli item')
     return clients.monday.system.get_items(ids=[dev_test_board_system_item_id])[0]
 
 
@@ -15,7 +14,6 @@ class TestCreationFromID:
 
     @pytest.fixture(scope='class')
     def test_item(self, dev_test_board_system_item_id):
-        print('instantiating Eric item')
         return base.BaseItem(dev_test_board_system_item_id)
 
     def test_id_is_correct(self, test_item, dev_test_board_system_item_id):
