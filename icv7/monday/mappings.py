@@ -1,3 +1,5 @@
+from typing import Union
+
 import moncli.entities
 from moncli.entities import column_value
 
@@ -9,7 +11,7 @@ class MappingObject:
     def __init__(self, board_id):
 
         if str(board_id) not in BOARD_MAPPING_DICT:
-            raise Exception(f'Board ID {board_id} does not exist in MAPPING_DICT')
+            raise Exception(f'Board ID {board_id} does not exist in config MAPPING_DICT')
 
         self._raw_mapping_dict = BOARD_MAPPING_DICT[str(board_id)]
 
@@ -73,15 +75,16 @@ class TextColumn(BaseColumnValue):
 
     @property
     def value(self):
-        print('getting text value')
         return self._value
 
     @value.setter
     def value(self, value):
-        print(f'setting text value :: {self.id} to {value}')
+        # Check column hasn't already had a chnage staged
         if self.id in self._staged_changes:
             raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
+        # Adjust eric object value
         self._value = str(value)
+        # Add change to staged changes
         self._stage_change(value)
 
     def _stage_change(self, value):
@@ -106,6 +109,29 @@ class DropdownColumn(BaseColumnValue):
 class NumberColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value: Union[str, int]):
+        # Check column hasn't got a staged change already
+        if self.id in self._staged_changes:
+            raise Exception(
+                f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
+        # Check input is correct via try/except
+        try:
+            value = int(value)
+            # Adjust eric value
+            self._value = str(value)
+            # Stage change
+            self._stage_change(value)
+        except ValueError:
+            raise Exception(f'Non-string or integer value ({value}) passed to Number Column ({self.id})')
+
+    def _stage_change(self, value):
+        self._staged_changes[self.id] = str(value)
 
 
 class DateColumn(BaseColumnValue):
