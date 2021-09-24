@@ -29,27 +29,27 @@ def dev_test_board_id():
     return '1139943160'
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def moncli_read_only_item(read_only_item_id):
     return clients.monday.system.get_items(ids=[read_only_item_id])[0]
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def moncli_system_item(system_item_id):
     return clients.monday.system.get_items(ids=[system_item_id])[0]
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def moncli_email_item(email_item_id):
     return clients.monday.system.get_items(ids=[email_item_id])[0]
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def moncli_error_item(error_item_id):
     return clients.monday.system.get_items(ids=[error_item_id])[0]
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def eric_read_only_item(read_only_item_id):
     return BaseItem(read_only_item_id)
 
@@ -58,11 +58,11 @@ def eric_system_item(system_item_id):
     return BaseItem(system_item_id)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def eric_email_item(email_item_id):
     return BaseItem(email_item_id)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def eric_error_item(error_item_id):
     return BaseItem(error_item_id)
