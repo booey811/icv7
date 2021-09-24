@@ -1,7 +1,16 @@
+"""
+Once all column values are complete, a fixture for reverting test items to their default state will be required, to be
+called at the end of a column_value test class
+"""
+
+
+
 import pytest
 
 from icv7.utilities import clients
 from icv7.monday.base import BaseItem
+
+
 
 
 @pytest.fixture(scope='session')
@@ -52,6 +61,7 @@ def moncli_error_item(error_item_id):
 @pytest.fixture(scope='session')
 def eric_read_only_item(read_only_item_id):
     return BaseItem(read_only_item_id)
+
 
 @pytest.fixture(scope='class')
 def eric_system_item(system_item_id):
