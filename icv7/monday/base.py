@@ -1,17 +1,42 @@
-from typing import Union
+from typing import Union, Callable
+from datetime import datetime
 
 import moncli.entities
+from moncli.api_v2.exceptions import MondayApiError as moncli_error
 
 from icv7.utilities import clients
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
 from icv7.monday import exceptions
 
-system = clients.monday.system
 
-test_board_id = 1139943160
+class CustomLogger:
 
-test_item_id = 1139943185
+    def __init__(self, eric_item):
+        self._log_file_path = None
+        self._eric = eric_item
+        self._log_name = self._generate_log_file_name()
+
+
+    def _generate_log_file_name(self):
+        now = datetime.now()
+        date_time = now.strftime("%d%b|%H-%M-%S")
+        name = f'{self._eric.id}|{date_time}.txt'
+        return name
+
+
+    @property
+    def log_file_path(self):
+        if not self._log_file_path:
+            self._log_file_path = f'tmp/logs/{self._log_name}'
+        return self._log_file_path
+
+    def write_to_log(self, lines_to_write):
+
+        with open(self.log_file_path, 'w+') as log:
+            log.writelines(lines_to_write)
+
+        return True
 
 
 class BaseItemStructure:
@@ -42,7 +67,8 @@ class BaseItem(BaseItemStructure):
             # Check if input is mon_item or item_id via try/except
             try:
                 # Set basic info and private variables from item_id
-                self._moncli_obj = clients.monday.system.get_items(get_column_values=get_column_values, ids=[item_id_or_mon_item])[0]
+                self._moncli_obj = \
+                    clients.monday.system.get_items(get_column_values=get_column_values, ids=[item_id_or_mon_item])[0]
             except TypeError:
                 # Set basic info and private variables from mon_item, triggers if input is not int or str
                 self._moncli_obj = item_id_or_mon_item
@@ -67,6 +93,9 @@ class BaseItem(BaseItemStructure):
 
         self._board_id = str(self._moncli_board_obj.id)
         self._convert_column_date_to_eric_values(columns)
+
+        # Setup Logger
+        self.logger = CustomLogger(self)
 
     def _convert_column_date_to_eric_values(self, columns):
         """
@@ -105,6 +134,19 @@ class BaseItem(BaseItemStructure):
     def commit(self):
         if not self._staged_changes:
             raise Exception('Attempting to Commit Changes with no Staged Changes')
-        result = self._moncli_obj.change_multiple_column_values(self._staged_changes)
-        self._staged_changes = {}
-        return result
+        try:
+            result = self._moncli_obj.change_multiple_column_values(self._staged_changes)
+            self._staged_changes = {}
+            return result
+
+        except moncli_error as error:
+            raise Exception('NEED TO WRITE THIS')
+
+
+class MondaySubmissionError(moncli_error):
+    def __init__(self, staged_changes: dict, moncli_obj: moncli.entities.Item, logger: CustomLogger):
+        print('Error Submitting Changes to Monday, attempting individually')
+        moncli_obj = moncli_obj
+        for item in staged_changes:
+            submit_dict = {item: staged_changes[item]}
+            print(f'Adjusting')
