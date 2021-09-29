@@ -17,13 +17,11 @@ class CustomLogger:
         self._eric = eric_item
         self._log_name = self._generate_log_file_name()
 
-
     def _generate_log_file_name(self):
         now = datetime.now()
         date_time = now.strftime("%d%b|%H-%M-%S")
         name = f'{self._eric.id}|{date_time}.txt'
         return name
-
 
     @property
     def log_file_path(self):
@@ -32,7 +30,6 @@ class CustomLogger:
         return self._log_file_path
 
     def write_to_log(self, lines_to_write):
-
         with open(self.log_file_path, 'w+') as log:
             log.writelines(lines_to_write)
 
@@ -51,6 +48,7 @@ class BaseItemStructure:
 
 
 class BaseItem(BaseItemStructure):
+    """This item is the main interface for the entire application"""
 
     def __init__(self,
                  item_id_or_mon_item: Union[str, int, moncli.entities.Item] = None,
@@ -92,12 +90,12 @@ class BaseItem(BaseItemStructure):
             raise Exception('Unexpected Inputs for BaseItem.__init__')
 
         self._board_id = str(self._moncli_board_obj.id)
-        self._convert_column_date_to_eric_values(columns)
+        self._convert_column_data_to_eric_values(columns)
 
         # Setup Logger
         self.logger = CustomLogger(self)
 
-    def _convert_column_date_to_eric_values(self, columns):
+    def _convert_column_data_to_eric_values(self, columns):
         """
         Processes column data taken from monday item or board IDs and sets up the eric item accordingly
         Prints out columns that are defined in the config file but not used

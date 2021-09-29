@@ -65,14 +65,20 @@ def eric_read_only_item(read_only_item_id):
 
 @pytest.fixture(scope='class')
 def eric_system_item(system_item_id):
+    """Returns an Eric item retrieved with the monday.system client
+    Need to add the item as yield instead of return then change the item to default state afterwards"""
     return BaseItem(system_item_id)
 
 
 @pytest.fixture(scope='session')
 def eric_email_item(email_item_id):
+    """Returns an Eric item retrieved with the monday.email client
+    Need to add the item as yield instead of return then change the item to default state afterwards"""
     return BaseItem(email_item_id)
 
 
 @pytest.fixture(scope='session')
 def eric_error_item(error_item_id):
+    """Returns an Eric item retrieved with the monday.error client
+    Need to add the item as yield instead of return then change the item to default state afterwards"""
     return BaseItem(error_item_id)
