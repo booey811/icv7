@@ -88,7 +88,7 @@ class TextColumn(BaseColumnValue):
         # Adjust eric object value
         self._value = to_set
         # Add change to staged changes
-        self._stage_change(value)
+        self._stage_change(self._value)
 
     def _stage_change(self, value):
         self._staged_changes[self.id] = value
@@ -113,6 +113,8 @@ class DropdownColumn(BaseColumnValue):
 class NumberColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            self._value = moncli_column_value.number
 
     @property
     def value(self):

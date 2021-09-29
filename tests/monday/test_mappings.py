@@ -80,7 +80,7 @@ class TestNumberValue:
         assert moncli == eric
 
     def test_staged_changes_are_correct(self, eric_system_item):
-        """Tests that staging a change for a text value will generate the correct _staged_changes dictionary"""
+        """Tests that staging a change for a number value will generate the correct _staged_changes dictionary"""
         new_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = new_value
         assert eric_system_item._staged_changes[eric_system_item.text.id] == new_value
