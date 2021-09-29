@@ -169,7 +169,6 @@ class StatusColumn(BaseColumnValue):
         # Pass new value to value setter, which sets index and label as well
         self.value = to_set
 
-
     @property
     def index(self):
         return self._index
@@ -180,11 +179,8 @@ class StatusColumn(BaseColumnValue):
         if type(to_set) not in (str, int):
             raise ValueError(f'StatusColumn.label.setter supplied with non-string input: {to_set}')
 
-        # Pass new value to value setter, which sets inde and label as well
+        # Pass new value to value setter, which sets index and label as well
         self.value = to_set
-
-
-
 
 
 class DropdownColumn(BaseColumnValue):
