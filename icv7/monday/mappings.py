@@ -92,6 +92,8 @@ class TextColumn(BaseColumnValue):
         self._stage_change(self._value)
 
     def _stage_change(self, value):
+        if type(value) not in [int, str]:
+            raise TypeError(f'TextColumn._stage_change ({self.title}) supplied with incorrect type: {type(value)}')
         self._staged_changes[self.id] = value
         return {self.id: value}
 
@@ -148,13 +150,16 @@ class StatusColumn(BaseColumnValue):
             input_label = str(to_set)
             input_index = str(self._settings[input_label])
         else:
-            raise Exception('Unknown Error in StatusColumn.value.setter - could not convert index to'
+            raise Exception(f'Unknown Error in StatusColumn.value.setter ({self.title}) - could not convert index to'
                             'label or vice versa')
 
         # Set private attributes
         self._label = input_label
         self._index = input_index
         self._value = input_label
+
+        # Stage change
+        self._stage_change()
 
     @property
     def label(self):
@@ -181,6 +186,30 @@ class StatusColumn(BaseColumnValue):
 
         # Pass new value to value setter, which sets index and label as well
         self.value = to_set
+
+    def _stage_change(self, value: Union[int, str]):
+        # Check Input is the right type
+        if type(value) not in (str, int):
+            raise TypeError(f'StatusColumn._stage_change ({self.title}) supplied with incorrect type: {type(value)}')
+
+        # Check if input is the index (integer) and convert from string if so
+        if type(value) == str:
+            try:
+                index = int(value)
+            except ValueError:
+                index = int(self._settings[value])
+        elif type(value) == int:
+            index = int(value)
+        else:
+            raise Exception('An Unknown Error Occurred')
+
+        # Check index is still in column _settings
+        try:
+            conversion = self._settings[str(index)]
+        except KeyError:
+            raise Exception(f'StatusColumn._stage_change ({self.title}) supplied with value not in _settings ({value})')
+
+        self._staged_changes[self.id] = {'index': index}
 
 
 class DropdownColumn(BaseColumnValue):
@@ -216,9 +245,11 @@ class NumberColumn(BaseColumnValue):
             # Stage change
             self._stage_change(self._value)
         except ValueError:
-            raise ValueError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
+            raise ValueError(f'NumberColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
-    def _stage_change(self, value):
+    def _stage_change(self, value: Union[str, int]):
+        if type(value) not in (str, int):
+            raise TypeError(f'NumberColumn._stage_change ({self.title}) supplied with incorrect type: {type(value)}')
         self._staged_changes[self.id] = value
 
 
