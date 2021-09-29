@@ -83,7 +83,7 @@ class TextColumn(BaseColumnValue):
             to_set = str(value)
         else:
             # TODO: Add 'soft_log' for this error then allow the exception
-            raise TypeError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
+            raise ValueError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
         # Adjust eric object value
         self._value = to_set
@@ -124,18 +124,19 @@ class NumberColumn(BaseColumnValue):
         if self.id in self._staged_changes:
             raise Exception(
                 f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
-        # Check input is correct via try/except
+
+        # Check input is correct via try/except (int or str only)
         try:
             value = int(value)
             # Adjust eric value
             self._value = str(value)
             # Stage change
-            self._stage_change(value)
+            self._stage_change(self._value)
         except ValueError:
-            raise Exception(f'Non-string or integer value ({value}) passed to Number Column ({self.id})')
+            raise ValueError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
     def _stage_change(self, value):
-        self._staged_changes[self.id] = str(value)
+        self._staged_changes[self.id] = value
 
 
 class DateColumn(BaseColumnValue):
