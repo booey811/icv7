@@ -123,6 +123,10 @@ class TestNumberValue:
 
 class TestStatusValue:
 
+    @pytest.fixture(scope='class')
+    def test_label(self):
+        return
+
     def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_number_column_value):
         """Tests whether the number values of the read only test item are the same for the moncli object and
         the eric object"""

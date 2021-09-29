@@ -4,5 +4,3 @@ from icv7.utilities import clients
 
 
 eric = BaseItem(1139943185)
-
-lines = ['line1', 'line2']

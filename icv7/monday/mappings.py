@@ -1,4 +1,5 @@
 from typing import Union
+import json
 
 import moncli.entities
 from moncli.entities import column_value
@@ -103,6 +104,87 @@ class LongTextColumn(BaseColumnValue):
 class StatusColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            # Take basic column info from the moncli value & set up value attribute to return the label
+            self._label = str(moncli_column_value.label)
+            self._index = moncli_column_value.index
+            self._value = self._label
+
+            # Set up the _settings attribute (dict), which is used to convert label inputs into index and vice versa
+            simple_settings = json.loads(moncli_column_value.settings_str)['labels']
+            self._settings = {}
+            for item in simple_settings:
+                self._settings[item] = simple_settings[item]
+                self._settings[simple_settings[item]] = item
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, to_set: Union[str, int]):
+        # Check column hasn't already had a change staged
+        if self.id in self._staged_changes:
+            raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
+
+        # Check input is either int or string
+        if type(to_set) not in (int, str):
+            raise ValueError(f'StatusColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+
+        # Check input is valid for column settings through try/except
+        try:
+            key = str(to_set)
+            val = str(self._settings[key])
+        except AttributeError as e:
+            # TODO Add softlog for this exception
+            raise ValueError(f'StatusColumn ({self.title}) value setter supplied with input that does not show '
+                             f'in settings ({to_set})')
+
+        # Work out whether an index or a label has been provided
+        try:
+            input_index = str(int(to_set))
+            input_label = str(self._settings[input_index])
+        except ValueError as e:
+            input_label = str(to_set)
+            input_index = str(self._settings[input_label])
+        else:
+            raise Exception('Unknown Error in StatusColumn.value.setter - could not convert index to'
+                            'label or vice versa')
+
+        # Set private attributes
+        self._label = input_label
+        self._index = input_index
+        self._value = input_label
+
+    @property
+    def label(self):
+        return self._label
+
+    @label.setter
+    def label(self, to_set: str):
+        # Check input is correct
+        if type(to_set) is not str:
+            raise ValueError(f'StatusColumn.label.setter supplied with non-string input: {to_set}')
+
+        # Pass new value to value setter, which sets index and label as well
+        self.value = to_set
+
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, to_set: Union[str, int]):
+        # Check input is correct
+        if type(to_set) not in (str, int):
+            raise ValueError(f'StatusColumn.label.setter supplied with non-string input: {to_set}')
+
+        # Pass new value to value setter, which sets inde and label as well
+        self.value = to_set
+
+
+
 
 
 class DropdownColumn(BaseColumnValue):
