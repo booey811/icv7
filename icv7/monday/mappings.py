@@ -78,11 +78,11 @@ class TextColumn(BaseColumnValue):
         if self.id in self._staged_changes:
             raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
 
-        # Check Input Type is Allowed (str and int)
+        # Check Input Type is Allowed (str and int only)
         if type(value) in [str, int]:
             to_set = str(value)
         else:
-            # Add
+            # TODO: Add 'soft_log' for this error
             raise TypeError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
         # Adjust eric object value
@@ -91,7 +91,8 @@ class TextColumn(BaseColumnValue):
         self._stage_change(value)
 
     def _stage_change(self, value):
-        self._staged_changes[self.id] = str(value)
+        self._staged_changes[self.id] = value
+        return {self.id: value}
 
 
 class LongTextColumn(BaseColumnValue):
