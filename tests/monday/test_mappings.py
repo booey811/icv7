@@ -13,17 +13,15 @@ Need to write tests for the following (for each column value):
 """
 
 
-@pytest.fixture(scope='class')
-def read_only_text_column_value(moncli_read_only_item):
-    return moncli_read_only_item.get_column_value('text')
 
 
-@pytest.fixture(scope='class')
-def read_only_number_column_value(moncli_read_only_item):
-    return moncli_read_only_item.get_column_value('numbers6')
 
 
 class TestTextValue:
+
+    @pytest.fixture(scope='class')
+    def read_only_text_column_value(self, moncli_read_only_item):
+        return moncli_read_only_item.get_column_value('text')
 
     def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_text_column_value):
         """Tests whether the text values of the read only test item are the same for the moncli object and
@@ -58,7 +56,7 @@ class TestTextValue:
         new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.text.id).text
         assert new_moncli_value == test_value
 
-    @pytest.mark.parametrize('input', [
+    @pytest.mark.parametrize('input_type', [
         ['random', 'list', 'entries'],  # Arbitrary test value
         {'dict': 'value'},  # Arbitrary test value
         object  # Arbitrary test value
@@ -71,6 +69,10 @@ class TestTextValue:
 
 
 class TestNumberValue:
+
+    @pytest.fixture(scope='class')
+    def read_only_number_column_value(self, moncli_read_only_item):
+        return moncli_read_only_item.get_column_value('numbers6')
 
     @pytest.fixture(scope='class')
     def test_value(self):
@@ -109,7 +111,7 @@ class TestNumberValue:
         new_moncli_value = str(new_moncli_item.get_column_value(id=eric_system_item.numbers.id).text)
         assert new_moncli_value == str(test_value)
 
-    @pytest.mark.parametrize('input', [
+    @pytest.mark.parametrize('input_type', [
         ['random', 'list', 'entries'],  # Arbitrary test value
         {'dict': 'value'},  # Arbitrary test value
         object  # Arbitrary test value
@@ -123,15 +125,22 @@ class TestNumberValue:
 
 class TestStatusValue:
 
-    def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_number_column_value):
-        """Tests whether the number values of the read only test item are the same for the moncli object and
+    @pytest.fixture(scope='class')
+    def read_only_status_column_value(self, moncli_read_only_item):
+        return moncli_read_only_item.get_column_value('status')
+
+    def test_moncli_label_and_eric_label_match(self, eric_read_only_item, read_only_status_column_value):
+        """Tests whether the label value of the read only test item is the same for the moncli object and
         the eric object"""
-        moncli = str(read_only_number_column_value.number)
-        eric = eric_read_only_item.numbers.value
-        assert moncli == eric
+        assert read_only_status_column_value.label == eric_read_only_item.status.label
+
+    def test_moncli_index_and_eric_index_match(self, eric_read_only_item, read_only_status_column_value):
+        """Tests whether the index value of the read only test item is the same for the moncli object and
+        the eric object"""
+        assert read_only_status_column_value.index == int(eric_read_only_item.status.index)
 
     def test_staged_changes_are_correct(self, eric_system_item, test_value):
-        """Tests that staging a change for a number value will generate the correct _staged_changes dictionary"""
+        """Tests that staging a change for a status value will generate the correct _staged_changes dictionary"""
         new_value = test_value  # Arbitrary Test value to assert
         eric_system_item.numbers.value = new_value
         assert eric_system_item._staged_changes[eric_system_item.numbers.id] == str(new_value)
@@ -156,7 +165,7 @@ class TestStatusValue:
         new_moncli_value = str(new_moncli_item.get_column_value(id=eric_system_item.numbers.id).text)
         assert new_moncli_value == str(test_value)
 
-    @pytest.mark.parametrize('input', [
+    @pytest.mark.parametrize('input_type', [
         ['random', 'list', 'entries'],  # Arbitrary test value
         {'dict': 'value'},  # Arbitrary test value
         object  # Arbitrary test value

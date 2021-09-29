@@ -135,10 +135,10 @@ class StatusColumn(BaseColumnValue):
         try:
             key = str(to_set)
             val = str(self._settings[key])
-        except AttributeError as e:
+        except KeyError as e:
             # TODO Add softlog for this exception
             raise ValueError(f'StatusColumn ({self.title}) value setter supplied with input that does not show '
-                             f'in settings ({to_set})')
+                             f'in settings ("{to_set}")')
 
         # Work out whether an index or a label has been provided
         try:
