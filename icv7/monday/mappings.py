@@ -114,7 +114,10 @@ class NumberColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
-            self._value = moncli_column_value.number
+            if moncli_column_value.text:
+                self._value = moncli_column_value.text
+            else:
+                self._value = 0
 
     @property
     def value(self):
@@ -127,9 +130,9 @@ class NumberColumn(BaseColumnValue):
             raise Exception(
                 f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
 
-        # Check input is correct via try/except (int or str only)
+        # Check input is correct via try/except (int, str or float only)
         try:
-            value = int(value)
+            value = float(value)  # Has to be float as moncli struggles to convert
             # Adjust eric value
             self._value = str(value)
             # Stage change
