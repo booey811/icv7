@@ -32,7 +32,6 @@ class TestTextValue:
         new_value = 'test_staged_changes_are_correct VALUE'  # Test value to assert
         eric_system_item.text.value = new_value
         assert eric_system_item._staged_changes[eric_system_item.text.id] == new_value
-        eric_system_item._staged_changes = {}
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
@@ -51,7 +50,7 @@ class TestTextValue:
         eric_system_item.text.value = test_value
         eric_system_item.commit()
         new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
-        new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.text.value)
+        new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.text.id).text
         assert new_moncli_value == test_value
 
 
