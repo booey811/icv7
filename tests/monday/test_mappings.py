@@ -63,11 +63,11 @@ class TestTextValue:
         {'dict': 'value'},  # Arbitrary test value
         object  # Arbitrary test value
     ])
-    def test_incorrect_input_raises_type_error(self, input, eric_system_item):
+    def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
         """Tests that supplying the text column with a non int or str argument raises a type error"""
         with pytest.raises(ValueError) as e_info:
-            print(input)
-            eric_system_item.text.value = input
+            print(input_type)
+            eric_system_item.text.value = input_type
 
 
 class TestNumberValue:
@@ -114,8 +114,8 @@ class TestNumberValue:
         {'dict': 'value'},  # Arbitrary test value
         object  # Arbitrary test value
     ])
-    def test_incorrect_input_raises_type_error(self, input, eric_system_item):
-        """Tests that supplying the text column with a non int or str argument raises a type error"""
+    def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
+        """Tests that supplying the number column with a non int or str argument raises a type error"""
         with pytest.raises(ValueError) as e_info:
-            print(input)
-            eric_system_item.text.value = input
+            print(input_type)
+            eric_system_item.text.value = input_type
