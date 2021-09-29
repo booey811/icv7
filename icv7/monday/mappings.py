@@ -59,11 +59,6 @@ class BaseColumnValue:
         self._value = value
 
     def stage(self, new_value: (str, int)) -> list:
-        """
-Returns a list: [COLUMN_ID, COLUMN_VALUE]
-COLUMN_VALUE may be a string (text column), an integer (number column), a dictionary (status, dropwdown columns)
-        :param new_value: the value to set the column to
-        """
         pass
 
 
@@ -78,12 +73,20 @@ class TextColumn(BaseColumnValue):
         return self._value
 
     @value.setter
-    def value(self, value):
-        # Check column hasn't already had a chnage staged
+    def value(self, value: Union[str, int]):
+        # Check column hasn't already had a change staged
         if self.id in self._staged_changes:
             raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
+
+        # Check Input Type is Allowed (str and int)
+        if type(value) in [str, int]:
+            to_set = str(value)
+        else:
+            # Add
+            raise TypeError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
+
         # Adjust eric object value
-        self._value = str(value)
+        self._value = to_set
         # Add change to staged changes
         self._stage_change(value)
 

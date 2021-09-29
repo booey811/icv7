@@ -29,14 +29,14 @@ class TestTextValue:
 
     def test_staged_changes_are_correct(self, eric_system_item):
         """Tests that staging a change for a text value will generate the correct _staged_changes dictionary"""
-        new_value = 'test_staged_changes_are_correct VALUE'  # Test value to assert
+        new_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = new_value
         assert eric_system_item._staged_changes[eric_system_item.text.id] == new_value
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
         value is the same as the test input"""
-        test_value = 'test_staged_changes_are_correct VALUE'  # Test value to assert
+        test_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = test_value
         eric_system_item.commit()
         new_eric = BaseItem(eric_system_item.id)
@@ -46,13 +46,23 @@ class TestTextValue:
     def test_committed_changes_match_new_moncli_value(self, eric_system_item, clients_object):
         """Tests that committing change to a standard value still allows retrieval of the moncli value and that this
         value is the same as the test input"""
-        test_value = 'test_staged_changes_are_correct VALUE'  # Test value to assert
+        test_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = test_value
         eric_system_item.commit()
         new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
         new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.text.id).text
         assert new_moncli_value == test_value
 
+    @pytest.mark.parametrize('input', [
+        ['random', 'list', 'entries'],          # Arbitrary test value
+        {'dict': 'value'},                      # Arbitrary test value
+        object                                  # Arbitrary test value
+    ])
+    def test_incorrect_input_raises_type_error(self, input, eric_system_item):
+        """Tests that supplying the text column with a non int or str argument raises a type error"""
+        with pytest.raises(TypeError) as e_info:
+            print(input)
+            eric_system_item.text.value = input
 
 
 class TestNumberValue:
