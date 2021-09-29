@@ -118,6 +118,7 @@ class BaseItem(BaseItemStructure):
             except KeyError:
                 # Occurs when id is not found in the config file
                 if mon_col.id == 'name':
+                    # Ignore the 'name' column as this would be the name of the item
                     pass
                 else:
                     print(f'Column ID "{mon_col.id}" not found in config: ""{board_data["name"]}""')

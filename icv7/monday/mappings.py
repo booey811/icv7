@@ -159,7 +159,7 @@ class StatusColumn(BaseColumnValue):
         self._value = input_label
 
         # Stage change
-        self._stage_change()
+        self._stage_change(to_set)
 
     @property
     def label(self):

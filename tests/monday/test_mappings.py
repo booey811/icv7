@@ -139,9 +139,9 @@ class TestStatusValue:
         the eric object"""
         assert read_only_status_column_value.index == int(eric_read_only_item.status.index)
 
-    def test_staged_changes_are_correct(self, eric_system_item, test_value):
+    def test_staged_changes_are_correct_when_a_label_is_used_to_effect_change(self, eric_system_item, test_value):
         """Tests that staging a change for a status value will generate the correct _staged_changes dictionary"""
-        new_value = test_value  # Arbitrary Test value to assert
+        new_value = {}  # Arbitrary Test value to assert
         eric_system_item.numbers.value = new_value
         assert eric_system_item._staged_changes[eric_system_item.numbers.id] == str(new_value)
 
