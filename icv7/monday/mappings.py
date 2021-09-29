@@ -82,7 +82,7 @@ class TextColumn(BaseColumnValue):
         if type(value) in [str, int]:
             to_set = str(value)
         else:
-            # TODO: Add 'soft_log' for this error
+            # TODO: Add 'soft_log' for this error then allow the exception
             raise TypeError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
         # Adjust eric object value
