@@ -89,8 +89,6 @@ class TextColumn(BaseColumnValue):
         self._stage_change(self._value)
 
     def _stage_change(self, value):
-        if type(value) not in [int, str]:
-            raise TypeError(f'TextColumn._stage_change ({self.title}) supplied with incorrect type: {type(value)}')
         self._staged_changes[self.id] = value
         return {self.id: value}
 
@@ -98,6 +96,28 @@ class TextColumn(BaseColumnValue):
 class LongTextColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            self._value = moncli_column_value.text
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, to_set: Union[str, int]):
+        # Check input is correct
+        if type(to_set) not in (str, int):
+            raise ValueError(f'LongTextColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+
+        # Adjust eric value
+        self._value = str(to_set)
+
+        # Add change to _staged_changes
+        self._stage_change(self._value)
+
+
+
+
 
 
 class StatusColumn(BaseColumnValue):
