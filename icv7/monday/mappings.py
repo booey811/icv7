@@ -42,8 +42,8 @@ class MappingObject:
 
 
 class BaseColumnValue:
-    def __init__(self, moncli_column_value, staged_changes):
-        self._staged_changes = staged_changes
+    def __init__(self, moncli_column_value, eric_item):
+        self._eric = eric_item
         self._moncli_value = moncli_column_value
         self.id = moncli_column_value.id
         self.title = moncli_column_value.title
@@ -89,7 +89,7 @@ class TextColumn(BaseColumnValue):
         self._stage_change(self._value)
 
     def _stage_change(self, value):
-        self._staged_changes[self.id] = value
+        self._eric.staged_changes[self.id] = value
         return {self.id: value}
 
 
@@ -113,7 +113,7 @@ class LongTextColumn(BaseColumnValue):
         self._value = str(to_set)
 
         # Add change to _staged_changes
-        self._stage_change(self._value)
+        # self._stage_change(self._value)
 
 
 
@@ -220,7 +220,7 @@ class StatusColumn(BaseColumnValue):
         except KeyError:
             raise Exception(f'StatusColumn._stage_change ({self.title}) supplied with value not in _settings ({value})')
 
-        self._staged_changes[self.id] = {'index': index}
+        self._eric.staged_changes[self.id] = {'index': index}
 
 
 class DropdownColumn(BaseColumnValue):
@@ -257,7 +257,7 @@ class NumberColumn(BaseColumnValue):
     def _stage_change(self, value: Union[str, int]):
         if type(value) not in (str, int):
             raise TypeError(f'NumberColumn._stage_change ({self.title}) supplied with incorrect type: {type(value)}')
-        self._staged_changes[self.id] = value
+        self._eric.staged_changes[self.id] = value
 
 
 class DateColumn(BaseColumnValue):

@@ -41,7 +41,7 @@ class BaseItemStructure:
         self._moncli_obj = None
         self._moncli_board_obj = None
         self._board_id = board_id
-        self._staged_changes = {}
+        self.staged_changes = {}
 
         self.id = None
         self.name = ''
@@ -112,7 +112,7 @@ class BaseItem(BaseItemStructure):
         for mon_col in columns:
             try:
                 name = board_data['columns'][mon_col.id]
-                column = self._mapper.process_column(mon_col, self._staged_changes)
+                column = self._mapper.process_column(mon_col, self)
                 setattr(self, name, column)
                 completed_columns.append(column.id)
             except KeyError:
@@ -131,11 +131,11 @@ class BaseItem(BaseItemStructure):
             print('!!!!!!!!! CLEAN UP ON AISLE CONFIG !!!!!!!!!')
 
     def commit(self):
-        if not self._staged_changes:
+        if not self.staged_changes:
             raise Exception('Attempting to Commit Changes with no Staged Changes')
         try:
-            result = self._moncli_obj.change_multiple_column_values(self._staged_changes)
-            self._staged_changes = {}
+            result = self._moncli_obj.change_multiple_column_values(self.staged_changes)
+            self.staged_changes = {}
             return result
 
         except moncli_error as error:
