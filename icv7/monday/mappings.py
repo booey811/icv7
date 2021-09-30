@@ -75,9 +75,6 @@ class TextColumn(BaseColumnValue):
 
     @value.setter
     def value(self, value: Union[str, int]):
-        # Check column hasn't already had a change staged
-        if self.id in self._staged_changes:
-            raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
 
         # Check Input Type is Allowed (str and int only)
         if type(value) in [str, int]:
@@ -125,9 +122,6 @@ class StatusColumn(BaseColumnValue):
 
     @value.setter
     def value(self, to_set: Union[str, int]):
-        # Check column hasn't already had a change staged
-        if self.id in self._staged_changes:
-            raise Exception(f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
 
         # Check input is either int or string
         if type(to_set) not in (int, str):
@@ -139,8 +133,8 @@ class StatusColumn(BaseColumnValue):
             val = str(self._settings[key])
         except KeyError as e:
             # TODO Add softlog for this exception
-            raise ValueError(f'StatusColumn ({self.title}) value setter supplied with input that does not show '
-                             f'in settings ("{to_set}")')
+            raise ValueError(f'StatusColumn ({self.title}) value setter supplied with a label or index that does not '
+                             f'show in settings ("{to_set}")')
 
         # Work out whether an index or a label has been provided
         try:
@@ -149,9 +143,6 @@ class StatusColumn(BaseColumnValue):
         except ValueError as e:
             input_label = str(to_set)
             input_index = str(self._settings[input_label])
-        else:
-            raise Exception(f'Unknown Error in StatusColumn.value.setter ({self.title}) - could not convert index to'
-                            'label or vice versa')
 
         # Set private attributes
         self._label = input_label
@@ -232,10 +223,6 @@ class NumberColumn(BaseColumnValue):
 
     @value.setter
     def value(self, value: Union[str, int]):
-        # Check column hasn't got a staged change already
-        if self.id in self._staged_changes:
-            raise Exception(
-                f'Attempted to stage a change in a column ({self.id}) that has already got a change staged')
 
         # Check input is correct via try/except (int, str or float only)
         try:
