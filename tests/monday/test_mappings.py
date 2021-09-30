@@ -30,7 +30,7 @@ class TestTextValue:
         """Tests that staging a change for a text value will generate the correct _staged_changes dictionary"""
         new_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = new_value
-        assert eric_system_item._staged_changes[eric_system_item.text.id] == new_value
+        assert eric_system_item.staged_changes[eric_system_item.text.id] == new_value
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
@@ -84,7 +84,7 @@ class TestNumberValue:
         """Tests that staging a change for a number value will generate the correct _staged_changes dictionary"""
         new_value = test_value  # Arbitrary Test value to assert
         eric_system_item.numbers.value = new_value
-        assert eric_system_item._staged_changes[eric_system_item.numbers.id] == str(new_value)
+        assert eric_system_item.staged_changes[eric_system_item.numbers.id] == str(new_value)
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item, test_value):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
@@ -122,7 +122,7 @@ class TestStatusValue:
 
     @pytest.fixture(scope='class')
     def read_only_status_column_value(self, moncli_read_only_item):
-        return moncli_read_only_item.get_column_value('status')
+        return moncli_read_only_item.get_column_value('status4')
 
     @pytest.fixture(scope='class')
     def test_index(self):
@@ -159,7 +159,7 @@ class TestStatusValue:
         """Tests that staging a change for a status value using a label will generate the correct
         _staged_changes dictionary"""
         eric_system_item.status.label = test_label
-        assert eric_system_item._staged_changes[eric_system_item.status.id]['index'] == test_index
+        assert eric_system_item.staged_changes[eric_system_item.status.id]['index'] == test_index
 
     def test_staged_changes_are_correct_when_an_index_is_used_to_effect_change(
             self,
@@ -169,7 +169,7 @@ class TestStatusValue:
         """Tests that staging a change for a status value using an index will generate the correct
         _staged_changes dictionary"""
         eric_system_item.status.index = test_index
-        assert eric_system_item._staged_changes[eric_system_item.status.id]['index'] == test_index
+        assert eric_system_item.staged_changes[eric_system_item.status.id]['index'] == test_index
 
     def test_committed_changes_through_label_match_new_eric_value(
             self,

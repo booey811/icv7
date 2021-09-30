@@ -48,7 +48,7 @@ class TestItemAttributesFromItemID:
         assert type(eric_read_only_item._moncli_board_obj) == moncli.entities.Board
 
     def test_no_column_changes_are_staged_after_instantiation(self, eric_read_only_item):
-        assert eric_read_only_item._staged_changes == {}
+        assert eric_read_only_item.staged_changes == {}
 
 
 class TestItemAttributesFromBoardID:
@@ -61,5 +61,5 @@ class TestItemAttributesFromBoardID:
 
     def test_no_column_changes_are_staged_after_instantiation(self, eric_read_only_item):
 
-        assert eric_read_only_item._staged_changes == {}
+        assert eric_read_only_item.staged_changes == {}
 
