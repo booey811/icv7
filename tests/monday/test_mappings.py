@@ -60,7 +60,6 @@ class TestTextValue:
     def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
         """Tests that supplying the text column with a non int or str argument raises a type error"""
         with pytest.raises(ValueError) as e_info:
-            print(input_type)
             eric_system_item.text.value = input_type
 
 
@@ -232,3 +231,54 @@ class TestStatusValue:
         """Tests that attempting to change a ststus column with a label that does not exist raises a ValueError"""
         with pytest.raises(ValueError) as e_info:
             eric_system_item.status.value = index_label
+
+
+class TestLongTextValue:
+
+    @pytest.fixture(scope='class')
+    def read_only_long_text_column_value(self, moncli_read_only_item):
+        return moncli_read_only_item.get_column_value('long_text')
+
+    @pytest.fixture(scope='class')
+    def test_value(self):
+        return 'A VERY LONG TEXT VALUE, HELLO WORLD'  # Arbitrary test value
+
+    def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_long_text_column_value):
+        """Tests whether the text values of the read only test item are the same for the moncli object and
+        the eric object"""
+        moncli = read_only_long_text_column_value.text
+        eric = eric_read_only_item.longtext.value
+        assert moncli == eric
+
+    def test_staged_changes_are_correct(self, eric_system_item, test_value):
+        """Tests that staging a change for a text value will generate the correct staged_changes dictionary"""
+        eric_system_item.longtext.value = test_value
+        assert eric_system_item.staged_changes[eric_system_item.longtext.id] == test_value
+
+    def test_committed_changes_match_new_eric_value(self, eric_system_item, test_value):
+        """Tests that committing change to a standard value still allows retrieval of the eric value and that this
+        value is the same as the test input"""
+        eric_system_item.longtext.value = test_value
+        eric_system_item.commit()
+        new_eric = BaseItem(eric_system_item.id)
+        new_eric_value = new_eric.longtext.value
+        assert new_eric_value == test_value
+
+    def test_committed_changes_match_new_moncli_value(self, eric_system_item, clients_object, test_value):
+        """Tests that committing change to a standard value still allows retrieval of the moncli value and that this
+        value is the same as the test input"""
+        eric_system_item.longtext.value = test_value
+        eric_system_item.commit()
+        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
+        new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.longtext.id).text
+        assert new_moncli_value == test_value
+
+    @pytest.mark.parametrize('input_type', [
+        ['random', 'list', 'entries'],  # Arbitrary test value
+        {'dict': 'value'},  # Arbitrary test value
+        object  # Arbitrary test value
+    ])
+    def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
+        """Tests that supplying the text column with a non int or str argument raises a type error"""
+        with pytest.raises(ValueError) as e_info:
+            eric_system_item.longtext.value = input_type

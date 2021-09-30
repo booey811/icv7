@@ -59,9 +59,6 @@ class BaseColumnValue:
         print(f'setting value :: {self.id} to {value}')
         self._value = value
 
-    def stage(self, new_value: (str, int)) -> list:
-        pass
-
 
 class TextColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
@@ -86,11 +83,11 @@ class TextColumn(BaseColumnValue):
         # Adjust eric object value
         self._value = to_set
         # Add change to staged changes
-        self._stage_change(self._value)
+        self._stage_change()
 
-    def _stage_change(self, value):
-        self._eric.staged_changes[self.id] = value
-        return {self.id: value}
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = self._value
+        return {self.id: self._value}
 
 
 class LongTextColumn(BaseColumnValue):
@@ -113,9 +110,11 @@ class LongTextColumn(BaseColumnValue):
         self._value = str(to_set)
 
         # Add change to _staged_changes
-        # self._stage_change(self._value)
+        self._stage_change()
 
-
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = self._value
+        return {self.id: self._value}
 
 
 
@@ -170,7 +169,7 @@ class StatusColumn(BaseColumnValue):
         self._value = input_label
 
         # Stage change
-        self._stage_change(to_set)
+        self._stage_change()
 
     @property
     def label(self):
@@ -198,19 +197,16 @@ class StatusColumn(BaseColumnValue):
         # Pass new value to value setter, which sets index and label as well
         self.value = to_set
 
-    def _stage_change(self, value: Union[int, str]):
-        # Check Input is the right type
-        if type(value) not in (str, int):
-            raise TypeError(f'StatusColumn._stage_change ({self.title}) supplied with incorrect type: {type(value)}')
+    def _stage_change(self):
 
         # Check if input is the index (integer) and convert from string if so
-        if type(value) == str:
+        if type(self._value) == str:
             try:
-                index = int(value)
+                index = int(self._value)
             except ValueError:
-                index = int(self._settings[value])
-        elif type(value) == int:
-            index = int(value)
+                index = int(self._settings[self._value])
+        elif type(self._value) == int:
+            index = int(self._value)
         else:
             raise Exception('An Unknown Error Occurred')
 
@@ -218,7 +214,7 @@ class StatusColumn(BaseColumnValue):
         try:
             conversion = self._settings[str(index)]
         except KeyError:
-            raise Exception(f'StatusColumn._stage_change ({self.title}) supplied with value not in _settings ({value})')
+            raise Exception(f'StatusColumn._stage_change ({self.title}) supplied with value not in _settings ({self._value})')
 
         self._eric.staged_changes[self.id] = {'index': index}
 
