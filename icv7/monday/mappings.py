@@ -199,24 +199,24 @@ class StatusColumn(BaseColumnValue):
     def _stage_change(self):
 
         # Check if input is the index (integer) and convert from string if so
-        if type(self._value) == str:
-            try:
-                index = int(self._value)
-            except ValueError:
-                index = int(self._settings[self._value])
-        elif type(self._value) == int:
-            index = int(self._value)
-        else:
-            raise Exception('An Unknown Error Occurred')
+        # if type(self._value) == str:
+        #     try:
+        #         index = int(self._value)
+        #     except ValueError:
+        #         index = int(self._settings[self._value])
+        # elif type(self._value) == int:
+        #     index = int(self._value)
+        # else:
+        #     raise Exception('An Unknown Error Occurred')
 
         # Check index is still in column _settings
         try:
-            conversion = self._settings[str(index)]
+            conversion = self._settings[str(self._index)]
         except KeyError:
             raise Exception(
                 f'StatusColumn._stage_change ({self.title}) supplied with value not in _settings ({self._value})')
 
-        self._eric.staged_changes[self.id] = {'index': index}
+        self._eric.staged_changes[self.id] = {'index': self._index}
 
 
 class DropdownColumn(BaseColumnValue):
@@ -234,8 +234,108 @@ class DropdownColumn(BaseColumnValue):
                 self._settings[str(item['id'])] = item['name']
                 self._settings[item['name']] = str(item['id'])
 
+    @property
+    def value(self):
+        return self._value
 
+    @property
+    def labels(self):
+        return self._labels
 
+    @property
+    def ids(self):
+        return self._ids
+
+    @value.setter
+    def value(self, ids_to_set: list):
+
+        # Set private variables
+        self._ids = [int(item) for item in ids_to_set]
+        self._labels = [self._settings[str(item)] for item in self._ids]
+
+        # Adjust value
+        self._value = self._labels
+
+        # Stage Change
+        self._stage_change()
+
+    @staticmethod
+    def _check_input_and_convert_to_list(to_set) -> list:
+        """Checks input for changing values is of the correct type and converts it to a list for processing"""
+        # Check input is correct
+        if type(to_set) not in (str, int, list):
+            raise ValueError(f'DropDownColumn.label.setter supplied with non-string or int input: {to_set}')
+
+        # Convert input to list if it is not already one
+        if type(to_set) is not list:
+            to_set = [to_set]
+
+        # Check all values in list are correct
+        for item in to_set:
+            if type(item) not in (str, int):
+                raise ValueError(f'DropdownColumn supplied with {type(item)} - Should be int or string')
+
+        return to_set
+
+    def _id_and_label_conversion(self, list_of_values):
+        """converts list of labels or ids to list of ids, ready for submission to value.setter"""
+        ids_list = []
+        for item in list_of_values:
+            # Check that value is present in _settings to see if change is possible
+            try:
+                key = item
+                val = self._settings[str(key)]
+            except KeyError:
+                raise ValueError(
+                    f'DropDownColumn ({self.title}) value setter supplied with a label or index that does not '
+                    f'show in settings ("{item}")')
+
+            # Work out whether an id or a label has been provided & add relevant id to results list
+            try:
+                input_id = str(int(item))
+            except ValueError as e:
+                input_label = str(item)
+                input_id = str(self._settings[input_label])
+
+            ids_list.append(input_id)
+
+        return ids_list
+
+    def remove(self, to_remove: Union[str, int, list]):
+        """Removes the given id(s) or label(s) from the column value"""
+        # Check inputs
+        to_remove = self._check_input_and_convert_to_list(to_remove)
+        # Convert labels to ids if necessary
+        ids_to_remove = self._id_and_label_conversion(to_remove)
+        # State new ids
+        new_ids = list(set(self._ids) - set(ids_to_remove))
+        # Adjust value
+        self.value = new_ids
+
+    def add(self, to_add: Union[str, int, list]):
+        """Adds the given id(s) or label(s) to the column value"""
+        # Check inputs
+        to_add = self._check_input_and_convert_to_list(to_add)
+        # Convert labels to ids if necessary
+        ids_to_add = self._id_and_label_conversion(to_add)
+        # State new ids
+        new_ids = self._ids + ids_to_add
+        # Adjust value
+        self.value = new_ids
+
+    def replace(self, to_replace: Union[str, int, list]):
+        """Replaces the item's currents ids and labels with the one(s) provided"""
+        # Check inputs
+        to_replace = self._check_input_and_convert_to_list(to_replace)
+        # Convert labels to ids if necessary
+        replacement_ids = self._id_and_label_conversion(to_replace)
+        # State new ids
+        new_ids = replacement_ids
+        # Adjust value
+        self.value = new_ids
+
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = {'ids': self._ids}
 
 
 class NumberColumn(BaseColumnValue):
@@ -265,8 +365,6 @@ class NumberColumn(BaseColumnValue):
             raise ValueError(f'NumberColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
     def _stage_change(self):
-        if type(self._value) not in (str, int):
-            raise TypeError(f'NumberColumn._stage_change ({self.title}) supplied with incorrect type: {type(self._value)}')
         self._eric.staged_changes[self.id] = self._value
 
 
