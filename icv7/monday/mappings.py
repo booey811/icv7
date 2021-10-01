@@ -306,7 +306,7 @@ class DropdownColumn(BaseColumnValue):
         # Check inputs
         to_remove = self._check_input_and_convert_to_list(to_remove)
         # Convert labels to ids if necessary
-        ids_to_remove = self._id_and_label_conversion(to_remove)
+        ids_to_remove = [int(item) for item in self._id_and_label_conversion(to_remove)]
         # State new ids
         new_ids = list(set(self._ids) - set(ids_to_remove))
         # Adjust value

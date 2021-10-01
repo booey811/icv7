@@ -233,6 +233,129 @@ class TestStatusValue:
             eric_system_item.status.value = index_label
 
 
+class TestDropDownValue:
+
+    @pytest.fixture(scope='class')
+    def read_only_dropdown_column_value(self, moncli_read_only_item):
+        return moncli_read_only_item.get_column_value('dropdown3')
+
+    @pytest.fixture(scope='class')
+    def test_id(self):
+        return 1
+
+    @pytest.fixture(scope='class')
+    def test_label(self):
+        return 'dropdownlabel1'
+
+    def test_moncli_label_and_eric_label_match(
+            self,
+            eric_read_only_item,
+            read_only_dropdown_column_value
+    ):
+        """Tests whether the label value of the read only test item is the same for the moncli object and
+        the eric object"""
+        moncli_labels = [item['name'] for item in read_only_dropdown_column_value.labels]
+        assert moncli_labels == eric_read_only_item.dropdown.labels
+
+    def test_moncli_ids_and_eric_ids_match(
+            self,
+            eric_read_only_item,
+            read_only_dropdown_column_value
+    ):
+        """Tests whether the index value of the read only test item is the same for the moncli object and
+        the eric object"""
+        moncli_ids = [item['id'] for item in read_only_dropdown_column_value.labels]
+        assert moncli_ids == eric_read_only_item.dropdown.ids
+
+    def test_labels_convert_to_ids_correctly(
+            self,
+            eric_system_item
+    ):
+        """Tests that conversion from labels to ids is correct"""
+        labels = ['dropdownlabel1', 'dropdownlabel2']
+        ids = [1, 2]
+        eric_ids = eric_system_item.dropdown._id_and_label_conversion(labels)
+
+        assert ids == [int(item) for item in eric_ids]
+
+    def test_list_input_is_processed_correctly(
+            self,
+            eric_read_only_item
+    ):
+        """Tests that the column can be supplied with a list in order to effect change"""
+        eric_read_only_item.dropdown.add([3, 4])
+        assert sorted(eric_read_only_item.dropdown.ids) == [1, 2, 3, 4]
+
+    def test_string_input_is_processed_correctly(
+            self,
+            eric_read_only_item
+    ):
+        """Tests that the column can be supplied with a string in order to effect change"""
+        eric_read_only_item.dropdown.add('dropdownlabel3')
+        assert sorted(eric_read_only_item.dropdown.ids) == [1, 2, 3]
+
+    def test_integer_input_is_processed_correctly(
+            self,
+            eric_read_only_item
+    ):
+        """Tests that the column can be supplied with a string in order to effect change"""
+        eric_read_only_item.dropdown.add(3)
+        assert sorted(eric_read_only_item.dropdown.ids) == [1, 2, 3]
+
+    def test_add_method_adds_the_required_ids(
+            self,
+            eric_read_only_item
+    ):
+        """Tests the dropdown.add effects the correct change"""
+        new_ids = [3, 4]  # IDs for 'dropdownlabel3' and 'dropdownlabel4'
+        expected_ids = new_ids + eric_read_only_item.dropdown.ids
+        new_labels = ['dropdownlabel3', 'dropdownlabel4']
+        eric_read_only_item.dropdown.add(new_labels)
+        assert sorted(eric_read_only_item.dropdown.ids) == sorted(expected_ids)
+
+    def test_remove_method_removes_the_required_ids(
+            self,
+            eric_read_only_item
+    ):
+        """Tests the dropdown.remove effects the correct change"""
+        to_remove = [2]
+        expected = [1]
+        eric_read_only_item.dropdown.remove(to_remove)
+        assert eric_read_only_item.dropdown.ids == expected
+
+    def test_replace_method_replaces_the_required_ids(
+            self,
+            eric_read_only_item
+    ):
+        """Tests the dropdown.remove effects the correct change"""
+        to_replace = [3, 4]
+        expected = [3, 4]
+        eric_read_only_item.dropdown.replace(to_replace)
+        assert eric_read_only_item.dropdown.ids == expected
+
+    def test_committed_changes_through_label_match_new_eric_value(
+            self,
+            eric_system_item
+    ):
+        """Tests that committing change to a standard value still allows retrieval of the eric value and that this
+        value is the same as the test input"""
+        eric_system_item.dropdown.add('dropdownlabel3')  # Label corresponding to ID: 3
+        eric_system_item.commit()
+        new_eric = BaseItem(eric_system_item.id)
+        assert new_eric.dropdown.ids == [1, 2, 3]
+
+    def test_committed_changes_through_ids_match_new_eric_value(
+            self,
+            eric_system_item
+    ):
+        """Tests that committing change to a standard value still allows retrieval of the eric value and that this
+        value is the same as the test input"""
+        eric_system_item.dropdown.add(3)  # Label corresponding to ID: 3
+        eric_system_item.commit()
+        new_eric = BaseItem(eric_system_item.id)
+        assert new_eric.dropdown.ids == [1, 2, 3]
+
+
 class TestLongTextValue:
 
     @pytest.fixture(scope='class')
