@@ -407,45 +407,36 @@ class TestLongTextValue:
             eric_system_item.longtext.value = input_type
 
 
-
 class TestLinkValue:
 
     @pytest.fixture(scope='class')
     def read_only_link_column_value(self, moncli_read_only_item):
-        return moncli_read_only_item.get_column_value('text')
+        return moncli_read_only_item.get_column_value('link7')
 
-    def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_link_column_value):
+    def test_moncli_strings_and_eric_strings_match(self, eric_read_only_item, read_only_link_column_value):
         """Tests whether the text values of the read only test item are the same for the moncli object and
         the eric object"""
-        moncli = read_only_link_column_value.text
-        eric = eric_read_only_item.text.value
-        assert moncli == eric
+        moncli_text = read_only_link_column_value.url_text
+        moncli_url = read_only_link_column_value.url
+        assert moncli_text == eric_read_only_item.link.text
+        assert moncli_url == eric_read_only_item.link.url
 
-    def test_staged_changes_are_correct(self, eric_system_item):
+    def test_staged_changes_are_correct(self, eric_read_only_item):
         """Tests that staging a change for a text value will generate the correct _staged_changes dictionary"""
-        new_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
-        eric_system_item.text.value = new_value
-        assert eric_system_item.staged_changes[eric_system_item.text.id] == new_value
+        url = 'www.random.com'
+        text = 'random display text'
+        eric_read_only_item.link.value = [url, text]
+        assert eric_read_only_item.staged_changes[eric_read_only_item.link.id] == {'url': url, 'url_text': text}
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
         value is the same as the test input"""
-        test_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
-        eric_system_item.text.value = test_value
-        eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
-        new_eric_value = new_eric.text.value
-        assert new_eric_value == test_value
+        # TODO Write this test (TestLinkValue.test_committed_changes_match_new_eric_value)
+        pass
 
     def test_committed_changes_match_new_moncli_value(self, eric_system_item, clients_object):
-        """Tests that committing change to a standard value still allows retrieval of the moncli value and that this
-        value is the same as the test input"""
-        test_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
-        eric_system_item.text.value = test_value
-        eric_system_item.commit()
-        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
-        new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.text.id).text
-        assert new_moncli_value == test_value
+        # TODO Write this test (TestLinkValue.test_committed_changes_match_new_moncli_value)
+        pass
 
     @pytest.mark.parametrize('input_type', [
         ['random', 'list', 'entries'],  # Arbitrary test value
@@ -455,4 +446,4 @@ class TestLinkValue:
     def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
         """Tests that supplying the text column with a non int or str argument raises a type error"""
         with pytest.raises(ValueError) as e_info:
-            eric_system_item.text.value = input_type
+            eric_system_item.link.value = input_type

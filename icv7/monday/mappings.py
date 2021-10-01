@@ -426,6 +426,8 @@ class LinkColumn(BaseColumnValue):
         # Check inputs
         if type(url_then_text) is not list:
             raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(url_then_text)})')
+        if len(url_then_text) > 2:
+            raise ValueError(f'LinkColumn ({self.title}) value setter supplied with list of len > 2 {url_then_text}')
         for item in url_then_text:
             if type(item) is not str:
                 raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect list containing '
@@ -439,8 +441,26 @@ class LinkColumn(BaseColumnValue):
         # Stage changes
         self._stage_change()
 
+    @text.setter
+    def text(self, to_set: str):
+        # Check inputs
+        if to_set is not str:
+            raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+
+        # Set value
+        self.value = [self._url, to_set]
+
+    @url.setter
+    def url(self, to_set: str):
+        # Check inputs
+        if to_set is not str:
+            raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+
+        # Set value
+        self.value = [to_set, self._text]
+
     def _stage_change(self):
-        self._eric.staged_changes[self.id] = {'url': self._url, 'text': self._text}
+        self._eric.staged_changes[self.id] = {'url': self._url, 'url_text': self._text}
 
 
 class FileColumn(BaseColumnValue):
