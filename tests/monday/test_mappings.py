@@ -339,10 +339,10 @@ class TestDropDownValue:
     ):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
         value is the same as the test input"""
-        eric_system_item.dropdown.add('dropdownlabel3')  # Label corresponding to ID: 3
+        eric_system_item.dropdown.replace(['dropdownlabel1', 'dropdownlabel2'])  # Label corresponding to ID: 3
         eric_system_item.commit()
         new_eric = BaseItem(eric_system_item.id)
-        assert new_eric.dropdown.ids == [1, 2, 3]
+        assert new_eric.dropdown.ids == [1, 2]
 
     def test_committed_changes_through_ids_match_new_eric_value(
             self,

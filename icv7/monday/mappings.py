@@ -319,7 +319,7 @@ class DropdownColumn(BaseColumnValue):
         # Convert labels to ids if necessary
         ids_to_add = self._id_and_label_conversion(to_add)
         # State new ids
-        new_ids = self._ids + ids_to_add
+        new_ids = list(set(self._ids + ids_to_add))
         # Adjust value
         self.value = new_ids
 

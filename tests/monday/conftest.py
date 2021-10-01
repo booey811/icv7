@@ -58,9 +58,9 @@ def moncli_error_item(error_item_id):
     return clients.monday.system.get_items(ids=[error_item_id])[0]
 
 
-@pytest.fixture(scope='session')
-def eric_read_only_item(read_only_item_id):
-    return BaseItem(read_only_item_id)
+@pytest.fixture(scope='function')
+def eric_read_only_item(moncli_read_only_item):
+    return BaseItem(moncli_read_only_item)
 
 
 @pytest.fixture(scope='function')
