@@ -403,6 +403,44 @@ class DateColumn(BaseColumnValue):
 class LinkColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            # Set private variables
+            self._value = moncli_column_value.text
+            self._text = moncli_column_value.url_text
+            self._url = moncli_column_value.url
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def url(self):
+        return self._url
+
+    @value.setter
+    def value(self, url_then_text: list):
+        # Check inputs
+        if type(url_then_text) is not list:
+            raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(url_then_text)})')
+        for item in url_then_text:
+            if type(item) is not str:
+                raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect list containing '
+                                 f'non-strings')
+
+        # Set private variables
+        self._url = url_then_text[0]
+        self._text = url_then_text[1]
+        self._value = f'{self._text} - {self._url}'
+
+        # Stage changes
+        self._stage_change()
+
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = {'url': self._url, 'text': self._text}
 
 
 class FileColumn(BaseColumnValue):
