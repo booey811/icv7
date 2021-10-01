@@ -1,3 +1,4 @@
+import datetime
 from typing import Union
 import json
 
@@ -371,6 +372,35 @@ class NumberColumn(BaseColumnValue):
 class DateColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            # Set private attributes
+            self._value = moncli_column_value.text
+            self._date = self._value.split()[0]
+            self._time = moncli_column_value.time
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, date: str, time: str = ''):
+        if date and date is not str:
+            raise ValueError(
+                f'DateColumn "date" ({self.title}) value setter supplied with incorrect type ({type(date)})')
+        if time and time is not str:
+            raise ValueError(
+                f'DateColumn "time" ({self.title}) value setter supplied with incorrect type ({type(time)})')
+
+        if date.capitalize() == 'TODAY':
+            self._date = datetime.datetime.today().strftime('%Y-%m-%d')
+        else:
+            raise Exception('DateColumn Setting to non-today Date has not yet been developed')
+
+        # Stage change
+        self._stage_change()
+
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = {'date': self._date}
 
 
 class LinkColumn(BaseColumnValue):

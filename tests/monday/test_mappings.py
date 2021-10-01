@@ -405,3 +405,9 @@ class TestLongTextValue:
         """Tests that supplying the text column with a non int or str argument raises a type error"""
         with pytest.raises(ValueError) as e_info:
             eric_system_item.longtext.value = input_type
+
+
+class TestDateValue:
+
+    def test_instant(self, eric_read_only_item):
+        eric = eric_read_only_item
