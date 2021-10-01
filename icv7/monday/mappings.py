@@ -383,13 +383,10 @@ class DateColumn(BaseColumnValue):
         return self._value
 
     @value.setter
-    def value(self, date: str, time: str = ''):
+    def value(self, date: str):
         if date and date is not str:
             raise ValueError(
                 f'DateColumn "date" ({self.title}) value setter supplied with incorrect type ({type(date)})')
-        if time and time is not str:
-            raise ValueError(
-                f'DateColumn "time" ({self.title}) value setter supplied with incorrect type ({type(time)})')
 
         if date.capitalize() == 'TODAY':
             self._date = datetime.datetime.today().strftime('%Y-%m-%d')
