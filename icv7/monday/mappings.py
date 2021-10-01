@@ -164,7 +164,7 @@ class StatusColumn(BaseColumnValue):
 
         # Set private attributes
         self._label = input_label
-        self._index = input_index
+        self._index = int(input_index)
         self._value = input_label
 
         # Stage change
