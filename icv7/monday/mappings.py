@@ -508,7 +508,11 @@ class CheckboxColumn(BaseColumnValue):
         self._stage_change()
 
     def _stage_change(self):
-        self._eric.staged_changes[self.id] = {'checked': self._value}
+        if self._value:
+            submit = 'true'
+        else:
+            raise Exception('Cannot Currently Set CheckBoxValue to "False" - Not Developed')
+        self._eric.staged_changes[self.id] = {'checked': submit}
 
 
 class HourColumn(BaseColumnValue):
