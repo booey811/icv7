@@ -497,8 +497,18 @@ class CheckboxColumn(BaseColumnValue):
 
     @value.setter
     def value(self, to_set: bool):
+        # Check input
         if type(to_set) is not bool:
             raise ValueError(f'CheckBoxColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+
+        # Set private attributes
+        self._value = to_set
+
+        # Stage Change
+        self._stage_change()
+
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = {'checked': self._value}
 
 
 class HourColumn(BaseColumnValue):
