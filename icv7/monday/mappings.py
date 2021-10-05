@@ -468,7 +468,10 @@ class FileColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
-            self._files = [item['name'] for item in moncli_column_value.files]
+            try:
+                self._files = [item['name'] for item in moncli_column_value.files]
+            except TypeError:
+                self._files = []
 
     @property
     def files(self):
