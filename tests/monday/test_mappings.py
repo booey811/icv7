@@ -465,30 +465,3 @@ class TestCheckBoxValue:
         else:
             monc = True
         assert eric == monc
-
-    # def test_staged_changes_are_correct(self, eric_read_only_item):
-    #     """Tests that staging a change for a text value will generate the correct _staged_changes dictionary"""
-    #     url = 'www.random.com'
-    #     text = 'random display text'
-    #     eric_read_only_item.link.value = [url, text]
-    #     assert eric_read_only_item.staged_changes[eric_read_only_item.link.id] == {'url': url, 'url_text': text}
-    #
-    # def test_committed_changes_match_new_eric_value(self, eric_system_item):
-    #     """Tests that committing change to a standard value still allows retrieval of the eric value and that this
-    #     value is the same as the test input"""
-    #     pass
-    #
-    # def test_committed_changes_match_new_moncli_value(self, eric_system_item, clients_object):
-    #     pass
-    #
-    # @pytest.mark.parametrize('input_type', [
-    #     ['random', 'list', 'entries'],  # Arbitrary test value
-    #     {'dict': 'value'},  # Arbitrary test value
-    #     object  # Arbitrary test value
-    # ])
-    # def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
-    #     """Tests that supplying the text column with a non int or str argument raises a type error"""
-    #     with pytest.raises(ValueError) as e_info:
-    #         eric_system_item.link.value = input_type
-    #
-    #
