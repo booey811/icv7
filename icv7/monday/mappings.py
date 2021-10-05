@@ -499,7 +499,8 @@ class CheckboxColumn(BaseColumnValue):
     def value(self, to_set: bool):
         # Check input
         if type(to_set) is not bool:
-            raise ValueError(f'CheckBoxColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+            raise ValueError(
+                f'CheckBoxColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
 
         # Set private attributes
         self._value = to_set
@@ -518,6 +519,67 @@ class CheckboxColumn(BaseColumnValue):
 class HourColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            self._hour = moncli_column_value.hour
+            self._minute = moncli_column_value.minute
+            self._value = f'{self._hour}:{self._minute}'
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, to_set: Union[str, int]):
+        """accepts 'military time' input (int or str) - 4 digits with the first two referring to the hour and
+        the second two, the minutes"""
+
+        if type(to_set) not in (str, int):
+            raise ValueError(f'HourColumn ({self.title}) value.setter supplied with incorrect type ({type(to_set)})')
+
+        if len(to_set) != 4:
+            raise ValueError(f'HourColumn ({self.title}) value.setter supplied with non-4-digit input {to_set}')
+
+        # Set private variables
+        self._hour = int(str(to_set)[:1])
+        self._minute = int(str(to_set)[2:])
+        self._value = f'{self._hour}:{self._minute}'
+
+        # Stage change
+        self._stage_change()
+
+    @property
+    def hour(self):
+        return self._hour
+
+    @hour.setter
+    def hour(self, to_set: Union[int, str]):
+        """accepts a two digit input in 24 hour clock format"""
+        # Check inputs
+        if type(to_set) not in (str, int):
+            raise ValueError(f'HourColumn ({self.title}) hour.setter supplied with incorrect type ({type(to_set)})')
+        if len(to_set) != 2:
+            raise ValueError(f'HourColumn ({self.title}) hour.setter supplied with non-4-digit input {to_set}')
+
+        # Set private variables and adjust value
+        self._hour = int(to_set)
+        self.value = f'{self._hour}{self._minute}'
+
+    @property
+    def minute(self):
+        return self._minute
+
+    @hour.setter
+    def hour(self, to_set: Union[int, str]):
+        """accepts a two digit input in 24 hour clock format"""
+        # Check inputs
+        if type(to_set) not in (str, int):
+            raise ValueError(f'HourColumn ({self.title}) minute.setter supplied with incorrect type ({type(to_set)})')
+        if len(to_set) != 2:
+            raise ValueError(f'HourColumn ({self.title}) minute.setter supplied with non-4-digit input {to_set}')
+
+        # Set private variables and adjust value
+        self._minute = int(to_set)
+        self.value = f'{self._hour}{self._minute}'
 
 
 class PeopleColumn(BaseColumnValue):
