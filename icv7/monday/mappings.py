@@ -425,7 +425,8 @@ class LinkColumn(BaseColumnValue):
     def value(self, url_then_text: list):
         # Check inputs
         if type(url_then_text) is not list:
-            raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(url_then_text)})')
+            raise ValueError(
+                f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(url_then_text)})')
         if len(url_then_text) > 2:
             raise ValueError(f'LinkColumn ({self.title}) value setter supplied with list of len > 2 {url_then_text}')
         for item in url_then_text:
@@ -466,6 +467,16 @@ class LinkColumn(BaseColumnValue):
 class FileColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            self._files = [item['name'] for item in moncli_column_value.files]
+
+    @property
+    def files(self):
+        return self._files
+
+    @files.setter
+    def files(self, value):
+        raise Exception('FilesColumn.setter has not yet been developed')
 
 
 class CheckboxColumn(BaseColumnValue):
