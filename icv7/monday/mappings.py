@@ -591,6 +591,8 @@ class PeopleColumn(BaseColumnValue):
 
 
 class ReadOnlyColumn(BaseColumnValue):
+    """ReadOnly Columns will simply make the moncli_value more readily available (non-private) for more literal
+    access """
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         self.moncli_value = self._moncli_value
