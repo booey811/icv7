@@ -536,11 +536,11 @@ class HourColumn(BaseColumnValue):
         if type(to_set) not in (str, int):
             raise ValueError(f'HourColumn ({self.title}) value.setter supplied with incorrect type ({type(to_set)})')
 
-        if len(to_set) != 4:
+        if len(str(to_set)) != 4:
             raise ValueError(f'HourColumn ({self.title}) value.setter supplied with non-4-digit input {to_set}')
 
         # Set private variables
-        self._hour = int(str(to_set)[:1])
+        self._hour = int(str(to_set)[:2])
         self._minute = int(str(to_set)[2:])
         self._value = f'{self._hour}:{self._minute}'
 
@@ -557,7 +557,7 @@ class HourColumn(BaseColumnValue):
         # Check inputs
         if type(to_set) not in (str, int):
             raise ValueError(f'HourColumn ({self.title}) hour.setter supplied with incorrect type ({type(to_set)})')
-        if len(to_set) != 2:
+        if len(str(to_set)) != 2:
             raise ValueError(f'HourColumn ({self.title}) hour.setter supplied with non-4-digit input {to_set}')
 
         # Set private variables and adjust value
@@ -568,18 +568,21 @@ class HourColumn(BaseColumnValue):
     def minute(self):
         return self._minute
 
-    @hour.setter
-    def hour(self, to_set: Union[int, str]):
+    @minute.setter
+    def minute(self, to_set: Union[int, str]):
         """accepts a two digit input in 24 hour clock format"""
         # Check inputs
         if type(to_set) not in (str, int):
             raise ValueError(f'HourColumn ({self.title}) minute.setter supplied with incorrect type ({type(to_set)})')
-        if len(to_set) != 2:
+        if len(str(to_set)) != 2:
             raise ValueError(f'HourColumn ({self.title}) minute.setter supplied with non-4-digit input {to_set}')
 
         # Set private variables and adjust value
         self._minute = int(to_set)
         self.value = f'{self._hour}{self._minute}'
+
+    def _stage_change(self):
+        self._eric.staged_changes[self.id] = {'hour': self._hour, 'minute': self._minute}
 
 
 class PeopleColumn(BaseColumnValue):

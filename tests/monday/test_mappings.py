@@ -465,3 +465,64 @@ class TestCheckBoxValue:
         else:
             monc = True
         assert eric == monc
+
+
+class TestHourValue:
+
+    @pytest.fixture(scope='class')
+    def read_only_hour_column_value(self, moncli_read_only_item):
+        return moncli_read_only_item.get_column_value('hour')
+
+    @pytest.fixture(scope='class')
+    def dummy_hour(self):
+        return 19
+
+    @pytest.fixture(scope='class')
+    def dummy_minute(self):
+        return 55
+
+    def test_moncli_strings_and_eric_strings_match(self, eric_read_only_item, read_only_hour_column_value):
+        """Tests whether the text values of the read only test item are the same for the moncli object and
+        the eric object"""
+        moncli_hour = read_only_hour_column_value.hour
+        eric_hour = eric_read_only_item.hour.hour
+        assert moncli_hour == eric_hour
+
+        moncli_min = read_only_hour_column_value.minute
+        eric_min = eric_read_only_item.hour.minute
+        assert moncli_min == eric_min
+
+    def test_staged_changes_are_correct_after_hour_change(self, eric_system_item, dummy_hour):
+        """Tests that staging a change for an hour value will generate the correct _staged_changes dictionary"""
+        eric_system_item.hour.hour = dummy_hour
+        assert eric_system_item.staged_changes[eric_system_item.hour.id]['hour'] == dummy_hour
+
+    def test_staged_changes_are_correct_after_minute_change(self, eric_system_item, dummy_minute):
+        """Tests that staging a change for an hour value will generate the correct _staged_changes dictionary"""
+        eric_system_item.hour.minute = dummy_minute
+        assert eric_system_item.staged_changes[eric_system_item.hour.id]['minute'] == dummy_minute
+
+    def test_staged_changes_are_correct_after_value_change(self, eric_system_item, dummy_hour, dummy_minute):
+        """Tests that staging a change for an hour value will generate the correct _staged_changes dictionary"""
+        eric_system_item.hour.value = f'{dummy_hour}{dummy_minute}'
+        assert eric_system_item.staged_changes[eric_system_item.hour.id] == {'hour': dummy_hour, 'minute': dummy_minute}
+
+    def test_committed_changes_match_new_eric_value(self, eric_system_item, dummy_hour, dummy_minute):
+        """Tests that committing change to a standard value still allows retrieval of the eric value and that this
+        value is the same as the test input"""
+        test_value = f'{dummy_hour}{dummy_minute}'  # Arbitrary Test value to assert (7:55 PM)
+        eric_system_item.hour.value = test_value
+        eric_system_item.commit()
+        new_eric = BaseItem(eric_system_item.id)
+        new_eric_value = new_eric.hour.value
+        assert new_eric_value.replace(':', '') == test_value  # eric value needs to have colon removed
+
+    @pytest.mark.parametrize('input_type', [
+        ['random', 'list', 'entries'],  # Arbitrary test value
+        {'dict': 'value'},  # Arbitrary test value
+        object  # Arbitrary test value
+    ])
+    def test_incorrect_input_raises_type_error(self, input_type, eric_system_item):
+        """Tests that supplying the text column with a non int or str argument raises a type error"""
+        with pytest.raises(ValueError) as e_info:
+            eric_system_item.text.value = input_type
