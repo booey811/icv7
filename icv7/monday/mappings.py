@@ -485,6 +485,20 @@ class FileColumn(BaseColumnValue):
 class CheckboxColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            if not moncli_column_value.checked:
+                self._value = False
+            else:
+                self._value = True
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, to_set: bool):
+        if type(to_set) is not bool:
+            raise ValueError(f'CheckBoxColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
 
 
 class HourColumn(BaseColumnValue):
