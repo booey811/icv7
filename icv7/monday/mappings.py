@@ -593,6 +593,7 @@ class PeopleColumn(BaseColumnValue):
 class ReadOnlyColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        self.moncli_value = self._moncli_value
 
 
 # Dictionary to convert moncli column values to Eric column values
