@@ -62,14 +62,14 @@ class BaseItem(BaseItemStructure):
 
         # Check instantiation type via input keywords
         elif item_id_or_mon_item:
-            # Check if input is mon_item or item_id via try/except
-            try:
-                # Set basic info and private variables from item_id
+            # Check whether input is int or str (meaning it is the item's ID) and act accordingly
+            if type(item_id_or_mon_item) in (str, int):
                 self._moncli_obj = \
                     clients.monday.system.get_items(get_column_values=get_column_values, ids=[item_id_or_mon_item])[0]
-            except TypeError:
-                # Set basic info and private variables from mon_item, triggers if input is not int or str
+            elif type(item_id_or_mon_item) == moncli.entities.Item:
                 self._moncli_obj = item_id_or_mon_item
+            else:
+                raise Exception('BaseItem supplied with item_id_or_object that is not str, int, or moncli.Item')
 
             # Set derived basic info
             self.id = str(self._moncli_obj.id)
