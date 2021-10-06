@@ -366,11 +366,16 @@ class DropdownColumn(BaseColumnValue):
 class NumberColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             if moncli_column_value.text:
                 self._value = moncli_column_value.text
             else:
-                self._value = 0
+                self._value = None
+
+        # Setup from Board ID
+        else:
+            self._value = None
 
     @property
     def value(self):
