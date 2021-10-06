@@ -3,4 +3,4 @@ from icv7.monday import BaseItem, CustomLogger
 from icv7.utilities import clients
 
 
-eric = BaseItem(1139943185)
+eric = BaseItem(board_id=1139943160)

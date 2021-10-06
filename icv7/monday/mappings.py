@@ -44,10 +44,11 @@ class MappingObject:
 
 class BaseColumnValue:
     def __init__(self, moncli_column_value, eric_item):
-        self._eric = eric_item
-        self._moncli_value = moncli_column_value
         self.id = moncli_column_value.id
         self.title = moncli_column_value.title
+
+        self._eric = eric_item
+        self._moncli_value = moncli_column_value
         self._value = None
 
     @property
