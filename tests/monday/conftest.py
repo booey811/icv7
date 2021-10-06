@@ -11,8 +11,6 @@ from icv7.utilities import clients
 from icv7.monday.base import BaseItem
 
 
-
-
 @pytest.fixture(scope='session')
 def read_only_item_id():
     return '1649471278'

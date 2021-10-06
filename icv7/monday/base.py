@@ -131,10 +131,6 @@ class BaseItem(BaseItemStructure):
             print('!!!!!!!!! CLEAN UP ON AISLE CONFIG !!!!!!!!!')
 
     def commit(self):
-        # Check for item ID, no ID means the item hasn't been pushed to Monday (it's a new item)
-        if not self.id:
-            pass
-
         # Check whether item has staged changes waiting to be pushed
         if not self.staged_changes:
             raise Exception('Attempting to Commit Changes with no Staged Changes')
@@ -157,6 +153,28 @@ class BaseItem(BaseItemStructure):
                     # TODO Write incremental failure reporter (logger)
                     raise Exception('NEED TO WRITE - During incremental changing of BaseItem.commit()'
                                     'a submission value failed')
+
+    def new_item(self, name: str) -> moncli.entities.Item:
+        """
+        creates a new monday item on the board related by this eric item
+        :param name: the desired item name
+        :return: moncli_item
+        """
+        # Check input
+        if type(name) != str:
+            raise Exception('New Item Name Must Be A String')
+
+        # Create new item
+        try:
+            new_item = self._moncli_board_obj.add_item(name, column_values=self.staged_changes)
+        except moncli_error:
+            raise Exception(f'While Trying to Create an Item on Board[{self._moncli_board_obj.name}] an API '
+                            f'error occurred')
+
+        # Set ID
+        self.id = new_item.id
+
+        return new_item
 
 
 class MondaySubmissionError(moncli_error):

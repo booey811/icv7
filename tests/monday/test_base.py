@@ -60,6 +60,16 @@ class TestItemAttributesFromBoardID:
         assert type(eric_read_only_item._moncli_board_obj) == moncli.entities.Board
 
     def test_no_column_changes_are_staged_after_instantiation(self, eric_read_only_item):
-
         assert eric_read_only_item.staged_changes == {}
 
+
+class TestNewItemCreation:
+
+    def test_create_simple_new_monday_item(self, dev_test_board_id):
+
+        eric = base.BaseItem(board_id=dev_test_board_id)
+        item = eric.new_item('NEW TEST ITEM')
+
+        assert type(item) == moncli.entities.Item
+
+        item.delete()
