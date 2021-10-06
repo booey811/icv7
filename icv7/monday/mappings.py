@@ -401,11 +401,18 @@ class NumberColumn(BaseColumnValue):
 class DateColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             # Set private attributes
             self._value = moncli_column_value.text
             self._date = self._value.split()[0]
             self._time = moncli_column_value.time
+
+        # Setup from board ID
+        else:
+            self._value = ''
+            self._date = ''
+            self._time = ''
 
     @property
     def value(self):
