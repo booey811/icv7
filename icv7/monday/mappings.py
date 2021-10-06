@@ -70,7 +70,7 @@ class TextColumn(BaseColumnValue):
             self._value = moncli_column_value.text
         # Setup from board ID
         else:
-            self._value = None
+            self._value = ''
 
     @property
     def value(self):
@@ -99,8 +99,14 @@ class TextColumn(BaseColumnValue):
 class LongTextColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             self._value = moncli_column_value.text
+
+        # Setup from Board ID
+        else:
+            self._value = ''
+
 
     @property
     def value(self):
@@ -127,18 +133,25 @@ class LongTextColumn(BaseColumnValue):
 class StatusColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             # Take basic column info from the moncli value & set up value attribute to return the label
             self._label = str(moncli_column_value.label)
             self._index = moncli_column_value.index
             self._value = self._label
 
-            # Set up the _settings attribute (dict), which is used to convert label inputs into index and vice versa
-            simple_settings = json.loads(moncli_column_value.settings_str)['labels']
-            self._settings = {}
-            for item in simple_settings:
-                self._settings[item] = simple_settings[item]
-                self._settings[simple_settings[item]] = item
+        # Setup from board ID
+        else:
+            self._label = ''
+            self._index = None
+            self._value = self._label
+
+        # Set up the _settings attribute (dict), which is used to convert label inputs into index and vice versa
+        simple_settings = json.loads(moncli_column_value.settings_str)['labels']
+        self._settings = {}
+        for item in simple_settings:
+            self._settings[item] = simple_settings[item]
+            self._settings[simple_settings[item]] = item
 
     @property
     def value(self):
