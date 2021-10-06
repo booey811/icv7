@@ -131,15 +131,32 @@ class BaseItem(BaseItemStructure):
             print('!!!!!!!!! CLEAN UP ON AISLE CONFIG !!!!!!!!!')
 
     def commit(self):
+        # Check for item ID, no ID means the item hasn't been pushed to Monday (it's a new item)
+        if not self.id:
+            pass
+
+        # Check whether item has staged changes waiting to be pushed
         if not self.staged_changes:
             raise Exception('Attempting to Commit Changes with no Staged Changes')
+
+        # Try to apply the changes
         try:
             result = self._moncli_obj.change_multiple_column_values(self.staged_changes)
             self.staged_changes = {}
             return result
 
         except moncli_error as error:
-            raise Exception('NEED TO WRITE THIS')
+            # This occurs on a submission error (data supplied to moncli does not match the schema)
+            for item in self.staged_changes:
+                try:
+                    col_id = item
+                    value = self.staged_changes[col_id]
+                    self._moncli_obj.change_multiple_column_values({col_id: value})
+                except moncli_error:
+                    # Add update to item and notify of column and value attempted to change to
+                    # TODO Write incremental failure reporter (logger)
+                    raise Exception('NEED TO WRITE - During incremental changing of BaseItem.commit()'
+                                    'a submission value failed')
 
 
 class MondaySubmissionError(moncli_error):
