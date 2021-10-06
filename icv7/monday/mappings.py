@@ -65,8 +65,12 @@ class BaseColumnValue:
 class TextColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             self._value = moncli_column_value.text
+        # Setup from board ID
+        else:
+            self._value = None
 
     @property
     def value(self):
