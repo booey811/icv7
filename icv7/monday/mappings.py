@@ -439,11 +439,18 @@ class DateColumn(BaseColumnValue):
 class LinkColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             # Set private variables
             self._value = moncli_column_value.text
             self._text = moncli_column_value.url_text
             self._url = moncli_column_value.url
+
+        # Setup from board ID
+        else:
+            self._value = ''
+            self._text = ''
+            self._url = ''
 
     @property
     def value(self):
@@ -509,6 +516,9 @@ class FileColumn(BaseColumnValue):
             except TypeError:
                 self._files = []
 
+        else:
+            self._files = []
+
     @property
     def files(self):
         return self._files
@@ -526,6 +536,9 @@ class CheckboxColumn(BaseColumnValue):
                 self._value = False
             else:
                 self._value = True
+
+        else:
+            self._value = False
 
     @property
     def value(self):
@@ -559,6 +572,11 @@ class HourColumn(BaseColumnValue):
             self._hour = moncli_column_value.hour
             self._minute = moncli_column_value.minute
             self._value = f'{self._hour}:{self._minute}'
+
+        else:
+            self._hour = None
+            self._minute = None
+            self._value = ''
 
     @property
     def value(self):
@@ -626,6 +644,10 @@ class PeopleColumn(BaseColumnValue):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
             self._ids = [item['id'] for item in moncli_column_value.persons_and_teams]
+            self._value = self._ids
+
+        else:
+            self._ids = []
             self._value = self._ids
 
     @property
