@@ -241,17 +241,23 @@ class StatusColumn(BaseColumnValue):
 class DropdownColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
         if from_item:
             # Take basic info from column value and set up _value to return labels
             self._ids = [item.id for item in moncli_column_value.labels]
             self._labels = [item.name for item in moncli_column_value.labels]
 
-            # Set up _settings attribute containing all labels and associated ids
-            self._settings = {}
-            simple_settings = json.loads(moncli_column_value.settings_str)['labels']
-            for item in simple_settings:
-                self._settings[str(item['id'])] = item['name']
-                self._settings[item['name']] = str(item['id'])
+        # Setup from board ID
+        else:
+            self._ids = []
+            self._labels = []
+
+        # Set up _settings attribute containing all labels and associated ids
+        self._settings = {}
+        simple_settings = json.loads(moncli_column_value.settings_str)['labels']
+        for item in simple_settings:
+            self._settings[str(item['id'])] = item['name']
+            self._settings[item['name']] = str(item['id'])
 
     @property
     def value(self):
