@@ -588,11 +588,39 @@ class HourColumn(BaseColumnValue):
 class PeopleColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            self._ids = [item['id'] for item in moncli_column_value.persons_and_teams]
+            self._value = self._ids
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, to_set: Union[str, int, list]):
+        # Check inputs
+        if type(to_set) not in (str, int, list):
+            raise ValueError(f'PeopleColumn ({self.title}) minute.setter supplied with incorrect type ({type(to_set)})')
+
+        # Convert input to list
+        if type(to_set) is not list:
+            to_set = [to_set]
+
+        raise Exception('Not Yet Developed - PeopleValue.value.setter')
+
+    @property
+    def ids(self):
+        return self._ids
+
+    @ids.setter
+    def ids(self, to_set):
+        raise Exception('Not Yet Developed - PeopleValue.ids.setter')
 
 
 class ReadOnlyColumn(BaseColumnValue):
     """ReadOnly Columns will simply make the moncli_value more readily available (non-private) for more literal
     access """
+
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         self.moncli_value = self._moncli_value
