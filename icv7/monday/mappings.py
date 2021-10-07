@@ -44,6 +44,7 @@ class MappingObject:
 
 class BaseColumnValue:
     def __init__(self, moncli_column_value, eric_item):
+
         self.id = moncli_column_value.id
         self.title = moncli_column_value.title
 
@@ -53,12 +54,10 @@ class BaseColumnValue:
 
     @property
     def value(self):
-        print('getting value')
         return self._value
 
     @value.setter
     def value(self, value):
-        print(f'setting value :: {self.id} to {value}')
         self._value = value
 
 

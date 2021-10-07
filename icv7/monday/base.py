@@ -5,6 +5,7 @@ import moncli.entities
 from moncli.api_v2.exceptions import MondayApiError as moncli_error
 
 from icv7.utilities import clients
+from icv7.exceptions import HardLog
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
 
@@ -51,6 +52,7 @@ class CustomLogger:
     def soft_log(self):
         """creates a log entry in the logs board but does not halt execution"""
         # Create the log file
+
         self.log('==== SOFT LOG REQUESTED =====')
         self._create_log()
         col_vals = {
@@ -62,6 +64,8 @@ class CustomLogger:
         )
         file_column = log_item.get_column_value(id='file')
         log_item.add_file(file_column, self._log_file_path)
+
+        print('==== SOFT LOG REQUESTED =====')
 
     def hard_log(self):
         """creates a log entry in the logs board and halts execution"""
@@ -139,8 +143,7 @@ class BaseItem(BaseItemStructure):
 
         else:
             self.log('Unexpected Inputs for BaseItem.__init__')
-            columns = None
-            self.logger.hard_log()
+            raise HardLog(self)
 
         self._board_id = str(self._moncli_board_obj.id)
         self._convert_column_data_to_eric_values(columns)
@@ -156,53 +159,62 @@ class BaseItem(BaseItemStructure):
         # Initialise mapping object for relevant board
         self._mapper = MappingObject(self._board_id)
         board_data = BOARD_MAPPING_DICT[self._board_id]
+        self.log(f'Board[{board_data["name"]}]')
 
         # Iterate through moncli columns with mapping object to instantiate columns on BaseItem
         completed_columns = []
         for mon_col in columns:
             try:
                 name = board_data['columns'][mon_col.id]
+                self.log(f'Processing Column[{name}|{mon_col.id}|{mon_col.title}]')
                 column = self._mapper.process_column(mon_col, self)
                 setattr(self, name, column)
                 completed_columns.append(column.id)
+                self.log('Column Processing Finished\n')
+
             except KeyError:
                 # Occurs when id is not found in the config file
                 if mon_col.id == 'name':
                     # Ignore the 'name' column as this would be the name of the item
-                    pass
+                    self.log('Skipping "name" Column')
                 else:
-                    print(f'Column ID "{mon_col.id}" not found in config: ""{board_data["name"]}""')
+                    self.log(f'ColumnID[{mon_col.id}] not found in monday.config[{board_data["name"]}] '
+                             f'- skip processing')
 
         # Compares successfully mapped columns with those listed in config, prints out the excess to keep clutter down
         if len(completed_columns) < len(board_data['columns'].keys()):
-            print(f'Surplus Columns: Config: {board_data["name"]}')
+            self.log(f'Surplus Columns: Config: {board_data["name"]}')
             for column in list(set(board_data['columns'].keys()) - set(completed_columns)):
-                print(column)
-            print('!!!!!!!!! CLEAN UP ON AISLE CONFIG !!!!!!!!!')
+                self.log(f'    {column}')
+            self.logger.soft_log()
 
     def commit(self):
         # Check whether item has staged changes waiting to be pushed
         if not self.staged_changes:
             raise Exception('Attempting to Commit Changes with no Staged Changes')
 
+        self.log('Commit Requested')
+
         # Try to apply the changes
         try:
             result = self._moncli_obj.change_multiple_column_values(self.staged_changes)
             self.staged_changes = {}
+            self.log('Commit Completed Successfully')
             return result
 
         except moncli_error as error:
             # This occurs on a submission error (data supplied to moncli does not match the schema)
+            self.log('Commit Failed - Attempting Incremental Change')
             for item in self.staged_changes:
                 try:
                     col_id = item
                     value = self.staged_changes[col_id]
+                    self.log(f'Changing Column[{col_id}] to {value}')
                     self._moncli_obj.change_multiple_column_values({col_id: value})
+                    self.log('Success!')
                 except moncli_error:
-                    # Add update to item and notify of column and value attempted to change to
-                    # TODO Write incremental failure reporter (logger)
-                    raise Exception('NEED TO WRITE - During incremental changing of BaseItem.commit()'
-                                    'a submission value failed')
+                    self.log('Failure - Terminating Process')
+                    raise HardLog(self)
 
     def new_item(self, name: str) -> moncli.entities.Item:
         """
@@ -214,15 +226,30 @@ class BaseItem(BaseItemStructure):
         if type(name) != str:
             raise Exception('New Item Name Must Be A String')
 
+        self.log(f'Creating New Item for Board[{self._moncli_board_obj.name}]')
+
         # Create new item
         try:
             new_item = self._moncli_board_obj.add_item(name, column_values=self.staged_changes)
         except moncli_error:
-            raise Exception(f'While Trying to Create an Item on Board[{self._moncli_board_obj.name}] an API '
-                            f'error occurred')
+            # This occurs on a submission error (data supplied to moncli does not match the schema)
+            self.log('Item Creation Failed - Attempting Incremental Change')
+            new_item = self._moncli_board_obj.add_item(name)
+            for item in self.staged_changes:
+                try:
+                    col_id = item
+                    value = self.staged_changes[col_id]
+                    self.log(f'Changing Column[{col_id}] to {value}')
+                    new_item.change_multiple_column_values({col_id: value})
+                    self.log('Success!')
+                except moncli_error:
+                    self.log('Failure - Terminating Process')
+                    raise HardLog(self)
 
         # Set ID
         self.mon_id = new_item.id
+
+        self.log(f'Item[{self.mon_id}] Created')
 
         return new_item
 
