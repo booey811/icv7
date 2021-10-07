@@ -24,13 +24,10 @@ def column_mapping_data_for_test_board(dev_test_board_id):
 class TestItemAttributesFromItemID:
 
     def test_id_is_correct(self, eric_system_item, system_item_id):
-        '''
+        """
         test that the eric item acquired through an item is search has the same id as the monday item used to create it
-        :param example_item_from_item_id:
-        :param dev_test_board_system_item_id:
-        :return:
-        '''
-        assert eric_system_item.id == system_item_id
+        """
+        assert eric_system_item.mon_id == system_item_id
 
     def test_board_id_is_correct(self, eric_system_item, dev_test_board_id):
         """

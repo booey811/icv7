@@ -1,4 +1,4 @@
-from typing import Union, Callable
+from typing import Union
 from datetime import datetime
 
 import moncli.entities
@@ -7,7 +7,6 @@ from moncli.api_v2.exceptions import MondayApiError as moncli_error
 from icv7.utilities import clients
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
-from icv7.monday import exceptions
 
 
 class CustomLogger:
@@ -17,10 +16,12 @@ class CustomLogger:
         self._eric = eric_item
         self._log_name = self._generate_log_file_name()
 
+        self._log_lines = []
+
     def _generate_log_file_name(self):
         now = datetime.now()
         date_time = now.strftime("%d%b|%H-%M-%S")
-        name = f'{self._eric.id}|{date_time}.txt'
+        name = f'{str(self._eric.mon_id)} | {str(self._eric.zen_id)} | {date_time}.txt'
         return name
 
     @property
@@ -32,7 +33,6 @@ class CustomLogger:
     def write_to_log(self, lines_to_write):
         with open(self.log_file_path, 'w+') as log:
             log.writelines(lines_to_write)
-
         return True
 
 
@@ -41,10 +41,12 @@ class BaseItemStructure:
         self._moncli_obj = None
         self._moncli_board_obj = None
         self._board_id = board_id
-        self.staged_changes = {}
 
-        self.id = None
+        self.staged_changes = {}
+        self.mon_id = None
+        self.zen_id = None
         self.name = ''
+        self.logger = CustomLogger(self)
 
 
 class BaseItem(BaseItemStructure):
@@ -72,7 +74,7 @@ class BaseItem(BaseItemStructure):
                 raise Exception('BaseItem supplied with item_id_or_object that is not str, int, or moncli.Item')
 
             # Set derived basic info
-            self.id = str(self._moncli_obj.id)
+            self.mon_id = str(self._moncli_obj.id)
             self._moncli_board_obj = self._moncli_obj.board
             self.name = self._moncli_obj.name
 
@@ -91,9 +93,6 @@ class BaseItem(BaseItemStructure):
 
         self._board_id = str(self._moncli_board_obj.id)
         self._convert_column_data_to_eric_values(columns)
-
-        # Setup Logger
-        self.logger = CustomLogger(self)
 
     def _convert_column_data_to_eric_values(self, columns):
         """
@@ -172,7 +171,7 @@ class BaseItem(BaseItemStructure):
                             f'error occurred')
 
         # Set ID
-        self.id = new_item.id
+        self.mon_id = new_item.id
 
         return new_item
 

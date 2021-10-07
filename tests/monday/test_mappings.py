@@ -38,7 +38,7 @@ class TestTextValue:
         test_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = test_value
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         new_eric_value = new_eric.text.value
         assert new_eric_value == test_value
 
@@ -48,7 +48,7 @@ class TestTextValue:
         test_value = 'test_staged_changes_are_correct VALUE'  # Arbitrary Test value to assert
         eric_system_item.text.value = test_value
         eric_system_item.commit()
-        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
+        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.mon_id])[0]
         new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.text.id).text
         assert new_moncli_value == test_value
 
@@ -92,7 +92,7 @@ class TestNumberValue:
         test_value = test_value  # Arbitrary Test value to assert
         eric_system_item.numbers.value = test_value
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         new_eric_value = new_eric.numbers.value
         assert new_eric_value == str(test_value)
 
@@ -102,7 +102,7 @@ class TestNumberValue:
         test_value = test_value  # Arbitrary Test value to assert
         eric_system_item.numbers.value = test_value
         eric_system_item.commit()
-        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
+        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.mon_id])[0]
         new_moncli_value = str(new_moncli_item.get_column_value(id=eric_system_item.numbers.id).text)
         assert new_moncli_value == str(test_value)
 
@@ -181,7 +181,7 @@ class TestStatusValue:
         test_value = test_label  # Arbitrary Test value to assert
         eric_system_item.status.label = test_value
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         new_eric_value = new_eric.status.label
         assert new_eric_value == test_value
 
@@ -195,7 +195,7 @@ class TestStatusValue:
         test_value = test_index  # Arbitrary Test value to assert
         eric_system_item.status.index = test_value
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         new_eric_value = new_eric.status.index
         assert new_eric_value == test_value
 
@@ -209,7 +209,7 @@ class TestStatusValue:
         value is the same as the test input"""
         eric_system_item.status.label = test_label
         eric_system_item.commit()
-        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
+        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.mon_id])[0]
         new_moncli_value = str(new_moncli_item.get_column_value(id=eric_system_item.status.id).label)
         assert new_moncli_value == test_label
 
@@ -341,7 +341,7 @@ class TestDropDownValue:
         value is the same as the test input"""
         eric_system_item.dropdown.replace(['dropdownlabel1', 'dropdownlabel2'])  # Label corresponding to ID: 3
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         assert new_eric.dropdown.ids == [1, 2]
 
     def test_committed_changes_through_ids_match_new_eric_value(
@@ -352,7 +352,7 @@ class TestDropDownValue:
         value is the same as the test input"""
         eric_system_item.dropdown.add(3)  # Label corresponding to ID: 3
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         assert new_eric.dropdown.ids == [1, 2, 3]
 
 
@@ -383,7 +383,7 @@ class TestLongTextValue:
         value is the same as the test input"""
         eric_system_item.longtext.value = test_value
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         new_eric_value = new_eric.longtext.value
         assert new_eric_value == test_value
 
@@ -392,7 +392,7 @@ class TestLongTextValue:
         value is the same as the test input"""
         eric_system_item.longtext.value = test_value
         eric_system_item.commit()
-        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.id])[0]
+        new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.mon_id])[0]
         new_moncli_value = new_moncli_item.get_column_value(id=eric_system_item.longtext.id).text
         assert new_moncli_value == test_value
 
@@ -513,7 +513,7 @@ class TestHourValue:
         test_value = f'{dummy_hour}{dummy_minute}'  # Arbitrary Test value to assert (7:55 PM)
         eric_system_item.hour.value = test_value
         eric_system_item.commit()
-        new_eric = BaseItem(eric_system_item.id)
+        new_eric = BaseItem(eric_system_item.mon_id)
         new_eric_value = new_eric.hour.value
         assert new_eric_value.replace(':', '') == test_value  # eric value needs to have colon removed
 
