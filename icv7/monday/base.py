@@ -15,14 +15,23 @@ class CustomLogger:
         self._log_file_path = None
         self._eric = eric_item
         self._log_name = self._generate_log_file_name()
+        self._log_board = None
 
         self._log_lines = []
 
     def _generate_log_file_name(self):
         now = datetime.now()
         date_time = now.strftime("%d%b|%H-%M-%S")
-        name = f'{str(self._eric.mon_id)} | {str(self._eric.zen_id)} | {date_time}.txt'
+        name = f'{str(self._eric.mon_id)}-{str(self._eric.zen_id)}-{date_time}.txt'
         return name
+
+    def _create_log(self):
+        with open(self.log_file_path, 'w+') as log:
+            for line in self._log_lines:
+                log.write(line)
+                log.write('\n')
+
+        return True
 
     @property
     def log_file_path(self):
@@ -30,10 +39,46 @@ class CustomLogger:
             self._log_file_path = f'tmp/logs/{self._log_name}'
         return self._log_file_path
 
-    def write_to_log(self, lines_to_write):
-        with open(self.log_file_path, 'w+') as log:
-            log.writelines(lines_to_write)
-        return True
+    @property
+    def log_board(self):
+        if not self._log_board:
+            self._log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
+        return self._log_board
+
+    def log(self, log_line):
+        self._log_lines.append(log_line)
+
+    def soft_log(self):
+        """creates a log entry in the logs board but does not halt execution"""
+        # Create the log file
+        self.log('==== SOFT LOG REQUESTED =====')
+        self._create_log()
+        col_vals = {
+            'status': {'label': 'Soft'}
+        }
+        log_item = self.log_board.add_item(
+            item_name=self._log_name,
+            column_values=col_vals
+        )
+        file_column = log_item.get_column_value(id='file')
+        log_item.add_file(file_column, self._log_file_path)
+
+    def hard_log(self):
+        """creates a log entry in the logs board and halts execution"""
+        self.log('==== HARD LOG REQUESTED =====')
+        # Create the log file
+        self._create_log()
+        col_vals = {
+            'status': {'label': 'Hard'}
+        }
+        log_item = self.log_board.add_item(
+            item_name=self._log_name,
+            column_values=col_vals
+        )
+        file_column = log_item.get_column_value(id='file')
+        log_item.add_file(file_column, self._log_file_path)
+
+        raise Exception(f'Hard Log Requested: {self._log_name}')
 
 
 class BaseItemStructure:
@@ -46,6 +91,7 @@ class BaseItemStructure:
         self.mon_id = None
         self.zen_id = None
         self.name = ''
+
         self.logger = CustomLogger(self)
 
 
@@ -66,9 +112,11 @@ class BaseItem(BaseItemStructure):
         elif item_id_or_mon_item:
             # Check whether input is int or str (meaning it is the item's ID) and act accordingly
             if type(item_id_or_mon_item) in (str, int):
+                self.log(f'Instantiate BaseItem from Monday ID: {item_id_or_mon_item}')
                 self._moncli_obj = \
                     clients.monday.system.get_items(get_column_values=get_column_values, ids=[item_id_or_mon_item])[0]
             elif type(item_id_or_mon_item) == moncli.entities.Item:
+                self.log(f'Instantiate BaseItem from moncli.Item Object: {item_id_or_mon_item.id}')
                 self._moncli_obj = item_id_or_mon_item
             else:
                 raise Exception('BaseItem supplied with item_id_or_object that is not str, int, or moncli.Item')
@@ -83,13 +131,16 @@ class BaseItem(BaseItemStructure):
 
         elif board_id:
             # Set basic info that can be taken from Board, columns
+            self.log(f'Insantiate Empty BaseItem from Board ID {board_id}')
             self._moncli_board_obj = clients.monday.system.get_boards(ids=[self._board_id])[0]
 
             # Set columns
             columns = self._moncli_board_obj.columns
 
         else:
-            raise Exception('Unexpected Inputs for BaseItem.__init__')
+            self.log('Unexpected Inputs for BaseItem.__init__')
+            columns = None
+            self.logger.hard_log()
 
         self._board_id = str(self._moncli_board_obj.id)
         self._convert_column_data_to_eric_values(columns)
@@ -174,6 +225,9 @@ class BaseItem(BaseItemStructure):
         self.mon_id = new_item.id
 
         return new_item
+
+    def log(self, log_line):
+        self.logger.log(log_line)
 
 
 class MondaySubmissionError(moncli_error):
