@@ -67,6 +67,8 @@ class CustomLogger:
 
         print('==== SOFT LOG REQUESTED =====')
 
+        return log_item
+
     def hard_log(self):
         """creates a log entry in the logs board and halts execution"""
         self.log('==== HARD LOG REQUESTED =====')

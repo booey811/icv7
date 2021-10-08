@@ -70,3 +70,16 @@ class TestNewItemCreation:
         assert type(item) == moncli.entities.Item
 
         item.delete()
+
+
+class TestLogger:
+
+    @pytest.fixture(scope='function')
+    def logger(self, eric_read_only_item):
+        return eric_read_only_item.logger
+
+    def test_adding_log_line(self, logger):
+        ori = len(logger._log_lines)
+        logger.log('First Line')
+        assert len(logger._log_lines) == ori + 1
+

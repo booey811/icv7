@@ -44,7 +44,6 @@ class MappingObject:
 
 class BaseColumnValue:
     def __init__(self, moncli_column_value, eric_item):
-
         self.id = moncli_column_value.id
         self.title = moncli_column_value.title
 
@@ -85,6 +84,8 @@ class TextColumn(BaseColumnValue):
             # TODO: Add 'soft_log' for this error then allow the exception
             raise ValueError(f'TextColumn ({self.title}) value setter supplied with incorrect type ({type(value)})')
 
+        self._eric.log(f'Column[{self.id | self.title}].value => {value}')
+
         # Adjust eric object value
         self._value = to_set
         # Add change to staged changes
@@ -106,7 +107,6 @@ class LongTextColumn(BaseColumnValue):
         else:
             self._value = ''
 
-
     @property
     def value(self):
         return self._value
@@ -117,6 +117,8 @@ class LongTextColumn(BaseColumnValue):
         if type(to_set) not in (str, int):
             raise ValueError(
                 f'LongTextColumn ({self.title}) value setter supplied with incorrect type ({type(to_set)})')
+
+        self._eric.log(f'Column[{self.id | self.title}].value => {to_set}')
 
         # Adjust eric value
         self._value = str(to_set)
@@ -180,6 +182,8 @@ class StatusColumn(BaseColumnValue):
             input_label = str(to_set)
             input_index = str(self._settings[input_label])
 
+        self._eric.log(f'Column[{self.id | self.title}].value => LABEL: {input_label} | INDEX: {input_index}')
+
         # Set private attributes
         self._label = input_label
         self._index = int(input_index)
@@ -198,6 +202,8 @@ class StatusColumn(BaseColumnValue):
         if type(to_set) is not str:
             raise ValueError(f'StatusColumn.label.setter supplied with non-string input: {to_set}')
 
+        self._eric.log(f'Column[{self.id|self.title}].label => {to_set}')
+
         # Pass new value to value setter, which sets index and label as well
         self.value = to_set
 
@@ -210,6 +216,8 @@ class StatusColumn(BaseColumnValue):
         # Check input is correct
         if type(to_set) not in (str, int):
             raise ValueError(f'StatusColumn.label.setter supplied with non-string input: {to_set}')
+
+        self._eric.log(f'Column[{self.id|self.title}].index => {to_set}')
 
         # Pass new value to value setter, which sets index and label as well
         self.value = to_set
@@ -471,6 +479,9 @@ class LinkColumn(BaseColumnValue):
                 f'LinkColumn ({self.title}) value setter supplied with incorrect type ({type(url_then_text)})')
         if len(url_then_text) > 2:
             raise ValueError(f'LinkColumn ({self.title}) value setter supplied with list of len > 2 {url_then_text}')
+
+        self._eric.log(f'Column[{self.id | self.title}].value => URL:{url_then_text[0]} | TEXT: {url_then_text[1]}')
+
         for item in url_then_text:
             if type(item) is not str:
                 raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect list containing '
