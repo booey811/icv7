@@ -21,5 +21,12 @@ BOARD_MAPPING_DICT = {
             'item_id': 'item_id',
             'files': 'files'
         }
+    },
+    '1776299869': {
+        'name': 'repairs-safron',
+        'columns': {
+            'connect_boards': 'connect_main',
+            'connect_boards2': 'connect_review'
+        }
     }
 }
