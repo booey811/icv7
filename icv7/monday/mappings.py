@@ -693,6 +693,9 @@ class ReadOnlyColumn(BaseColumnValue):
         super().__init__(moncli_column_value, staged_changes)
         self.moncli_value = self._moncli_value
 
+        if moncli_column_value.text:
+            self.value = self.moncli_value.text
+
 
 # Dictionary to convert moncli column values to Eric column values
 COLUMN_TYPE_MAPPINGS = {
