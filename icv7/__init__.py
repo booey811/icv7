@@ -7,10 +7,7 @@ from icv7.utilities import clients
 
 
 def create_app():
-    if os.environ['ENV'] == 'prod':
-        configuration = config.ProdConfig
-    else:
-        configuration = config.DevConfig
+    configuration = os.environ['APP_SETTINGS']
 
     app = flask.Flask('eric')
 
