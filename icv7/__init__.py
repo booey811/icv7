@@ -4,6 +4,7 @@ import flask
 
 from icv7 import config
 from icv7.utilities import clients
+from monday.base import BaseItem
 
 
 def create_app():
@@ -14,3 +15,5 @@ def create_app():
     app.config.from_object(configuration)
 
     return app
+
+test = BaseItem(1649471278)

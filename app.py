@@ -12,6 +12,7 @@ def index():
     print('Hello World')
     return 'Hello Returns'
 
+
 @app.route('/monday/repairers/get-pc-report', methods=['POST'])
 def repairers_pc_report_fetch():
     pass
@@ -19,5 +20,3 @@ def repairers_pc_report_fetch():
 
 if __name__ == '__main__':
     app.run()
-else:
-    pass
