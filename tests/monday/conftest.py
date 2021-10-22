@@ -9,6 +9,7 @@ import pytest
 
 from icv7.utilities import clients
 from icv7.monday.base import BaseItem
+from icv7 import CustomLogger
 
 
 @pytest.fixture(scope='session')
@@ -57,26 +58,26 @@ def moncli_error_item(error_item_id):
 
 
 @pytest.fixture(scope='function')
-def eric_read_only_item(moncli_read_only_item):
-    return BaseItem(moncli_read_only_item)
+def eric_read_only_item(logger, moncli_read_only_item):
+    return BaseItem(logger, moncli_read_only_item)
 
 
 @pytest.fixture(scope='function')
-def eric_system_item(moncli_system_item):
+def eric_system_item(logger, moncli_system_item):
     """Returns an Eric item retrieved with the monday.system client
     Need to add the item as yield instead of return then change the item to default state afterwards"""
-    return BaseItem(moncli_system_item)
+    return BaseItem(logger, moncli_system_item)
 
 
 @pytest.fixture(scope='function')
-def eric_email_item(moncli_email_item):
+def eric_email_item(logger, moncli_email_item):
     """Returns an Eric item retrieved with the monday.email client
     Need to add the item as yield instead of return then change the item to default state afterwards"""
-    return BaseItem(moncli_email_item)
+    return BaseItem(logger, moncli_email_item)
 
 
 @pytest.fixture(scope='function')
-def eric_error_item(moncli_error_item):
+def eric_error_item(logger, moncli_error_item):
     """Returns an Eric item retrieved with the monday.error client
     Need to add the item as yield instead of return then change the item to default state afterwards"""
-    return BaseItem(moncli_error_item)
+    return BaseItem(logger, moncli_error_item)

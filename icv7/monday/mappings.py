@@ -700,7 +700,8 @@ class ReadOnlyColumn(BaseColumnValue):
             self.value = self.moncli_value.text
 
         else:
-            raise Exception(f'Could Not Assign A Value for ReadOnlyColumn[{self.title} | {self.id}]')
+            self._eric.log(f'Could Not Assign A Value for ReadOnlyColumn[{self.title} | {self.id}]')
+            self._eric.logger.soft_log()
 
 
 

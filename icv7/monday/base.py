@@ -4,91 +4,15 @@ from datetime import datetime
 import moncli.entities
 from moncli.api_v2.exceptions import MondayApiError as moncli_error
 
+import icv7
 from icv7.utilities import clients
 from icv7.exceptions import HardLog
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
 
 
-class CustomLogger:
-
-    def __init__(self, eric_item):
-        self._log_file_path = None
-        self._eric = eric_item
-        self._log_name = self._generate_log_file_name()
-        self._log_board = None
-
-        self._log_lines = []
-
-    def _generate_log_file_name(self):
-        now = datetime.now()
-        date_time = now.strftime("%d%b|%H-%M-%S")
-        name = f'{str(self._eric.mon_id)}-{str(self._eric.zen_id)}-{date_time}.txt'
-        return name
-
-    def _create_log(self):
-        with open(self.log_file_path, 'w+') as log:
-            for line in self._log_lines:
-                log.write(line)
-                log.write('\n')
-
-        return True
-
-    @property
-    def log_file_path(self):
-        if not self._log_file_path:
-            self._log_file_path = f'tmp/logs/{self._log_name}'
-        return self._log_file_path
-
-    @property
-    def log_board(self):
-        if not self._log_board:
-            self._log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
-        return self._log_board
-
-    def log(self, log_line):
-        self._log_lines.append(log_line)
-
-    def soft_log(self):
-        """creates a log entry in the logs board but does not halt execution"""
-        # Create the log file
-
-        self.log('==== SOFT LOG REQUESTED =====')
-        self._create_log()
-        col_vals = {
-            'status': {'label': 'Soft'}
-        }
-        log_item = self.log_board.add_item(
-            item_name=self._log_name,
-            column_values=col_vals
-        )
-        file_column = log_item.get_column_value(id='file')
-        log_item.add_file(file_column, self._log_file_path)
-
-        print('==== SOFT LOG REQUESTED =====')
-
-        return log_item
-
-    def hard_log(self):
-        """creates a log entry in the logs board and halts execution"""
-        self.log('==== HARD LOG REQUESTED =====')
-        # Create the log file
-        self._create_log()
-        col_vals = {
-            'status': {'label': 'Hard'}
-        }
-        log_item = self.log_board.add_item(
-            item_name=self._log_name,
-            column_values=col_vals
-        )
-        file_column = log_item.get_column_value(id='file')
-        log_item.add_file(file_column, self._log_file_path)
-
-        raise Exception(f'Hard Log Requested: {self._log_name}')
-
-
 class BaseItemStructure:
-    def __init__(self, item_id_or_mon_item: Union[str, int] = '', board_id: Union[str, int] = ''):
+    def __init__(self, logger, board_id: Union[str, int] = ''):
         self._moncli_obj = None
         self._moncli_board_obj = None
         self._board_id = board_id
@@ -98,17 +22,18 @@ class BaseItemStructure:
         self.zen_id = None
         self.name = ''
 
-        self.logger = CustomLogger(self)
+        self.logger = logger
 
 
 class BaseItem(BaseItemStructure):
     """This item is the main interface for the entire application"""
 
     def __init__(self,
+                 logger,
                  item_id_or_mon_item: Union[str, int, moncli.entities.Item] = None,
                  board_id: Union[str, int] = None,
                  get_column_values=True):
-        super().__init__(item_id_or_mon_item, board_id)
+        super().__init__(logger, board_id)
 
         # Check input is correct
         if not item_id_or_mon_item and not board_id:
@@ -260,7 +185,7 @@ class BaseItem(BaseItemStructure):
 
 
 class MondaySubmissionError(moncli_error):
-    def __init__(self, staged_changes: dict, moncli_obj: moncli.entities.Item, logger: CustomLogger):
+    def __init__(self, staged_changes: dict, moncli_obj: moncli.entities.Item):
         print('Error Submitting Changes to Monday, attempting individually')
         moncli_obj = moncli_obj
         for item in staged_changes:

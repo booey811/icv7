@@ -1,5 +1,5 @@
 from icv7 import create_app, clients
-from icv7.monday import BaseItem, CustomLogger
+from icv7.monday import BaseItem
 
 # App Creation
 app = create_app()

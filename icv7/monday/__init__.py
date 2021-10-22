@@ -1,1 +1,1 @@
-from .base import BaseItem, CustomLogger
+from .base import BaseItem

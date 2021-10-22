@@ -7,13 +7,13 @@ from icv7.monday import config
 
 
 @pytest.fixture(scope='class')
-def example_item_from_item_id(system_item_id):
-    return base.BaseItem(system_item_id)
+def example_item_from_item_id(logger, system_item_id):
+    return base.BaseItem(logger, system_item_id)
 
 
 @pytest.fixture(scope='class')
-def example_item_from_board_id(dev_test_board_id):
-    return base.BaseItem(board_id=dev_test_board_id)
+def example_item_from_board_id(logger, dev_test_board_id):
+    return base.BaseItem(logger, board_id=dev_test_board_id)
 
 
 @pytest.fixture(scope='module')
@@ -62,9 +62,9 @@ class TestItemAttributesFromBoardID:
 
 class TestNewItemCreation:
 
-    def test_create_simple_new_monday_item(self, dev_test_board_id):
+    def test_create_simple_new_monday_item(self, dev_test_board_id, logger):
 
-        eric = base.BaseItem(board_id=dev_test_board_id)
+        eric = base.BaseItem(logger, board_id=dev_test_board_id)
         item = eric.new_item('NEW TEST ITEM')
 
         assert type(item) == moncli.entities.Item
