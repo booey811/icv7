@@ -27,7 +27,7 @@ BOARD_MAPPING_DICT = {
         'columns': {
             'connect_boards': 'connect_main',
             'connect_boards2': 'connect_review',
-            'status4': 'pc_report_status',
+            'status4': 'pc_reports_status',
             'status8': 'diag_status',
             'status': 'repair_status',
             'mirror8': 'device',
@@ -35,7 +35,14 @@ BOARD_MAPPING_DICT = {
             'mirror1': 'passcode',
             'long_text': 'repair_notes',
             'mirror67': 'parts',
-            'files8': 'pc_reports'
+            'files8': 'pc_reports',
+            'mirror69': 'imeisn'
+        }
+    },
+    '349212843': {
+        'name': 'main',
+        'columns': {
+            'repair': 'repairs'
         }
     }
 }

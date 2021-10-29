@@ -534,8 +534,8 @@ class FileColumn(BaseColumnValue):
         return self._files
 
     @files.setter
-    def files(self, value):
-        raise Exception('FilesColumn.setter has not yet been developed')
+    def files(self, path_to_file):
+        self._eric._moncli_obj.add_file(self._moncli_value, path_to_file)
 
 
 class CheckboxColumn(BaseColumnValue):
@@ -685,6 +685,44 @@ class PeopleColumn(BaseColumnValue):
         raise Exception('Not Yet Developed - PeopleValue.ids.setter')
 
 
+class SubItemsValue(BaseColumnValue):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
+        super().__init__(moncli_column_value, staged_changes)
+        if from_item:
+            self._ids = self._moncli_value.item_ids
+
+        else:
+            self._ids = []
+
+        self._value = self._ids
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, to_set: Union[str, int, list]):
+        # Check inputs
+        if type(to_set) not in (str, int, list):
+            raise ValueError(f'PeopleColumn ({self.title}) minute.setter supplied with incorrect type ({type(to_set)})')
+
+        # Convert input to list
+        if type(to_set) is not list:
+            to_set = [to_set]
+
+        # Subitems column cannot be changed
+        raise Exception('Not Yet Developed - SubItemsValue.value.setter')
+
+    @property
+    def ids(self):
+        return self._ids
+
+    @ids.setter
+    def ids(self, to_set):
+        # Subitems column cannot be changed
+        raise Exception('Not Yet Developed - PeopleValue.ids.setter')
+
+
 class ReadOnlyColumn(BaseColumnValue):
     """ReadOnly Columns will simply make the moncli_value more readily available (non-private) for more literal
     access """
@@ -693,16 +731,23 @@ class ReadOnlyColumn(BaseColumnValue):
         super().__init__(moncli_column_value, staged_changes)
         self.moncli_value = self._moncli_value
 
-        if self.moncli_value['type'] == 'subtasks':
-            self.value = None
+        settings = json.loads(self.moncli_value.settings_str)
 
-        elif 'text' in vars(self.moncli_value):
-            self.value = self.moncli_value.text
+        if 'buttonText' in settings:
+            # Ignore Button Column - Cannot Be Interacted with
+            self._eric.log('Button Column Ignored')
+
+        elif self.moncli_value.id == 'item_id':
+            # Ignore Item ID as it is already assigned
+            self._eric.log('Item ID Column Ignored')
 
         else:
-            self._eric.log(f'Could Not Assign A Value for ReadOnlyColumn[{self.title} | {self.id}]')
-            self._eric.logger.soft_log()
-
+            # If Column has a text value, assign as the column_values value
+            try:
+                self.value = self.moncli_value.text
+            except AttributeError:
+                self._eric.log(f'Could Not Assign A Value for ReadOnlyColumn[{self.title} | {self.id}]')
+                self._eric.logger.soft_log()
 
 
 # Dictionary to convert moncli column values to Eric column values
@@ -728,5 +773,7 @@ COLUMN_TYPE_MAPPINGS = {
     column_value.HourValue: HourColumn,
     'hour': HourColumn,
     column_value.PeopleValue: PeopleColumn,
-    'multiple-person': PeopleColumn
+    'multiple-person': PeopleColumn,
+    column_value.SubitemsValue: SubItemsValue,
+    'subtasks': SubItemsValue
 }

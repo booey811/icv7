@@ -41,3 +41,5 @@ Werkzeug==1.0.1
 wrapt==1.12.1
 xero-python==1.5.3
 zenpy==2.0.24
+git+git://github.com/johnfraney/wkhtmltopdf-pack.git
+pdfkit==0.6.1

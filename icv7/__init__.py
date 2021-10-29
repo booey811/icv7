@@ -9,6 +9,9 @@ from icv7.utilities import clients
 from .phonecheck import phonecheck
 
 
+log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
+
+
 class CustomLogger:
     """Object for managing logging as Flask logging is a nightmare
     Dumps information to a monday item with log file"""
@@ -16,7 +19,7 @@ class CustomLogger:
     def __init__(self):
         self._log_file_path = None
         self._log_name = self._generate_log_file_name()
-        self._log_board = None
+        self._log_board = log_board
 
         self._log_lines = []
 
@@ -38,14 +41,8 @@ class CustomLogger:
     @property
     def log_file_path(self):
         if not self._log_file_path:
-            self._log_file_path = f'../tmp/logs/{self._log_name}'
+            self._log_file_path = f'tmp/logs/{self._log_name}'
         return self._log_file_path
-
-    @property
-    def log_board(self):
-        if not self._log_board:
-            self._log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
-        return self._log_board
 
     def log(self, log_line):
         self._log_lines.append(log_line)
@@ -59,7 +56,7 @@ class CustomLogger:
         col_vals = {
             'status': {'label': 'Soft'}
         }
-        log_item = self.log_board.add_item(
+        log_item = self._log_board.add_item(
             item_name=self._log_name,
             column_values=col_vals
         )
@@ -78,7 +75,7 @@ class CustomLogger:
         col_vals = {
             'status': {'label': 'Hard'}
         }
-        log_item = self.log_board.add_item(
+        log_item = self._log_board.add_item(
             item_name=self._log_name,
             column_values=col_vals
         )
