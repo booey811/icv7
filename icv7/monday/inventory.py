@@ -34,8 +34,10 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
     # Adjust Stock Level
     current_level = int(part.stock_level.value)
     new_level = current_level + quantity
-    logger.log(f'Part: {part.name} | Current: {current_level} | New: {new_level} | Diff: {quantity}')
     part.stock_level.value = new_level
+
+    logger.log(f'Part: {part.name} | ID: {part.mon_id}')
+    logger.log(f'Current: {current_level} | New: {new_level} | Diff: {quantity}')
 
     # Commit Changes
     part.commit()
