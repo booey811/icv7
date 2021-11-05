@@ -45,5 +45,22 @@ BOARD_MAPPING_DICT = {
             'repair': 'repairs',
             'text4': 'imeisn'
         }
+    },
+    '985177480': {
+        'name': 'parts',
+        'columns': {
+            'combined_id': 'combined_id',
+            'device_id': 'device_id',
+            'repair_id': 'repair_id',
+            'colour_id': 'colour_id',
+            'numbers45': 'count_num'
+        }
+    },
+    '1008986497': {
+        'name': 'stock_counts',
+        'columns': {
+            'parts_id': 'parts_id',
+            'numbers0': 'count_num'
+        }
     }
 }
