@@ -13,7 +13,7 @@ from .config import BOARD_MAPPING_DICT
 
 class BaseItemStructure:
     def __init__(self, logger, board_id: Union[str, int] = ''):
-        self._moncli_obj = None
+        self.moncli_obj = None
         self.moncli_board_obj = None
         self.board_id = board_id
 
@@ -44,21 +44,21 @@ class BaseItem(BaseItemStructure):
             # Check whether input is int or str (meaning it is the item's ID) and act accordingly
             if type(item_id_or_mon_item) in (str, int):
                 self.log(f'Instantiate BaseItem from Monday ID: {item_id_or_mon_item}')
-                self._moncli_obj = \
+                self.moncli_obj = \
                     clients.monday.system.get_items(get_column_values=get_column_values, ids=[item_id_or_mon_item])[0]
             elif type(item_id_or_mon_item) == moncli.entities.Item:
                 self.log(f'Instantiate BaseItem from moncli.Item Object: {item_id_or_mon_item.id}')
-                self._moncli_obj = item_id_or_mon_item
+                self.moncli_obj = item_id_or_mon_item
             else:
                 raise Exception('BaseItem supplied with item_id_or_object that is not str, int, or moncli.Item')
 
             # Set derived basic info
-            self.mon_id = str(self._moncli_obj.id)
-            self.moncli_board_obj = self._moncli_obj.board
-            self.name = self._moncli_obj.name
+            self.mon_id = str(self.moncli_obj.id)
+            self.moncli_board_obj = self.moncli_obj.board
+            self.name = self.moncli_obj.name
 
             # Set columns
-            columns = self._moncli_obj.column_values
+            columns = self.moncli_obj.column_values
 
         elif board_id:
             # Set basic info that can be taken from Board, columns
@@ -124,7 +124,7 @@ class BaseItem(BaseItemStructure):
 
         # Try to apply the changes
         try:
-            result = self._moncli_obj.change_multiple_column_values(self.staged_changes)
+            result = self.moncli_obj.change_multiple_column_values(self.staged_changes)
             self.staged_changes = {}
             self.log('Commit Completed Successfully')
             return result
@@ -137,7 +137,7 @@ class BaseItem(BaseItemStructure):
                     col_id = item
                     value = self.staged_changes[col_id]
                     self.log(f'Changing Column[{col_id}] to {value}')
-                    self._moncli_obj.change_multiple_column_values({col_id: value})
+                    self.moncli_obj.change_multiple_column_values({col_id: value})
                     self.log('Success!')
                 except moncli_error:
                     self.log('Failure - Terminating Process')

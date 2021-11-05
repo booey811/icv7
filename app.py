@@ -1,3 +1,4 @@
+import datetime
 import os
 import json
 
@@ -36,6 +37,64 @@ def index():
     return 'Hello Returns'
 
 
+# Process Stock Count
+@app.route('/monday/stock/process-count', methods=['POST'])
+def process_stock_count(test_id=None):
+    # Check for whether monday auth is needed or the function is being run under a test
+    if not test_id:
+        webhook = flask.request.get_data()
+        data = verify_monday(webhook)
+        if len(data) == 1:
+            return data
+        else:
+            data = data['event']
+    else:
+        data = test_id
+
+    logger = CustomLogger()
+
+    # Get Stock Count Board (Needed for creating New Group and getting New Count Group)
+    count_board = clients.monday.system.get_boards('id', ids=[1008986497])[0]
+    # Get Current Count Group
+    new_count_group = count_board.get_groups('id', ids=['new_group26476'])[0]
+    # Create Group for Processed Count
+    processed_group = count_board.add_group(f'Count | {datetime.datetime.today()}')
+
+    # Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
+    count_totals = {}  # dict of Part ID against Eric Part Item, Expected Quantity and Counted Quantity
+    count_items = {}  # For use later, to adjust status and group position
+
+    # Consolidate results
+    for item in new_count_group.items:
+
+        count_item = BaseItem(logger, item.id)
+
+        part_id = count_item.part_id.value
+        count_num = count_item.count_num.value
+
+        if part_id not in count_totals:
+            part_item = BaseItem(logger, part_id)
+            count_totals[part_id] = {
+                'count': count_item,
+                'part': part_item,
+                'expected': part_item.stock_level.value,
+                'actual': count_num
+            }
+        else:
+            count_totals[part_id]['actual'] += count_num
+
+    # Adjust Part stock levels and Count Item Status & Group
+    for result in count_totals:
+
+        inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'])
+
+        count_totals[result]['count'].count_status.label = 'Confirmed'
+        count_totals[result]['count'].expected_num.value = count_totals[result]['expected']
+        count_totals[result]['count'].moncli_obj.move_to_group(processed_group.id)
+        count_totals[result]['count'].commit()
+
+
+# Get Phonecheck Report and Add to Monday
 @app.route('/monday/repairers/get-pc-report', methods=['POST'])
 def repairers_pc_report_fetch(test_id=None):
     # Check for whether monday auth is needed or the function is being run under a test

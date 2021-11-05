@@ -25,7 +25,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
                         f'{type(part_reference)}')
 
     # Check part is from the PartsBoard
-    if part.moncli_board_obj.id != '985177480':
+    if part.moncli_board_obj.id != '985177480':  # Parts Board ID
         logger.log(f'Invalid Monday Item supplied to InventoryHelper.adjust_stock_level: '
                    f'{part.moncli_board_obj.name}')
         raise Exception(f'Invalid Monday Item supplied to InventoryHelper.adjust_stock_level: '

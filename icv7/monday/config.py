@@ -60,8 +60,10 @@ BOARD_MAPPING_DICT = {
     '1008986497': {
         'name': 'stock_counts',
         'columns': {
-            'parts_id': 'parts_id',
-            'numbers0': 'count_num'
+            'status4': 'count_status',
+            'parts_id': 'part_id',
+            'numbers0': 'count_num',
+            'numbers08': 'expected_num'
         }
     }
 }

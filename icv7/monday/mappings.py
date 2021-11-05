@@ -535,7 +535,7 @@ class FileColumn(BaseColumnValue):
 
     @files.setter
     def files(self, path_to_file):
-        self._eric._moncli_obj.add_file(self._moncli_value, path_to_file)
+        self._eric.moncli_obj.add_file(self._moncli_value, path_to_file)
 
 
 class CheckboxColumn(BaseColumnValue):
