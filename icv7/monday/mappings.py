@@ -395,7 +395,7 @@ class NumberColumn(BaseColumnValue):
         try:
             value = float(value)  # Has to be float as moncli struggles to convert
             # Adjust eric value
-            self._value = str(value)
+            self._value = value
             # Stage change
             self._stage_change()
         except ValueError:
