@@ -87,7 +87,10 @@ class CustomLogger:
 
     def clear(self):
         """Delete the generated log file"""
-        os.remove(self.log_file_path)
+        try:
+            os.remove(self.log_file_path)
+        except FileNotFoundError:
+            pass
 
 
 def create_app():

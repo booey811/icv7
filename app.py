@@ -107,6 +107,7 @@ def repairers_pc_report_fetch(test_id=None):
     # Delete the report file - helps clean local development dir clean
     os.remove(f'tmp/ph_chk_reports/report-{report_info["A4Reports"]}.pdf')
 
+    logger.clear()
     return ''
 
 
