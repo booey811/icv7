@@ -376,7 +376,7 @@ class NumberColumn(BaseColumnValue):
         # Setup from item (object or ID)
         if from_item:
             if moncli_column_value.text:
-                self._value = moncli_column_value.text
+                self._value = round(float(moncli_column_value.text), 3)
             else:
                 self._value = None
 

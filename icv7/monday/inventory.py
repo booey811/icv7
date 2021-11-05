@@ -31,7 +31,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
                         f'{part.moncli_board_obj.name}')
 
     # Adjust Stock Level
-    current_level = part.stock_level.value
+    current_level = int(part.stock_level.value)
     new_level = current_level + quantity
     part.stock_level.value = new_level
 
