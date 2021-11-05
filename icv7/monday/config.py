@@ -42,7 +42,8 @@ BOARD_MAPPING_DICT = {
     '349212843': {
         'name': 'main',
         'columns': {
-            'repair': 'repairs'
+            'repair': 'repairs',
+            'text4': 'imeisn'
         }
     }
 }
