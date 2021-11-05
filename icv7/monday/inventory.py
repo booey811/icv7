@@ -9,6 +9,7 @@ from typing import Union
 
 
 def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
+    logger.log('Adjusting Stock Level')
     # Check part_reference input is valid
     if type(part_reference) in [str, int]:
         part = BaseItem(logger, part_reference)
@@ -33,11 +34,11 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
     # Adjust Stock Level
     current_level = int(part.stock_level.value)
     new_level = current_level + quantity
+    logger.log(f'Part: {part.name} | Current: {current_level} | New: {new_level} | Diff: {quantity}')
     part.stock_level.value = new_level
 
     # Commit Changes
     part.commit()
 
+    logger.log('Stock Level Adjusted')
     return new_level
-
-
