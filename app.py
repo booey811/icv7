@@ -3,7 +3,7 @@ import json
 
 import flask
 
-from icv7 import create_app, clients, BaseItem, CustomLogger, phonecheck
+from icv7 import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory
 
 from icv7.phonecheck.pc import CannotFindReportThroughIMEI
 
@@ -117,4 +117,4 @@ if __name__ == '__main__' and os.environ['ENV'] != 'devlocal':
 else:
     # App Testing
     print('Testing App.py')
-    repairers_pc_report_fetch(1801613065)
+    base_log = CustomLogger()

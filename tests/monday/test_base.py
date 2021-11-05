@@ -36,13 +36,13 @@ class TestItemAttributesFromItemID:
         :param dev_test_board_id:
         :return:
         """
-        assert eric_system_item._moncli_board_obj.id == dev_test_board_id
+        assert eric_system_item.moncli_board_obj.id == dev_test_board_id
 
     def test_moncli_item_object_is_present_and_correct(self, eric_read_only_item):
         assert type(eric_read_only_item._moncli_obj) == moncli.entities.Item
 
     def test_moncli_board_object_is_present_and_correct(self, eric_read_only_item):
-        assert type(eric_read_only_item._moncli_board_obj) == moncli.entities.Board
+        assert type(eric_read_only_item.moncli_board_obj) == moncli.entities.Board
 
     def test_no_column_changes_are_staged_after_instantiation(self, eric_read_only_item):
         assert eric_read_only_item.staged_changes == {}
@@ -51,10 +51,10 @@ class TestItemAttributesFromItemID:
 class TestItemAttributesFromBoardID:
 
     def test_board_id_is_correct(self, eric_read_only_item, dev_test_board_id):
-        assert eric_read_only_item._board_id == dev_test_board_id
+        assert eric_read_only_item.board_id == dev_test_board_id
 
     def test_moncli_board_object_is_present_and_correct(self, eric_read_only_item):
-        assert type(eric_read_only_item._moncli_board_obj) == moncli.entities.Board
+        assert type(eric_read_only_item.moncli_board_obj) == moncli.entities.Board
 
     def test_no_column_changes_are_staged_after_instantiation(self, eric_read_only_item):
         assert eric_read_only_item.staged_changes == {}

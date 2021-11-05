@@ -53,7 +53,8 @@ BOARD_MAPPING_DICT = {
             'device_id': 'device_id',
             'repair_id': 'repair_id',
             'colour_id': 'colour_id',
-            'numbers45': 'count_num'
+            'numbers45': 'count_num',
+            'quantity': 'stock_level'
         }
     },
     '1008986497': {

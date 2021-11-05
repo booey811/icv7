@@ -14,8 +14,8 @@ from .config import BOARD_MAPPING_DICT
 class BaseItemStructure:
     def __init__(self, logger, board_id: Union[str, int] = ''):
         self._moncli_obj = None
-        self._moncli_board_obj = None
-        self._board_id = board_id
+        self.moncli_board_obj = None
+        self.board_id = board_id
 
         self.staged_changes = {}
         self.mon_id = None
@@ -54,7 +54,7 @@ class BaseItem(BaseItemStructure):
 
             # Set derived basic info
             self.mon_id = str(self._moncli_obj.id)
-            self._moncli_board_obj = self._moncli_obj.board
+            self.moncli_board_obj = self._moncli_obj.board
             self.name = self._moncli_obj.name
 
             # Set columns
@@ -63,16 +63,16 @@ class BaseItem(BaseItemStructure):
         elif board_id:
             # Set basic info that can be taken from Board, columns
             self.log(f'Insantiate Empty BaseItem from Board ID {board_id}')
-            self._moncli_board_obj = clients.monday.system.get_boards(ids=[self._board_id])[0]
+            self.moncli_board_obj = clients.monday.system.get_boards(ids=[self.board_id])[0]
 
             # Set columns
-            columns = self._moncli_board_obj.columns
+            columns = self.moncli_board_obj.columns
 
         else:
             self.log('Unexpected Inputs for BaseItem.__init__')
             raise HardLog(self)
 
-        self._board_id = str(self._moncli_board_obj.id)
+        self._board_id = str(self.moncli_board_obj.id)
         self._convert_column_data_to_eric_values(columns)
 
     def _convert_column_data_to_eric_values(self, columns):
@@ -153,15 +153,15 @@ class BaseItem(BaseItemStructure):
         if type(name) != str:
             raise Exception('New Item Name Must Be A String')
 
-        self.log(f'Creating New Item for Board[{self._moncli_board_obj.name}]')
+        self.log(f'Creating New Item for Board[{self.moncli_board_obj.name}]')
 
         # Create new item
         try:
-            new_item = self._moncli_board_obj.add_item(name, column_values=self.staged_changes)
+            new_item = self.moncli_board_obj.add_item(name, column_values=self.staged_changes)
         except moncli_error:
             # This occurs on a submission error (data supplied to moncli does not match the schema)
             self.log('Item Creation Failed - Attempting Incremental Change')
-            new_item = self._moncli_board_obj.add_item(name)
+            new_item = self.moncli_board_obj.add_item(name)
             for item in self.staged_changes:
                 try:
                     col_id = item

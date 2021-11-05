@@ -4,7 +4,7 @@ from datetime import datetime
 import flask
 
 from icv7 import config
-from .monday import BaseItem
+from .monday import BaseItem, inventory
 from icv7.utilities import clients
 from .phonecheck import phonecheck
 
