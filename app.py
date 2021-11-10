@@ -64,7 +64,6 @@ def process_stock_count(test_id=None):
     count_totals = {}  # dict of Part ID against Eric Part Item, Expected Quantity and Counted Quantity
     count_items = {}  # For use later, to adjust status and group position
 
-
     # Consolidate results
     for item in new_count_group.items:
 
