@@ -173,7 +173,9 @@ def repairers_pc_report_fetch(test_id=None):
 
 if __name__ == '__main__' and os.environ['ENV'] != 'devlocal':
     # App Entry Point
+    print('==PROD==')
     app.run()
 else:
     # App Testing
+    print('==DEV==')
     print('Testing App.py')
