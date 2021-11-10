@@ -58,11 +58,12 @@ def process_stock_count(test_id=None):
     # Get Current Count Group
     new_count_group = count_board.get_groups('id', ids=['new_group26476'])[0]
     # Create Group for Processed Count
-    processed_group = count_board.add_group(f'Count | {datetime.datetime.today()}')
+    processed_group = count_board.add_group(f'Count | {datetime.datetime.today().strftime("%A %d %m %y")}')
 
     # Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
     count_totals = {}  # dict of Part ID against Eric Part Item, Expected Quantity and Counted Quantity
     count_items = {}  # For use later, to adjust status and group position
+
 
     # Consolidate results
     for item in new_count_group.items:
@@ -82,13 +83,14 @@ def process_stock_count(test_id=None):
             }
         else:
             count_totals[part_id]['actual'] += count_num
+            count_item.moncli_obj.archive()
 
     # Adjust Part stock levels and Count Item Status & Group
     for result in count_totals:
-
         inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'])
 
         count_totals[result]['count'].count_status.label = 'Confirmed'
+        count_totals[result]['count'].count_num.value = count_totals[result]['actual']
         count_totals[result]['count'].expected_num.value = count_totals[result]['expected']
         count_totals[result]['count'].moncli_obj.move_to_group(processed_group.id)
         count_totals[result]['count'].commit()
@@ -176,4 +178,3 @@ if __name__ == '__main__' and os.environ['ENV'] != 'devlocal':
 else:
     # App Testing
     print('Testing App.py')
-    base_log = CustomLogger()
