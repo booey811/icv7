@@ -94,7 +94,14 @@ class CustomLogger:
 
 
 def create_app():
-    configuration = os.environ['APP_SETTINGS']
+
+    env = os.environ['ENV']
+    if env == 'prod':
+        configuration = config.ProdConfig
+    elif env == 'stage':
+        configuration = config.DevConfig
+    else:
+        raise Exception('ENV config var is not set correctly - cannot boot')
 
     app = flask.Flask('eric')
 
