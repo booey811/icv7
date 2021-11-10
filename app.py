@@ -75,6 +75,9 @@ def process_stock_count(test_id=None):
         count_totals[result]['count'].moncli_obj.move_to_group(processed_group.id)
         count_totals[result]['count'].commit()
 
+    logger.clear()
+    return ''
+
 
 # Get Phonecheck Report and Add to Monday
 @app.route('/monday/repairers/get-pc-report', methods=['POST'])
