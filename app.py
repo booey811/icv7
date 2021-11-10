@@ -30,8 +30,6 @@ def process_stock_count(test_id=None):
             data = verify_monday(webhook)['event']
         except ChallengeReceived as e:
             return e.token
-        else:
-            data = data['event']
     else:
         data = test_id
     logger = CustomLogger()
@@ -88,8 +86,6 @@ def repairers_pc_report_fetch(test_id=None):
             data = verify_monday(webhook)['event']
         except ChallengeReceived as e:
             return e.token
-        else:
-            data = data['event']
     else:
         data = test_id
     logger = CustomLogger()
