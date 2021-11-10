@@ -112,6 +112,8 @@ def verify_monday(webhook):
 
 
 def create_app():
+
+    # Detect Environment & Retreive config
     env = os.environ['ENV']
     if env == 'prod':
         configuration = config.ProdConfig
@@ -120,13 +122,16 @@ def create_app():
     else:
         raise Exception('ENV config var is not set correctly - cannot boot')
 
+    # Create and configure app
     app = flask.Flask('eric')
-
     app.config.from_object(configuration)
-
     return app
 
 
 class ChallengeReceived(Exception):
+    """
+    Exception that is thrown when the Monday challenge is received, stores the challenge token for return to app
+    level function
+    """
     def __init__(self, token):
         self.token = token
