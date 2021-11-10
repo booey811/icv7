@@ -4,29 +4,12 @@ import json
 
 import flask
 
-from icv7 import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory
+from icv7 import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory, verify_monday, ChallengeReceived
 
 from icv7.phonecheck.pc import CannotFindReportThroughIMEI
 
 # App Creation
 app = create_app()
-
-
-# App functions
-def verify_monday(webhook):
-    """Takes webhook information, authenticates if required, and decodes information
-    Args:
-        webhook (request): Payload received from Monday's Webhooks
-    Returns:
-        dictionary: contains various information from Monday, dependent on type of webhook sent
-    """
-    data = webhook.decode('utf-8')
-    data = json.loads(data)
-    if "challenge" in data.keys():
-        authtoken = {"challenge": data["challenge"]}
-        return authtoken
-    else:
-        return data
 
 
 # Routes
@@ -40,17 +23,17 @@ def index():
 # Process Stock Count
 @app.route('/monday/stock/process-count', methods=['POST'])
 def process_stock_count(test_id=None):
-    # Check for whether monday auth is needed or the function is being run under a test
+    # Check for whether monday auth is needed or the function is being run under a test, instantiate logger
     if not test_id:
         webhook = flask.request.get_data()
-        data = verify_monday(webhook)
-        if len(data) == 1:
-            return data
+        try:
+            data = verify_monday(webhook)['event']
+        except ChallengeReceived as e:
+            return e.token
         else:
             data = data['event']
     else:
         data = test_id
-
     logger = CustomLogger()
 
     # Get Stock Count Board (Needed for creating New Group and getting New Count Group)
@@ -98,18 +81,19 @@ def process_stock_count(test_id=None):
 # Get Phonecheck Report and Add to Monday
 @app.route('/monday/repairers/get-pc-report', methods=['POST'])
 def repairers_pc_report_fetch(test_id=None):
-    # Check for whether monday auth is needed or the function is being run under a test
+    # Check for whether monday auth is needed or the function is being run under a test, instantiate logger
     if not test_id:
         webhook = flask.request.get_data()
-        data = verify_monday(webhook)
-        if len(data) == 1:
-            return data
+        try:
+            data = verify_monday(webhook)['event']
+        except ChallengeReceived as e:
+            return e.token
         else:
             data = data['event']
     else:
         data = test_id
-
     logger = CustomLogger()
+
     repair_item = BaseItem(logger, data)
 
     try:

@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import json
 
 import flask
 
@@ -7,7 +8,6 @@ from icv7 import config
 from .monday import BaseItem, inventory
 from icv7.utilities import clients
 from .phonecheck import phonecheck
-
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 
@@ -93,8 +93,25 @@ class CustomLogger:
             pass
 
 
-def create_app():
+# App functions
+def verify_monday(webhook):
+    """Takes webhook information, authenticates if required, and decodes information
+    Args:
+        webhook (request): Payload received from Monday's Webhooks
+    Returns:
+        dictionary: contains various information from Monday, dependent on type of webhook sent
+    """
 
+    data = webhook.decode('utf-8')
+    data = json.loads(data)
+    if "challenge" in data.keys():
+        authtoken = {"challenge": data["challenge"]}
+        raise ChallengeReceived(authtoken)
+    else:
+        return data
+
+
+def create_app():
     env = os.environ['ENV']
     if env == 'prod':
         configuration = config.ProdConfig
@@ -108,3 +125,8 @@ def create_app():
     app.config.from_object(configuration)
 
     return app
+
+
+class ChallengeReceived(Exception):
+    def __init__(self, token):
+        self.token = token
