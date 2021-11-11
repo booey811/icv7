@@ -156,7 +156,7 @@ def repairers_pc_report_fetch(test_id=None):
     return ''
 
 
-if __name__ == '__main__' and os.environ['ENV'] == 'production':
+if os.environ['ENV'] == 'production':
     # App Entry Point
     print('Entry:Production')
     app.run()
