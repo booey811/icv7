@@ -52,6 +52,8 @@ def process_stock_count(test_id=None):
 
         part_id = count_item.part_id.value
         count_num = count_item.count_num.value
+        if count_num is None:
+            count_num = 0
 
         if part_id not in count_totals:
             part_item = BaseItem(logger, part_id)

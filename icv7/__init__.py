@@ -117,7 +117,7 @@ def create_app():
     env = os.environ['ENV']
     if env == 'prod':
         configuration = config.ProdConfig
-    elif env == 'stage':
+    elif env == 'devlocal':
         configuration = config.DevConfig
     else:
         raise Exception('ENV config var is not set correctly - cannot boot')
