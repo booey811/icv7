@@ -115,9 +115,11 @@ def create_app():
 
     # Detect Environment & Retreive config
     env = os.environ['ENV']
-    if env == 'prod':
+    if env == 'production':
+        print('Config:Production')
         configuration = config.ProdConfig
     elif env == 'devlocal':
+        print('Config:DevLocal')
         configuration = config.DevConfig
     else:
         raise Exception('ENV config var is not set correctly - cannot boot')

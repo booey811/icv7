@@ -156,11 +156,14 @@ def repairers_pc_report_fetch(test_id=None):
     return ''
 
 
-if __name__ == '__main__' and os.environ['ENV'] != 'devlocal':
+if __name__ == '__main__' and os.environ['ENV'] == 'production':
     # App Entry Point
-    print('==PROD==')
+    print('Entry:Production')
     app.run()
-else:
+elif os.environ['ENV'] == 'devlocal':
     # App Testing
-    print('==DEV==')
+    print('Entry:Devlocal')
     print('Testing App.py')
+else:
+    # Unknown Start up conditions
+    raise Exception(f'Unknown Startup Conditions: {os.environ["ENV"]}')
