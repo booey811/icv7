@@ -166,4 +166,4 @@ elif os.environ['ENV'] == 'devlocal':
     print('Testing App.py')
 else:
     # Unknown Start up conditions
-    raise Exception(f'Unknown Startup Conditions: {os.environ["ENV"]}')
+    raise Exception(f'Unknown Startup Conditions: {__name__} | {os.environ["ENV"]}')
