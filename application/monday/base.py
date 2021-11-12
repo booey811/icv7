@@ -72,7 +72,7 @@ class BaseItem(BaseItemStructure):
             self.log('Unexpected Inputs for BaseItem.__init__')
             raise HardLog(self)
 
-        self._board_id = str(self.moncli_board_obj.id)
+        self.board_id = str(self.moncli_board_obj.id)
         self._convert_column_data_to_eric_values(columns)
 
     def _convert_column_data_to_eric_values(self, columns):
@@ -84,8 +84,8 @@ class BaseItem(BaseItemStructure):
         """
 
         # Initialise mapping object for relevant board
-        self._mapper = MappingObject(self._board_id)
-        board_data = BOARD_MAPPING_DICT[self._board_id]
+        self._mapper = MappingObject(self.board_id)
+        board_data = BOARD_MAPPING_DICT[self.board_id]
         self.log(f'Board[{board_data["name"]}]')
 
         # Iterate through moncli columns with mapping object to instantiate columns on BaseItem

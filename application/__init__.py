@@ -17,7 +17,7 @@ class CustomLogger:
     Dumps information to a monday item with log file"""
 
     def __init__(self):
-        if os.environ['ENV'] == 'production':
+        if os.environ['ENV'] in ['production', 'test']:
             self.debug = False
         else:
             self.debug = True

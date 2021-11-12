@@ -1,6 +1,6 @@
 import pytest
 
-from icv7.monday.base import BaseItem
+from application.monday.base import BaseItem
 
 """
 Need to write tests for the following (for each column value):
@@ -76,15 +76,15 @@ class TestNumberValue:
     def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_number_column_value):
         """Tests whether the number values of the read only test item are the same for the moncli object and
         the eric object"""
-        moncli = str(read_only_number_column_value.number)
-        eric = eric_read_only_item.numbers.value
+        moncli = float(read_only_number_column_value.number)
+        eric = float(eric_read_only_item.numbers.value)
         assert moncli == eric
 
     def test_staged_changes_are_correct(self, eric_system_item, test_value):
         """Tests that staging a change for a number value will generate the correct _staged_changes dictionary"""
         new_value = test_value  # Arbitrary Test value to assert
         eric_system_item.numbers.value = new_value
-        assert eric_system_item.staged_changes[eric_system_item.numbers.id] == str(new_value)
+        assert round(eric_system_item.staged_changes[eric_system_item.numbers.id], 3) == round(float(new_value), 3)
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item, test_value, logger):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this
@@ -94,7 +94,7 @@ class TestNumberValue:
         eric_system_item.commit()
         new_eric = BaseItem(logger, eric_system_item.mon_id)
         new_eric_value = new_eric.numbers.value
-        assert new_eric_value == str(test_value)
+        assert round(new_eric_value, 3) == round(float(test_value), 3)
 
     def test_committed_changes_match_new_moncli_value(self, test_value, eric_system_item, clients_object):
         """Tests that committing change to a standard value still allows retrieval of the moncli value and that this

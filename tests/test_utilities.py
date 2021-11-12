@@ -1,6 +1,6 @@
 import pytest
 
-from icv7.utilities import ClientsObject
+from application.utilities import ClientsObject
 
 from moncli.entities import MondayClient
 

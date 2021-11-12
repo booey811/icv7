@@ -1,7 +1,7 @@
 import pytest
 
-from icv7.utilities import clients
-from icv7 import CustomLogger
+from application.utilities import clients
+from application import CustomLogger
 
 
 @pytest.fixture(scope='session')

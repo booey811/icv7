@@ -1,9 +1,9 @@
 import moncli.entities
 import pytest
 
-from icv7.monday import base
-from icv7.utilities import clients
-from icv7.monday import config
+from application.monday import base
+from application.utilities import clients
+from application.monday import config
 
 
 @pytest.fixture(scope='class')

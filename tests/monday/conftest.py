@@ -3,13 +3,10 @@ Once all column values are complete, a fixture for reverting test items to their
 called at the end of a column_value test class
 """
 
-
-
 import pytest
 
-from icv7.utilities import clients
-from icv7.monday.base import BaseItem
-from icv7 import CustomLogger
+from application.utilities import clients
+from application.monday.base import BaseItem
 
 
 @pytest.fixture(scope='session')
