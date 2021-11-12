@@ -6,9 +6,9 @@ import flask
 from rq import Queue
 from worker import conn
 
-from eric import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory, verify_monday, ChallengeReceived
+from application import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory, verify_monday, ChallengeReceived
 
-from eric.phonecheck.pc import CannotFindReportThroughIMEI
+from application.phonecheck.pc import CannotFindReportThroughIMEI
 
 # App Creation
 app = create_app()

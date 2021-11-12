@@ -4,9 +4,9 @@ from datetime import datetime
 import moncli.entities
 from moncli.api_v2.exceptions import MondayApiError as moncli_error
 
-import eric
-from eric.utilities import clients
-from eric.exceptions import HardLog
+import application
+from application.utilities import clients
+from application.exceptions import HardLog
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
 
