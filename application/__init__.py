@@ -17,6 +17,11 @@ class CustomLogger:
     Dumps information to a monday item with log file"""
 
     def __init__(self):
+        if os.environ['ENV'] == 'production':
+            self.debug = False
+        else:
+            self.debug = True
+
         self._log_file_path = None
         self._log_name = self._generate_log_file_name()
         self._log_board = log_board
@@ -46,6 +51,8 @@ class CustomLogger:
 
     def log(self, log_line):
         self._log_lines.append(log_line)
+        if self.debug:
+            print(log_line)
 
     def soft_log(self):
         """creates a log entry in the logs board but does not halt execution"""
@@ -112,7 +119,6 @@ def verify_monday(webhook):
 
 
 def create_app():
-
     # Detect Environment & Retreive config
     env = os.environ['ENV']
     if env == 'production':
@@ -135,5 +141,6 @@ class ChallengeReceived(Exception):
     Exception that is thrown when the Monday challenge is received, stores the challenge token for return to app
     level function
     """
+
     def __init__(self, token):
         self.token = token
