@@ -4,9 +4,9 @@ import json
 
 import flask
 
-from icv7 import config
+from . import config
 from .monday import BaseItem, inventory
-from icv7.utilities import clients
+from .utilities import clients
 from .phonecheck import phonecheck
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
@@ -117,10 +117,10 @@ def create_app():
     env = os.environ['ENV']
     if env == 'production':
         print('Config:Production')
-        configuration = config.ProdConfig
-    elif env == 'devlocal':
+        configuration = config.ProdConfig()
+    elif env in ['devlocal', 'devserver']:
         print('Config:DevLocal')
-        configuration = config.DevConfig
+        configuration = config.DevConfig()
     else:
         raise Exception('ENV config var is not set correctly - cannot boot')
 

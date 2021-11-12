@@ -4,9 +4,9 @@ import json
 
 import flask
 
-from icv7 import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory, verify_monday, ChallengeReceived
+from eric import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory, verify_monday, ChallengeReceived
 
-from icv7.phonecheck.pc import CannotFindReportThroughIMEI
+from eric.phonecheck.pc import CannotFindReportThroughIMEI
 
 # App Creation
 app = create_app()
@@ -156,14 +156,5 @@ def repairers_pc_report_fetch(test_id=None):
     return ''
 
 
-if os.environ['ENV'] == 'production':
-    # App Entry Point
-    print('Entry:Production')
+if __name__ == '__main__':
     app.run()
-elif os.environ['ENV'] == 'devlocal':
-    # App Testing
-    print('Entry:Devlocal')
-    print('Testing App.py')
-else:
-    # Unknown Start up conditions
-    raise Exception(f'Unknown Startup Conditions: {__name__} | {os.environ["ENV"]}')

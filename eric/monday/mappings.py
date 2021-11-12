@@ -6,7 +6,7 @@ import moncli.entities
 from moncli.entities import column_value
 
 from .config import BOARD_MAPPING_DICT
-from icv7.monday import exceptions
+from eric.monday import exceptions
 
 
 class MappingObject:
