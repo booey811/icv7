@@ -1,12 +1,15 @@
 import os
 import datetime
 
+from moncli.api_v2.exceptions import MondayApiError
+
 from application import BaseItem, clients, CustomLogger, phonecheck, inventory, CannotFindReportThroughIMEI
 
 
 def process_stock_count(webhook, test=None):
 
     logger = CustomLogger()
+    logger.log('Process Stock Count Requested')
 
     # Get Stock Count Board (Needed for creating New Group and getting New Count Group)
     logger.log('Getting Count Board')
@@ -15,13 +18,22 @@ def process_stock_count(webhook, test=None):
     logger.log('Creating Group')
     processed_group = count_board.add_group(f'Count | {datetime.datetime.today().strftime("%A %d %m %y")}')
 
-    # Get Current Count Group
-    if test:
-        item = clients.monday.system.get_items(test)[0]
-        new_count_group = count_board.get_groups('id', ids=[item.group.id])[0]
-    else:
-        group_id = webhook['groupId']
-        new_count_group = count_board.get_groups(ids=[group_id])[0]
+    try:
+        # Get Current Count Group
+        logger.log('Getting Items')
+        if test:
+            item = clients.monday.system.get_items(test)[0]
+            new_count_group = count_board.get_groups('id', ids=[item.group.id])[0]
+        else:
+            group_id = webhook['groupId']
+            new_count_group = count_board.get_groups(ids=[group_id])[0]
+        logger.log('Got Items')
+    except MondayApiError as e:
+        logger.log('Monday API Error Occurred')
+        messages = "/n".join(e.messages)
+        logger.log(f'MESSAGES:\n\n{messages}')
+        logger.hard_log()
+        return False
 
     # Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
     count_totals = {}  # dict of Part ID against Eric Part Item, Expected Quantity and Counted Quantity
