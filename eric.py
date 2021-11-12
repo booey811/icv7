@@ -18,7 +18,7 @@ def process_stock_count(webhook, test=None):
         item = clients.monday.system.get_items(test)[0]
         new_count_group = count_board.get_groups('id', ids=[item.group.id])[0]
     else:
-        new_count_group = webhook['groupId']
+        new_count_group = count_board.get_groups(webhook['groupId'])
 
     # Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
     count_totals = {}  # dict of Part ID against Eric Part Item, Expected Quantity and Counted Quantity
