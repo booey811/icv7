@@ -7,7 +7,7 @@ import flask
 from . import config
 from .monday import BaseItem, inventory
 from .utilities import clients
-from .phonecheck import phonecheck
+from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 

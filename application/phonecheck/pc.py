@@ -87,9 +87,9 @@ class PhonecheckManager:
 
     def convert_to_pdf(self, html_string, report_id):
         pdf = self.pdf.make_pdf(html_string)
-        with open(f'tmp/ph_chk_reports/report-{report_id}.pdf', 'wb') as f:
+        with open(f'tmp/pc_reports/report-{report_id}.pdf', 'wb') as f:
             f.write(pdf)
-        return f'temp/ph_chk_reports/report-{report_id}.pdf'
+        return f'tmp/pc_reports/report-{report_id}.pdf'
 
 
 class CannotFindReportThroughIMEI(Exception):
