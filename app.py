@@ -12,7 +12,7 @@ import eric
 # App Creation
 app = create_app()
 
-q_lo = Queue("low", connection=conn)
+q_lo = Queue("low", connection=conn, default_timeout=3600)
 q_def = Queue("default", connection=conn)
 q_hi = Queue("high", connection=conn)
 
