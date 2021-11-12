@@ -9,8 +9,10 @@ def process_stock_count(webhook, test=None):
     logger = CustomLogger()
 
     # Get Stock Count Board (Needed for creating New Group and getting New Count Group)
+    logger.log('Getting Count Board')
     count_board = clients.monday.system.get_boards('id', ids=[1008986497])[0]
     # Create Group for Processed Count
+    logger.log('Creating Group')
     processed_group = count_board.add_group(f'Count | {datetime.datetime.today().strftime("%A %d %m %y")}')
 
     # Get Current Count Group
@@ -19,7 +21,6 @@ def process_stock_count(webhook, test=None):
         new_count_group = count_board.get_groups('id', ids=[item.group.id])[0]
     else:
         group_id = webhook['groupId']
-        print(group_id)
         new_count_group = count_board.get_groups(ids=[group_id])[0]
 
     # Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
