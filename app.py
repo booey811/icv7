@@ -3,6 +3,8 @@ import os
 import json
 
 import flask
+from rq import Queue
+from worker import conn
 
 from eric import create_app, clients, BaseItem, CustomLogger, phonecheck, inventory, verify_monday, ChallengeReceived
 
@@ -10,6 +12,10 @@ from eric.phonecheck.pc import CannotFindReportThroughIMEI
 
 # App Creation
 app = create_app()
+
+q_lo = Queue("low", connection=conn)
+q_def = Queue("default", connection=conn)
+q_hi = Queue("high", connection=conn)
 
 
 # Routes
