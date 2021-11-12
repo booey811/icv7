@@ -99,7 +99,7 @@ def fetch_pc_report(webhook, test=None):
 
     try:
         # Converting to PDF
-        path_to_pdf_report = phonecheck.convert_to_pdf(html_report, report_info['A4Reports'])
+        path_to_pdf_report = phonecheck.new_convert_to_pdf(html_report, report_info['A4Reports'])
     except Exception as e:
         # Unknown Error - This is a very volatile function currently
         logger.log('An Unknown Error Occurred while converting to PDF')
