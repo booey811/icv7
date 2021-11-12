@@ -378,11 +378,11 @@ class NumberColumn(BaseColumnValue):
             if moncli_column_value.text:
                 self._value = round(float(moncli_column_value.text), 3)
             else:
-                self._value = None
+                self._value = 0
 
         # Setup from Board ID
         else:
-            self._value = None
+            self._value = 0
 
     @property
     def value(self):
