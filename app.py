@@ -63,7 +63,7 @@ def repairers_pc_report_fetch(test_id=None):
             raise Exception('test_id is required when testing locally')
         eric.fetch_pc_report(None, test_id)
     elif os.environ['ENV'] in ['devserver', 'production']:
-        result = q_lo.enqueue(eric.fetch_pc_report, webhook)
+        result = q_hi.enqueue(eric.fetch_pc_report, webhook)
     else:
         raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
 
