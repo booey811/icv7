@@ -21,7 +21,6 @@ pdfkit==0.6.1
 pluggy==0.13.1
 py==1.10.0
 pycountry==20.7.3
-pydf==12
 pyparsing==2.4.7
 pytest==6.2.1
 python-binary-memcached==0.30.1
@@ -39,8 +38,6 @@ toml==0.10.2
 uhashring==2.1
 urllib3==1.26.2
 Werkzeug==1.0.1
-wkhtmltopdf==0.2
-wkhtmltopdf-pack
 wrapt==1.12.1
 xero-python==1.5.3
 zenpy==2.0.24
