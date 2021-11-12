@@ -393,7 +393,10 @@ class NumberColumn(BaseColumnValue):
 
         # Check input is correct via try/except (int, str or float only)
         try:
-            value = float(value)  # Has to be float as moncli struggles to convert
+            if value:
+                value = float(value)  # Has to be float as moncli struggles to convert
+            else:
+                value = 0
             # Adjust eric value
             self._value = value
             # Stage change
