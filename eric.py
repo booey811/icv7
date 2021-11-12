@@ -139,3 +139,4 @@ def fetch_pc_report(webhook, test=None):
     os.remove(f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf')
 
     logger.clear()
+

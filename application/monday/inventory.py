@@ -36,7 +36,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
         current_level = int(part.stock_level.value)
     except TypeError:
         current_level = 0
-    new_level = current_level + quantity
+    new_level = quantity
     part.stock_level.value = new_level
 
     logger.log(f'Part: {part.name} | ID: {part.mon_id}')
