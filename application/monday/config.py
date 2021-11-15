@@ -54,7 +54,9 @@ BOARD_MAPPING_DICT = {
             'repair_id': 'repair_id',
             'colour_id': 'colour_id',
             'numbers45': 'count_num',
-            'quantity': 'stock_level'
+            'quantity': 'stock_level',
+            'numbers37': 'reorder_point',
+            'status3': 'low_stock_status'
         }
     },
     '1008986497': {
