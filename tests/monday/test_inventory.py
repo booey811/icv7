@@ -2,9 +2,11 @@ import pytest
 
 from application import BaseItem, CustomLogger
 
+
 @pytest.fixture()
 def eric_test_part_item():
     return BaseItem(CustomLogger(), 1226905145)  # TEST DEVICE TEST Screen Black
+
 
 @pytest.mark.fully_functional
 @pytest.mark.slow
@@ -24,5 +26,3 @@ class TestInventoryHelper:
         refetched_value = refetched_eric_test_part_item.stock_level.value
 
         assert new_value == refetched_value
-
-
