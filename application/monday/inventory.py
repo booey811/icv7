@@ -8,7 +8,7 @@ from .base import BaseItem
 from typing import Union
 
 
-def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
+def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolute=False):
     logger.log('Adjusting Stock Level')
     # Check part_reference input is valid
     if type(part_reference) in [str, int]:
@@ -31,12 +31,18 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
         raise Exception(f'Invalid Monday Item supplied to InventoryHelper.adjust_stock_level: '
                         f'{part.moncli_board_obj.name}')
 
-    # Adjust Stock Level
+    # Get current level (for logs)
     try:
         current_level = int(part.stock_level.value)
     except TypeError:
         current_level = 0
-    new_level = quantity
+
+    # Adjust Stock Level
+    if absolute:
+        new_level = quantity
+    else:
+        new_level = current_level + quantity
+
     part.stock_level.value = new_level
 
     logger.log(f'Part: {part.name} | ID: {part.mon_id}')
@@ -51,32 +57,33 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity):
     return new_level
 
 
+def check_stock_against_reorder(part_item: BaseItem) -> str:
+    """
+    Checks stock level of an item against it's reorder point, returning strings for the required Low Stock Status Label
+    Args:
+        part_item: Part Item to Check
+
+    Returns:
+        str: Required Label of the Low Stock Status
+
+    """
+    stock_level = part_item.stock_level.value
+    reorder_point = part_item.reorder_point.value
+
+    if stock_level > reorder_point:
+        return "Above Reorder"
+    elif stock_level <= reorder_point:
+        return "Below Reorder"
+    else:
+        raise Exception(
+            f'Stock Level and Reorder Point are Mathematically Impossible ({stock_level}, {reorder_point})')
+
+
 def check_and_adjust_for_low_stock(part_item: BaseItem):
     """Performs a quick check to see if a part is below/above it's reorder point, and acts accordingly"""
 
-    def check_stock_against_reorder(part_item: BaseItem) -> str:
-        """
-        Checks stock level of an item against it's reorder point, returning True if item is in stock and False otherwise
-        Args:
-            part_item: Part Item to Check
-
-        Returns:
-            str: Label of the Low Stock Status
-
-        """
-        stock_level = part_item.stock_level.value
-        reorder_point = part_item.reorder_point.value
-
-        if stock_level > reorder_point:
-            return "Above Reorder"
-        elif stock_level <= reorder_point:
-            return "Below Reorder"
-        else:
-            raise Exception(
-                f'Stock Level and Reorder Point are Mathematically Impossible ({stock_level}, {reorder_point})')
-
     # compare stock level with reorder point
-    low_stock_status = part_item.low_stock_staus.label
+    low_stock_status = part_item.low_stock_status.label
 
     # check 'Low Stock' status to see if this is correct
     low_stock_level = check_stock_against_reorder(part_item)
@@ -85,4 +92,3 @@ def check_and_adjust_for_low_stock(part_item: BaseItem):
         part_item.low_stock_status.label = low_stock_level
 
     # Do not need to commit item as it is always commited when adjusting stock level
-

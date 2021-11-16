@@ -726,6 +726,27 @@ class SubItemsValue(BaseColumnValue):
         raise Exception('Not Yet Developed - PeopleValue.ids.setter')
 
 
+class ConnectBoardsValue(BaseColumnValue):
+    def __init__(self, moncli_column_value, staged_changes, from_item=True):
+        super().__init__(moncli_column_value, staged_changes)
+        # Setup from item (object or ID)
+        if from_item:
+            self._value = moncli_column_value.item_ids
+        # Setup from board ID
+        else:
+            self._value = []
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value: Union[str, int]):
+        """This column cannot be changed via the API"""
+
+        raise Exception('Not Yet Developed - ConnectBoardsValue.value.setter')
+
+
 class ReadOnlyColumn(BaseColumnValue):
     """ReadOnly Columns will simply make the moncli_value more readily available (non-private) for more literal
     access """
@@ -778,5 +799,6 @@ COLUMN_TYPE_MAPPINGS = {
     column_value.PeopleValue: PeopleColumn,
     'multiple-person': PeopleColumn,
     column_value.SubitemsValue: SubItemsValue,
-    'subtasks': SubItemsValue
+    'subtasks': SubItemsValue,
+    column_value.ItemLinkValue: ConnectBoardsValue
 }

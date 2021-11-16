@@ -62,7 +62,7 @@ def process_stock_count(webhook, test=None):
 
     # Adjust Part stock levels and Count Item Status & Group
     for result in count_totals:
-        inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'])
+        inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'], absolute=True)
 
         count_totals[result]['count'].count_status.label = 'Confirmed'
         count_totals[result]['count'].count_num.value = count_totals[result]['actual']

@@ -56,7 +56,8 @@ BOARD_MAPPING_DICT = {
             'numbers45': 'count_num',
             'quantity': 'stock_level',
             'numbers37': 'reorder_point',
-            'status3': 'low_stock_status'
+            'status3': 'low_stock_status',
+            'connect_boards18': 'connect_supplier_orders'
         }
     },
     '1008986497': {
