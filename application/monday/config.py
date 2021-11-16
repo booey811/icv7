@@ -43,7 +43,11 @@ BOARD_MAPPING_DICT = {
         'name': 'main',
         'columns': {
             'repair': 'repairs',
-            'text4': 'imeisn'
+            "device0": "device",
+            'text4': 'imeisn',
+            'status_18': "notifications_status",
+            "text5": 'email',
+            "text00": "phone"
         }
     },
     '985177480': {

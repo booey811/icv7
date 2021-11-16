@@ -8,6 +8,13 @@ from .base import BaseItem
 from typing import Union
 
 
+# class PartsRetriever:
+#     """deals with the messy conversions required to get parts items from mainboard items"""
+#
+#     def
+
+
+
 def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolute=False):
     logger.log('Adjusting Stock Level')
     # Check part_reference input is valid
@@ -48,7 +55,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolu
     logger.log(f'Part: {part.name} | ID: {part.mon_id}')
     logger.log(f'Current: {current_level} | New: {new_level} | Diff: {quantity}')
 
-    check_and_adjust_for_low_stock(part)
+    _check_and_adjust_for_low_stock(part)
 
     # Commit Changes
     part.commit()
@@ -57,7 +64,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolu
     return new_level
 
 
-def check_stock_against_reorder(part_item: BaseItem) -> str:
+def _check_stock_against_reorder(part_item: BaseItem) -> str:
     """
     Checks stock level of an item against it's reorder point, returning strings for the required Low Stock Status Label
     Args:
@@ -79,16 +86,29 @@ def check_stock_against_reorder(part_item: BaseItem) -> str:
             f'Stock Level and Reorder Point are Mathematically Impossible ({stock_level}, {reorder_point})')
 
 
-def check_and_adjust_for_low_stock(part_item: BaseItem):
+def _check_and_adjust_for_low_stock(part_item: BaseItem):
     """Performs a quick check to see if a part is below/above it's reorder point, and acts accordingly"""
 
     # compare stock level with reorder point
     low_stock_status = part_item.low_stock_status.label
 
     # check 'Low Stock' status to see if this is correct
-    low_stock_level = check_stock_against_reorder(part_item)
+    low_stock_level = _check_stock_against_reorder(part_item)
 
     if low_stock_level != low_stock_status:
         part_item.low_stock_status.label = low_stock_level
 
-    # Do not need to commit item as it is always commited when adjusting stock level
+    # Do not need to commit item as it is always committed when adjusting stock level
+
+
+def get_stock_info(mainboard_item: BaseItem):
+    """returns a dictionary of repair items and some basic info"""
+    # get monday items
+    # build dict: {name: NAME, eric: ERIC ITEM, stock: STOCK LEVEL, available: bool}
+    result = {}
+    return result
+
+def get_parts(mainboard_item: BaseItem):
+    """"""
+
+

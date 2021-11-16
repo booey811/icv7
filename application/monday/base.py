@@ -176,8 +176,11 @@ class BaseItem(BaseItemStructure):
 
         # Set ID
         self.mon_id = new_item.id
+
         if convert_eric:
             self.moncli_obj = new_item
+            self._convert_column_data_to_eric_values(self.moncli_obj.column_values)
+
         self.log(f'Item[{self.mon_id}] Created')
 
 

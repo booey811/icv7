@@ -1,7 +1,7 @@
 import pytest
 
 from application.utilities import clients
-from application import CustomLogger
+from application import CustomLogger, BaseItem
 
 
 @pytest.fixture(scope='session')
@@ -14,3 +14,14 @@ def logger():
     logger = CustomLogger()
     yield logger
     logger.clear()
+
+
+@pytest.fixture
+def temp_mainboard_item(logger):
+    item = BaseItem(logger, board_id=349212843)
+    item.notifications_status.label = "OFF"
+    item.email.value = "blankemail@te811est.com"
+    item.phone.value = 4474206920
+    item.new_item('Test Item', convert_eric=True)
+    yield item
+    item.moncli_obj.delete()

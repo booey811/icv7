@@ -34,7 +34,7 @@ class TestInventoryHelper:
         eric_test_part_item.stock_level.value = 15  # Arbitrary
         eric_test_part_item.reorder_point.value = 20  # Arbitrary
 
-        calculated_low_stock_status = inventory.check_stock_against_reorder(eric_test_part_item)
+        calculated_low_stock_status = inventory._check_stock_against_reorder(eric_test_part_item)
 
         assert calculated_low_stock_status == "Below Reorder"
 
@@ -46,7 +46,7 @@ class TestInventoryHelper:
         eric_test_part_item.stock_level.value = 20  # Arbitrary
         eric_test_part_item.reorder_point.value = 15  # Arbitrary
 
-        calculated_low_stock_status = inventory.check_stock_against_reorder(eric_test_part_item)
+        calculated_low_stock_status = inventory._check_stock_against_reorder(eric_test_part_item)
 
         assert calculated_low_stock_status == "Above Reorder"
 
@@ -61,7 +61,7 @@ class TestInventoryHelper:
 
         refresh_eric = BaseItem(CustomLogger(), 1226905145)
 
-        calculated_low_stock_status = inventory.check_stock_against_reorder(refresh_eric)
+        calculated_low_stock_status = inventory._check_stock_against_reorder(refresh_eric)
 
         assert calculated_low_stock_status == "Below Reorder"
 
@@ -76,7 +76,7 @@ class TestInventoryHelper:
 
         refresh_eric = BaseItem(CustomLogger(), 1226905145)
 
-        calculated_low_stock_status = inventory.check_stock_against_reorder(refresh_eric)
+        calculated_low_stock_status = inventory._check_stock_against_reorder(refresh_eric)
 
         assert calculated_low_stock_status == "Above Reorder"
 
