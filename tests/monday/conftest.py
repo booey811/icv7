@@ -9,6 +9,11 @@ from application.utilities import clients
 from application.monday.base import BaseItem
 
 
+@pytest.fixture
+def blank_eric_devtest_item(logger, dev_test_board_id):
+    item = BaseItem(logger, board_id=dev_test_board_id)
+    return item
+
 @pytest.fixture(scope='session')
 def read_only_item_id():
     return '1649471278'

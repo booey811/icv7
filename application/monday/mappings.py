@@ -95,6 +95,13 @@ class TextColumn(BaseColumnValue):
         self._eric.staged_changes[self.id] = self._value
         return {self.id: self._value}
 
+    def search(self, value_to_search_for):
+        """returns list of item ids when using this monday column to search with the parameter"""
+        search = self._moncli_value
+        search.text = value_to_search_for
+        items = self._eric.moncli_board_obj.get_items_by_column_values(search, 'id')
+        return items
+
 
 class LongTextColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
@@ -415,8 +422,12 @@ class DateColumn(BaseColumnValue):
         if from_item:
             # Set private attributes
             self._value = moncli_column_value.text
-            self._date = self._value.split()[0]
-            self._time = moncli_column_value.time
+            try:
+                self._date = self._value.split()[0]
+                self._time = moncli_column_value.time
+            except IndexError:
+                self._date = ""
+                self._time = ""
 
         # Setup from board ID
         else:
