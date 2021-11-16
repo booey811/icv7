@@ -143,11 +143,12 @@ class BaseItem(BaseItemStructure):
                     self.log('Failure - Terminating Process')
                     raise HardLog(self)
 
-    def new_item(self, name: str) -> moncli.entities.Item:
+    def new_item(self, name: str, convert_eric=False) -> moncli.entities.Item:
         """
         creates a new monday item on the board related by this eric item
+        :param convert_eric: whether the eric item creating this will replace it's current moncki_obj property
         :param name: the desired item name
-        :return: moncli_item
+        :return: new moncli_item, if converted returns self
         """
         # Check input
         if type(name) != str:
@@ -175,8 +176,11 @@ class BaseItem(BaseItemStructure):
 
         # Set ID
         self.mon_id = new_item.id
-
+        if convert_eric:
+            self.moncli_obj = new_item
         self.log(f'Item[{self.mon_id}] Created')
+
+
 
         return new_item
 
