@@ -1,6 +1,7 @@
 import base64
 import os
 import json
+from urllib.parse import quote_plus
 
 import requests
 
@@ -60,13 +61,16 @@ class Authorizer:
 _auth = Authorizer()
 
 
-def _send_request(url, method, body=None):
+def _send_request(url, method, body=None, params=None):
     headers = {
         "Authorization": f"Bearer {_auth.access}",
         "Accept": "application/json"
     }
+
     if body:
         response = requests.request(method=method, url=url, headers=headers, data=body)
+    elif params:
+        response = requests.request(method=method, url=url, headers=headers, params=params)
     else:
         response = requests.request(method=method, url=url, headers=headers)
 
@@ -99,3 +103,24 @@ def get_contact(contact_id_or_zendesk_organisation_number, limit=None):
     else:
         return contact["Contacts"]
 
+
+def get_invoice(invoice_id):
+    url = f"https://api.xero.com/api.xro/2.0/Invoices/{invoice_id}"
+    method = "GET"
+    result = _send_request(url, method)
+    return result
+
+def get_draft_invoices_for_contact(contact_id_or_zendesk_organisation_number):
+
+    url_base = f"https://api.xero.com/api.xro/2.0/Invoices?ContactIDs={contact_id_or_zendesk_organisation_number}&Statuses=DRAFT"
+    method = "GET"
+
+    result = _send_request(url_base, method)
+
+    if result.status_code == 200:
+        info = json.loads(result.text)
+    else:
+        raise Exception('xero.get_drafts returned a non-200 response')
+    return info
+
+get_draft_invoices_for_contact("496881b2-956b-4ec2-a4e4-201628e3a0e0")
