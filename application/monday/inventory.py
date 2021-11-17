@@ -22,6 +22,9 @@ COLOURED_PARTS = [
 
 
 def construct_search_terms_for_parts(mainboard_item: BaseItem):
+
+    mainboard_item.log(f"Generating Search Terms for {mainboard_item.name}: {mainboard_item.mon_id}")
+
     terms = []
 
     for repair_id in mainboard_item.repairs.ids:
@@ -32,6 +35,8 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem):
             search_term = f"{mainboard_item.device.ids[0]}-{repair_id}-{mainboard_item.device_colour.index}"
         else:
             search_term = f"{mainboard_item.device.ids[0]}-{repair_id}"
+
+        mainboard_item.log(f"Generated {search_term}")
 
         terms.append(search_term)
 
@@ -97,12 +102,17 @@ def _check_stock_against_reorder(part_item: BaseItem) -> str:
         str: Required Label of the Low Stock Status
 
     """
+
     stock_level = part_item.stock_level.value
     reorder_point = part_item.reorder_point.value
 
+    part_item.log(f"Checking Stock for {part_item.name} ({stock_level}) against Reorder({reorder_point})")
+
     if stock_level > reorder_point:
+        part_item.log("Above Reorder")
         return "Above Reorder"
     elif stock_level <= reorder_point:
+        part_item.log("Below Reorder")
         return "Below Reorder"
     else:
         raise Exception(
@@ -112,13 +122,17 @@ def _check_stock_against_reorder(part_item: BaseItem) -> str:
 def _check_and_adjust_for_low_stock(part_item: BaseItem):
     """Performs a quick check to see if a part is below/above it's reorder point, and acts accordingly"""
 
+    part_item.log(f"Checking Low Stock Status for {part_item.name}")
+
     # compare stock level with reorder point
     low_stock_status = part_item.low_stock_status.label
+    part_item.log(low_stock_status)
 
     # check 'Low Stock' status to see if this is correct
     low_stock_level = _check_stock_against_reorder(part_item)
 
     if low_stock_level != low_stock_status:
+        part_item.log(f"Adjusting to: {low_stock_level}")
         part_item.low_stock_status.label = low_stock_level
 
     # Do not need to commit item as it is always committed when adjusting stock level
@@ -126,6 +140,8 @@ def _check_and_adjust_for_low_stock(part_item: BaseItem):
 
 def get_stock_info(mainboard_item: BaseItem):
     """returns a dictionary of repair items and some basic info"""
+
+    mainboard_item.log(f"Getting Stock Info: {mainboard_item.name}: {mainboard_item.mon_id}")
 
     result = {}
     # get monday items
@@ -148,6 +164,9 @@ def get_stock_info(mainboard_item: BaseItem):
 
 def get_repairs(mainboard_item: BaseItem):
     """"""
+
+    mainboard_item.log(f"Getting Repairs for {mainboard_item.name}: {mainboard_item.mon_id}")
+
     # Create an eric item of the repairs board to search with
     repairs_search_item = BaseItem(mainboard_item.logger, board_id=984924063)
 
@@ -158,9 +177,9 @@ def get_repairs(mainboard_item: BaseItem):
     for item in construct_search_terms_for_parts(mainboard_item):
         # Search using search items relevant column search method
         found_ids = repairs_search_item.combined_id.search(item)
-
+        mainboard_item.log(f"Found IDS: {found_ids}")
         diff = list(set(found_ids) - set(repair_ids))
-
+        mainboard_item.log(f"New IDs: {diff}")
         repair_ids.extend(diff)
 
     # Get eric parts
