@@ -47,7 +47,15 @@ BOARD_MAPPING_DICT = {
             'text4': 'imeisn',
             'status_18': "notifications_status",
             "text5": 'email',
-            "text00": "phone"
+            "text00": "phone",
+            "status8": "device_colour"
+        }
+    },
+    "984924063": {
+        'name': "repairs",
+        'columns': {
+            "combined_id": 'combined_id',
+            "connect_boards5": "connect_parts"
         }
     },
     '985177480': {

@@ -59,35 +59,36 @@ class CustomLogger:
         # Create the log file
 
         self.log('==== SOFT LOG REQUESTED =====')
-        self._create_log()
-        col_vals = {
-            'status': {'label': 'Soft'}
-        }
-        log_item = self._log_board.add_item(
-            item_name=self._log_name,
-            column_values=col_vals
-        )
-        file_column = log_item.get_column_value(id='file')
-        log_item.add_file(file_column, self._log_file_path)
-
         print('==== SOFT LOG REQUESTED =====')
-
-        return log_item
+        if os.environ['ENV'] == 'prod':
+            self._create_log()
+            col_vals = {
+                'status': {'label': 'Soft'}
+            }
+            log_item = self._log_board.add_item(
+                item_name=self._log_name,
+                column_values=col_vals
+            )
+            file_column = log_item.get_column_value(id='file')
+            log_item.add_file(file_column, self._log_file_path)
+            return log_item
 
     def hard_log(self):
         """creates a log entry in the logs board and halts execution"""
         self.log('==== HARD LOG REQUESTED =====')
-        # Create the log file
-        self._create_log()
-        col_vals = {
-            'status': {'label': 'Hard'}
-        }
-        log_item = self._log_board.add_item(
-            item_name=self._log_name,
-            column_values=col_vals
-        )
-        file_column = log_item.get_column_value(id='file')
-        log_item.add_file(file_column, self._log_file_path)
+
+        if os.environ['ENV'] == 'prod':
+            # Create the log file
+            self._create_log()
+            col_vals = {
+                'status': {'label': 'Hard'}
+            }
+            log_item = self._log_board.add_item(
+                item_name=self._log_name,
+                column_values=col_vals
+            )
+            file_column = log_item.get_column_value(id='file')
+            log_item.add_file(file_column, self._log_file_path)
 
         self.clear()
         raise Exception(f'Hard Log Requested: {self._log_name}')

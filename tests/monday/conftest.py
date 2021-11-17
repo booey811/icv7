@@ -2,7 +2,8 @@
 Once all column values are complete, a fixture for reverting test items to their default state will be required, to be
 called at the end of a column_value test class
 """
-
+import time
+import datetime
 import pytest
 
 from application.utilities import clients
@@ -83,3 +84,26 @@ def eric_error_item(logger, moncli_error_item):
     """Returns an Eric item retrieved with the monday.error client
     Need to add the item as yield instead of return then change the item to default state afterwards"""
     return BaseItem(logger, moncli_error_item)
+
+
+@pytest.fixture
+def temp_mainboard_item(logger):
+    item = BaseItem(logger, board_id=349212843)
+    item.notifications_status.label = "OFF"
+    item.email.value = "blankemail@te811est.com"
+    item.phone.value = 4474206920
+    item.new_item('Test Item', convert_eric=True)
+    time.sleep(1)
+    yield item
+    item.moncli_obj.delete()
+
+
+@pytest.fixture
+def temp_devtest_item(logger):
+    item = BaseItem(logger, board_id=1139943160)
+    item.text.value = "TEST TEXT"
+    item.numbers.value = 98426742
+    item.new_item('Test Item', convert_eric=True)
+    time.sleep(8)
+    yield item
+    item.moncli_obj.delete()

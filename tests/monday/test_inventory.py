@@ -8,6 +8,22 @@ def eric_test_part_item():
     return BaseItem(CustomLogger(), 1226905145)  # TEST DEVICE TEST Screen Black
 
 
+@pytest.fixture
+def ip8_batt_screen_repair(temp_mainboard_item):
+    item = temp_mainboard_item
+    item.device.add('iPhone 8')
+    item.repairs.add(['Front Screen Universal', 'Battery'])
+    item.device_colour.label = "Black"
+    item.commit()
+    return item
+
+
+def test_ip8_batt_screen_repair_fixture(ip8_batt_screen_repair):
+    item = ip8_batt_screen_repair
+    assert sorted(item.device.labels) == sorted(['iPhone 8'])
+    assert sorted(item.repairs.labels) == sorted(['Front Screen Universal', 'Battery'])
+
+
 @pytest.mark.slow
 class TestInventoryHelper:
 
@@ -108,3 +124,24 @@ class TestInventoryHelper:
         refresh_eric = BaseItem(CustomLogger(), 1226905145)
 
         assert refresh_eric.low_stock_status.label == "Above Reorder"
+
+    def test_to_print_stock_levels_for_repair_to_an_item(self, ip8_batt_screen_repair):
+        """test creates a MainBoard Item for iPhone 7 Screen & Battery Repair, then checks the relvant stock levels and prints
+        to the item """
+        # Create test item
+        test_item = ip8_batt_screen_repair
+
+        # Get the required parts
+        stock_info = inventory.get_stock_info(test_item)
+
+        stock_list = []
+        for item in stock_info:
+            stock_list.append(f"{item}: {stock_info[item]['stock_level']}")
+
+        stock_string = "\n".join(stock_list)
+
+        update = f"""STOCK LEVELS\n\n{stock_string}"""
+
+        update_info = test_item.moncli_obj.add_update(body=update)
+
+        assert "STOCK LEVELS" in update_info["body"]

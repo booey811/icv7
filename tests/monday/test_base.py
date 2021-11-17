@@ -4,6 +4,7 @@ import pytest
 from application.monday import base
 from application.utilities import clients
 from application.monday import config
+from application import BaseItem
 
 
 @pytest.fixture(scope='class')
@@ -70,6 +71,18 @@ class TestNewItemCreation:
         assert type(item) == moncli.entities.Item
 
         item.delete()
+
+    def test_creating_a_blank_monday_item_from_an_eric_item_and_adopting_its_values(self, temp_mainboard_item, logger):
+        blank_eric_item = temp_mainboard_item
+        # Create and adopt monday item
+        blank_eric_item.new_item('Test Item', convert_eric=True)
+        blank_eric_item.imeisn.value = "Test"
+        blank_eric_item.commit()
+
+        # Create check eric item
+        check_eric_item = BaseItem(logger, blank_eric_item.mon_id)
+
+        assert blank_eric_item.imeisn.value == check_eric_item.imeisn.value
 
 
 class TestLogger:

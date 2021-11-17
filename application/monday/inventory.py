@@ -7,12 +7,35 @@ from .base import BaseItem
 
 from typing import Union
 
+COLOURED_PARTS = [
+    'TrackPad',
+    'Charging Port',
+    'Headphone Jack',
+    'Home Button',
+    'Front Screen Universal',
+    'Rear Glass',
+    'Front Screen (LG)',
+    'Front Screen (Tosh)',
+    'Rear Housing',
+    'TEST Screen'
+]
 
-# class PartsRetriever:
-#     """deals with the messy conversions required to get parts items from mainboard items"""
-#
-#     def
 
+def construct_search_terms_for_parts(mainboard_item: BaseItem):
+    terms = []
+
+    for repair_id in mainboard_item.repairs.ids:
+
+        label = mainboard_item.repairs._settings[str(repair_id)]
+
+        if label in COLOURED_PARTS:
+            search_term = f"{mainboard_item.device.ids[0]}-{repair_id}-{mainboard_item.device_colour.index}"
+        else:
+            search_term = f"{mainboard_item.device.ids[0]}-{repair_id}"
+
+        terms.append(search_term)
+
+    return terms
 
 
 def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolute=False):
@@ -103,12 +126,45 @@ def _check_and_adjust_for_low_stock(part_item: BaseItem):
 
 def get_stock_info(mainboard_item: BaseItem):
     """returns a dictionary of repair items and some basic info"""
-    # get monday items
-    # build dict: {name: NAME, eric: ERIC ITEM, stock: STOCK LEVEL, available: bool}
+
     result = {}
+    # get monday items
+    for repair in get_repairs(mainboard_item):
+        # build dict: {name: NAME, eric: ERIC ITEM, stock: STOCK LEVEL, stock_status: MONDAY LABEL}
+
+        part_id = repair.connect_parts.value[0]
+
+        part = BaseItem(mainboard_item.logger, part_id)
+
+        result[repair.name] = {
+            'repair': repair,
+            'part': part,
+            'stock_level': int(part.stock_level.value),
+            'low_stock_status': part.low_stock_status.value,
+        }
+
     return result
 
-def get_parts(mainboard_item: BaseItem):
+
+def get_repairs(mainboard_item: BaseItem):
     """"""
+    # Create an eric item of the repairs board to search with
+    repairs_search_item = BaseItem(mainboard_item.logger, board_id=984924063)
 
+    repair_ids = []
+    eric_parts = []
 
+    # Get search terms from device and repairs (and colour) columns
+    for item in construct_search_terms_for_parts(mainboard_item):
+        # Search using search items relevant column search method
+        found_ids = repairs_search_item.combined_id.search(item)
+
+        diff = list(set(found_ids) - set(repair_ids))
+
+        repair_ids.extend(diff)
+
+    # Get eric parts
+    for repair_id in repair_ids:
+        eric_parts.append(BaseItem(mainboard_item.logger, repair_id))
+
+    return eric_parts

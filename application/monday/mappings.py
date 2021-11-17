@@ -97,10 +97,10 @@ class TextColumn(BaseColumnValue):
 
     def search(self, value_to_search_for):
         """returns list of item ids when using this monday column to search with the parameter"""
-        search = self._moncli_value
-        search.text = value_to_search_for
+        search = self._eric.moncli_board_obj.get_column_value(self.id)
+        search.value = f'"{value_to_search_for}"'
         items = self._eric.moncli_board_obj.get_items_by_column_values(search, 'id')
-        return items
+        return [item['id'] for item in items]
 
 
 class LongTextColumn(BaseColumnValue):
@@ -239,6 +239,7 @@ class StatusColumn(BaseColumnValue):
         #         index = int(self._settings[self._value])
         # elif type(self._value) == int:
         #     index = int(self._value)
+        # else:
         # else:
         #     raise Exception('An Unknown Error Occurred')
 
@@ -811,5 +812,6 @@ COLUMN_TYPE_MAPPINGS = {
     'multiple-person': PeopleColumn,
     column_value.SubitemsValue: SubItemsValue,
     'subtasks': SubItemsValue,
-    column_value.ItemLinkValue: ConnectBoardsValue
+    column_value.ItemLinkValue: ConnectBoardsValue,
+    'board-relation': ConnectBoardsValue
 }
