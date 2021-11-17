@@ -28,7 +28,6 @@ def index():
 # Process Stock Count
 @app.route('/monday/stock/process-count', methods=['POST'])
 def process_stock_count(test_id=None):
-
     # Check for whether monday auth is needed or the function is being run under a test, instantiate logger
     webhook = flask.request.get_data()
     try:
@@ -69,6 +68,7 @@ def repairers_pc_report_fetch(test_id=None):
 
     return ''
 
+
 @app.route("/monday/main/check-stock")
 def check_stock_for_mainboard_item(test_id=None):
     webhook = flask.request.get_data()
@@ -80,9 +80,9 @@ def check_stock_for_mainboard_item(test_id=None):
     if os.environ['ENV'] == 'devlocal':
         if not test_id:
             raise Exception('test_id is required when testing locally')
-        eric.fetch_pc_report(None, test_id)
+        eric.print_stock_info_for_mainboard(None, test_id)
     elif os.environ['ENV'] in ['devserver', 'production']:
-        result = q_hi.enqueue(eric.fetch_pc_report, data)
+        result = q_hi.enqueue(eric.print_stock_info_for_mainboard, data)
     else:
         raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
 

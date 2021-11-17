@@ -147,7 +147,7 @@ def print_stock_info_for_mainboard(webhook, test=None):
     logger.log("Checking Stock For MainBoard Item")
 
     if test:
-        main_item = BaseItem(logger,test)
+        main_item = BaseItem(logger, test)
     else:
         main_item = BaseItem(logger, webhook["pulseId"])
 
