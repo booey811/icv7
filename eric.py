@@ -171,5 +171,3 @@ def print_stock_info_for_mainboard(webhook, test=None):
     logger.clear()
 
     return True
-
-print_stock_info_for_mainboard(None, test=1914061037)
