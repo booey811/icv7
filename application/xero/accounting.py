@@ -122,5 +122,3 @@ def get_draft_invoices_for_contact(contact_id_or_zendesk_organisation_number):
     else:
         raise Exception('xero.get_drafts returned a non-200 response')
     return info
-
-get_draft_invoices_for_contact("496881b2-956b-4ec2-a4e4-201628e3a0e0")
