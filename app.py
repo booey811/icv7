@@ -69,6 +69,25 @@ def repairers_pc_report_fetch(test_id=None):
 
     return ''
 
+@app.route("/monday/main/check-stock")
+def check_stock_for_mainboard_item(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    if os.environ['ENV'] == 'devlocal':
+        if not test_id:
+            raise Exception('test_id is required when testing locally')
+        eric.fetch_pc_report(None, test_id)
+    elif os.environ['ENV'] in ['devserver', 'production']:
+        result = q_hi.enqueue(eric.fetch_pc_report, data)
+    else:
+        raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
+
+    return ''
+
 
 if __name__ == '__main__':
     app.run()

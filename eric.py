@@ -7,7 +7,6 @@ from application import BaseItem, clients, CustomLogger, phonecheck, inventory, 
 
 
 def process_stock_count(webhook, test=None):
-
     logger = CustomLogger()
     logger.log('Process Stock Count Requested')
 
@@ -62,7 +61,8 @@ def process_stock_count(webhook, test=None):
 
     # Adjust Part stock levels and Count Item Status & Group
     for result in count_totals:
-        inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'], absolute=True)
+        inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'],
+                                     absolute=True)
 
         count_totals[result]['count'].count_status.label = 'Confirmed'
         count_totals[result]['count'].count_num.value = count_totals[result]['actual']
@@ -75,7 +75,6 @@ def process_stock_count(webhook, test=None):
 
 
 def fetch_pc_report(webhook, test=None):
-
     logger = CustomLogger()
 
     if test:
@@ -140,3 +139,37 @@ def fetch_pc_report(webhook, test=None):
 
     logger.clear()
 
+    return True
+
+
+def print_stock_info_for_mainboard(webhook, test=None):
+    logger = CustomLogger()
+    logger.log("Checking Stock For MainBoard Item")
+
+    if test:
+        main_item = BaseItem(logger,test)
+    else:
+        main_item = BaseItem(logger, webhook["pulseId"])
+
+    stock_info = inventory.get_stock_info(main_item)
+
+    # Create Monday Friendly Update from Stock Info
+    stock_list = []
+    for item in stock_info:
+        stock_list.append(f"{item}: {stock_info[item]['stock_level']}")
+    stock_string = "\n".join(stock_list)
+    update = f"""STOCK LEVELS\n\n{stock_string}"""
+
+    try:
+        update_info = main_item.moncli_obj.add_update(body=update)
+        logger.log(f"Update Added: {update_info['body']}")
+    except MondayApiError as e:
+        logger.log("Monday API Error Occurred")
+        logger.log(e.messages)
+        logger.hard_log()
+
+    logger.clear()
+
+    return True
+
+print_stock_info_for_mainboard(None, test=1914061037)

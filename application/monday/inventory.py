@@ -27,20 +27,41 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem):
 
     terms = []
 
-    for repair_id in mainboard_item.repairs.ids:
+    # If no repair is supplied, retrieve the following
+    if not mainboard_item.repairs.ids:
+        mainboard_item.log("No Repairs Supplied - Fetching Screens, Battery & Rear Cam")
+        terms.append(f"{mainboard_item.device.ids[0]}-{69}-{10}")  # Device screen black uni
+        terms.append(f"{mainboard_item.device.ids[0]}-{84}-{10}")  # Device screen black tosh
+        terms.append(f"{mainboard_item.device.ids[0]}-{83}-{10}")  # Device screen black lg
+        terms.append(f"{mainboard_item.device.ids[0]}-{69}-{16}")  # Device screen white uni
+        terms.append(f"{mainboard_item.device.ids[0]}-{84}-{16}")  # Device screen white tosh
+        terms.append(f"{mainboard_item.device.ids[0]}-{83}-{16}")  # Device screen white lg
+        terms.append(f"{mainboard_item.device.ids[0]}-{71}")  # Device battery
+        terms.append(f"{mainboard_item.device.ids[0]}-{70}")  # Device r cam
 
-        label = mainboard_item.repairs._settings[str(repair_id)]
+    else:
+        for repair_id in mainboard_item.repairs.ids:
 
-        if label in COLOURED_PARTS:
-            search_term = f"{mainboard_item.device.ids[0]}-{repair_id}-{mainboard_item.device_colour.index}"
-        else:
-            search_term = f"{mainboard_item.device.ids[0]}-{repair_id}"
+            label = mainboard_item.repairs._settings[str(repair_id)]
 
-        mainboard_item.log(f"Generated {search_term}")
+            mainboard_item.log(f"Generating for {label}")
 
-        terms.append(search_term)
+            if label in COLOURED_PARTS:
+                if not mainboard_item.device_colour.index:
+                    mainboard_item.log(f"No Colour Supplied - Autogenerating for Black and White")
+                    terms.append(f"{mainboard_item.device.ids[0]}-{repair_id}-10")
+                    terms.append(f"{mainboard_item.device.ids[0]}-{repair_id}-16")
+                    continue
+                else:
+                    search_term = f"{mainboard_item.device.ids[0]}-{repair_id}-{mainboard_item.device_colour.index}"
+            else:
+                search_term = f"{mainboard_item.device.ids[0]}-{repair_id}"
 
-    return terms
+            mainboard_item.log(f"Generated {search_term}")
+
+            terms.append(search_term)
+
+        return terms
 
 
 def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolute=False):
@@ -147,17 +168,20 @@ def get_stock_info(mainboard_item: BaseItem):
     # get monday items
     for repair in get_repairs(mainboard_item):
         # build dict: {name: NAME, eric: ERIC ITEM, stock: STOCK LEVEL, stock_status: MONDAY LABEL}
+        try:
+            part_id = repair.connect_parts.value[0]
 
-        part_id = repair.connect_parts.value[0]
+            part = BaseItem(mainboard_item.logger, part_id)
 
-        part = BaseItem(mainboard_item.logger, part_id)
-
-        result[repair.name] = {
-            'repair': repair,
-            'part': part,
-            'stock_level': int(part.stock_level.value),
-            'low_stock_status': part.low_stock_status.value,
-        }
+            result[repair.name] = {
+                'repair': repair,
+                'part': part,
+                'stock_level': int(part.stock_level.value),
+                'low_stock_status': part.low_stock_status.value,
+            }
+        except IndexError:
+            mainboard_item.logger.log(f"Repair[{repair.name}] Has No Linked Part - Likely This Product Does Not Exist")
+            mainboard_item.logger.soft_log()
 
     return result
 
