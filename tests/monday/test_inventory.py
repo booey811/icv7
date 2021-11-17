@@ -5,7 +5,10 @@ from application import BaseItem, CustomLogger, inventory
 
 @pytest.fixture(scope="module")
 def eric_test_part_item():
-    return BaseItem(CustomLogger(), 1226905145)  # TEST DEVICE TEST Screen Black
+    eric = BaseItem(CustomLogger(), board_id=985177480)
+    eric.new_item('TEST PART ITEM', convert_eric=True)
+    yield eric
+    eric.moncli_obj.delete()
 
 
 @pytest.fixture
@@ -29,15 +32,15 @@ class TestInventoryHelper:
 
     def test_adjust_stock_level(self, eric_test_part_item):
         """test that inventory.adjust_stock_level changes the stock level of an item on Monday"""
-        eric_test_part_item = BaseItem(CustomLogger(), 1226905145)  # TEST DEVICE TEST Screen Black
-        ori_value = eric_test_part_item.stock_level.value
+        test_item = eric_test_part_item
+        ori_value = test_item.stock_level.value
         difference = 7  # arbitrary difference
         new_value = ori_value - difference
 
-        eric_test_part_item.stock_level.value = new_value
-        eric_test_part_item.commit()
+        test_item.stock_level.value = new_value
+        test_item.commit()
 
-        refetched_eric_test_part_item = BaseItem(CustomLogger(), 1226905145)
+        refetched_eric_test_part_item = BaseItem(CustomLogger(), test_item.mon_id)
         refetched_value = refetched_eric_test_part_item.stock_level.value
 
         assert new_value == refetched_value
@@ -75,7 +78,7 @@ class TestInventoryHelper:
         eric_test_part_item.reorder_point.value = 20  # Arbitrary
         eric_test_part_item.commit()
 
-        refresh_eric = BaseItem(CustomLogger(), 1226905145)
+        refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
 
         calculated_low_stock_status = inventory._check_stock_against_reorder(refresh_eric)
 
@@ -90,7 +93,7 @@ class TestInventoryHelper:
         eric_test_part_item.reorder_point.value = 15  # Arbitrary
         eric_test_part_item.commit()
 
-        refresh_eric = BaseItem(CustomLogger(), 1226905145)
+        refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
 
         calculated_low_stock_status = inventory._check_stock_against_reorder(refresh_eric)
 
@@ -107,7 +110,7 @@ class TestInventoryHelper:
         inventory.adjust_stock_level(eric_test_part_item.logger, eric_test_part_item,
                                      -10)  # Sets stock_level to 20 - 10 < 15
 
-        refresh_eric = BaseItem(CustomLogger(), 1226905145)
+        refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
 
         assert refresh_eric.low_stock_status.label == "Below Reorder"
 
@@ -121,7 +124,7 @@ class TestInventoryHelper:
         inventory.adjust_stock_level(eric_test_part_item.logger, eric_test_part_item,
                                      10)  # Sets stock_level to 15 + 10 > 20
 
-        refresh_eric = BaseItem(CustomLogger(), 1226905145)
+        refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
 
         assert refresh_eric.low_stock_status.label == "Above Reorder"
 
