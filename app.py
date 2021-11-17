@@ -69,7 +69,7 @@ def repairers_pc_report_fetch(test_id=None):
     return ''
 
 
-@app.route("/monday/main/check-stock")
+@app.route("/monday/main/check-stock", methods=["POST"])
 def check_stock_for_mainboard_item(test_id=None):
     webhook = flask.request.get_data()
     try:
