@@ -2,6 +2,7 @@ import base64
 import os
 import json
 from urllib.parse import quote_plus
+from typing import Union
 
 import requests
 
@@ -19,7 +20,7 @@ class Authorizer:
         if self._access:
             return self._access
         else:
-            self._access = self.request_token()
+            self.request_token()
             return self._access
 
     @access.setter
@@ -53,7 +54,8 @@ class Authorizer:
 
         if response.status_code == 200:
             info = json.loads(response.text)
-            return info["access_token"]
+            self.access = info["access_token"]
+            return response
         else:
             raise Exception(f"Xero Authorisation Returned non-200 Response: {response.text}")
 
@@ -61,20 +63,33 @@ class Authorizer:
 _auth = Authorizer()
 
 
-def _send_request(url, method, body=None, params=None):
+def _send_request(url, method, body: dict = None, params=None):
     headers = {
         "Authorization": f"Bearer {_auth.access}",
         "Accept": "application/json"
     }
 
     if body:
-        response = requests.request(method=method, url=url, headers=headers, data=body)
+        response = requests.request(method=method, url=url, headers=headers, data=json.dumps(body))
     elif params:
         response = requests.request(method=method, url=url, headers=headers, params=params)
     else:
         response = requests.request(method=method, url=url, headers=headers)
 
     return response
+
+
+def add_zendesk_organisation_id_to_xero(xero_contact_id: str, zendesk_organisation_number: Union[str, int]):
+    contact = get_contact(xero_contact_id)[0]
+    contact["ContactNumber"] = zendesk_organisation_number
+
+    result = _send_request(
+        url="https://api.xero.com/api.xro/2.0/Contacts",
+        method="POST",
+        body=contact
+    )
+
+    if result.
 
 
 def get_contact(contact_id_or_zendesk_organisation_number, limit=None):
@@ -105,17 +120,23 @@ def get_contact(contact_id_or_zendesk_organisation_number, limit=None):
 
 
 def get_invoice(invoice_id):
+    """Gets a Xero invoice via the specified ID"""
     url = f"https://api.xero.com/api.xro/2.0/Invoices/{invoice_id}"
     method = "GET"
+
     result = _send_request(url, method)
+
+    # Analyse response
+
+
     return result
 
-def get_draft_invoices_for_contact(contact_id_or_zendesk_organisation_number):
 
-    url_base = f"https://api.xero.com/api.xro/2.0/Invoices?ContactIDs={contact_id_or_zendesk_organisation_number}&Statuses=DRAFT"
+def get_draft_invoices_for_contact(contact_id_or_zendesk_organisation_number):
+    url = f"https://api.xero.com/api.xro/2.0/Invoices?ContactIDs={contact_id_or_zendesk_organisation_number}&Statuses=DRAFT"
     method = "GET"
 
-    result = _send_request(url_base, method)
+    result = _send_request(url, method)
 
     if result.status_code == 200:
         info = json.loads(result.text)
