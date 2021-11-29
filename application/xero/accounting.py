@@ -79,18 +79,6 @@ def _send_request(url, method, body: dict = None, params=None):
     return response
 
 
-def add_zendesk_organisation_id_to_xero(xero_contact_id: str, zendesk_organisation_number: Union[str, int]):
-    contact = get_contact(xero_contact_id)[0]
-    contact["ContactNumber"] = zendesk_organisation_number
-
-    result = _send_request(
-        url="https://api.xero.com/api.xro/2.0/Contacts",
-        method="POST",
-        body=contact
-    )
-
-    if result.
-
 
 def get_contact(contact_id_or_zendesk_organisation_number, limit=None):
     """Takes Xero COntact ID or Zendesk Orgabnisation ID and gets the relevant Xero entities, returning a list
@@ -119,6 +107,15 @@ def get_contact(contact_id_or_zendesk_organisation_number, limit=None):
         return contact["Contacts"]
 
 
+def edit_contact(edited_contact_object):
+    """Commits local changes of contact to Xero Contact entity"""
+
+    url = "https://api.xero.com/api.xro/2.0/Contacts"
+    method = "POST"
+
+    result = _send_request(url=url, method=method, body=edited_contact_object)
+
+
 def get_invoice(invoice_id):
     """Gets a Xero invoice via the specified ID"""
     url = f"https://api.xero.com/api.xro/2.0/Invoices/{invoice_id}"
@@ -127,7 +124,6 @@ def get_invoice(invoice_id):
     result = _send_request(url, method)
 
     # Analyse response
-
 
     return result
 

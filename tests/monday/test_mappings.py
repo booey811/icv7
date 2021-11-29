@@ -533,10 +533,10 @@ class TestHourValue:
 
 
 
-@pytest.mark.slow
-class TestColumnValueSearches:
-
-    def test_text_column_search(self, temp_devtest_item):
-        test_item = temp_devtest_item
-        item_ids = test_item.text.search(test_item.text.value)
-        assert item_ids == [test_item.mon_id]
+# @pytest.mark.slow
+# class TestColumnValueSearches:
+#
+#     def test_text_column_search(self, temp_devtest_item):
+#         test_item = temp_devtest_item
+#         item_ids = test_item.text.search(test_item.text.value)
+#         assert item_ids == [test_item.mon_id]
