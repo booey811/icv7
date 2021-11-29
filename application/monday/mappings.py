@@ -43,13 +43,22 @@ class MappingObject:
 
 
 class BaseColumnValue:
-    def __init__(self, moncli_column_value, eric_item):
+    def __init__(self, moncli_column_value, eric_item, zendesk=False):
         self.id = moncli_column_value.id
         self.title = moncli_column_value.title
 
         self._eric = eric_item
         self._moncli_value = moncli_column_value
         self._value = None
+
+        # Check whether this column is registered to by synced with zendesk on change
+        try:
+            if self.id in BOARD_MAPPING_DICT[str(self._eric.board_id)]["zendesk"]:
+                self.zen_sync = True
+            else:
+                self.zen_sync = False
+        except KeyError:
+            self.zen_sync = False
 
     @property
     def value(self):

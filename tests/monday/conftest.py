@@ -6,8 +6,7 @@ import time
 import datetime
 import pytest
 
-from application.utilities import clients
-from application.monday.base import BaseItem
+from application import CustomLogger, BaseItem, clients
 
 
 @pytest.fixture
@@ -86,9 +85,9 @@ def eric_error_item(logger, moncli_error_item):
     return BaseItem(logger, moncli_error_item)
 
 
-@pytest.fixture
-def temp_mainboard_item(logger):
-    item = BaseItem(logger, board_id=349212843)
+@pytest.fixture(scope="class")
+def temp_mainboard_item():
+    item = BaseItem(CustomLogger(), board_id=349212843)
     item.notifications_status.label = "OFF"
     item.email.value = "blankemail@te811est.com"
     item.phone.value = 4474206920
@@ -99,8 +98,8 @@ def temp_mainboard_item(logger):
 
 
 @pytest.fixture
-def temp_devtest_item(logger):
-    item = BaseItem(logger, board_id=1139943160)
+def temp_devtest_item():
+    item = BaseItem(CustomLogger(), board_id=1139943160)
     item.text.value = "TEST TEXT"
     item.numbers.value = 98426742
     item.new_item('Test Item', convert_eric=True)
