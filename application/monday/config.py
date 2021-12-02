@@ -80,5 +80,19 @@ BOARD_MAPPING_DICT = {
             'numbers0': 'count_num',
             'numbers08': 'expected_num'
         }
+    },
+    '1967127282': {
+        'name': 'pc_reports',
+        'columns': {
+            'text': 'imeisn'
+        }
+    },
+    '1967142485': {
+        'name': 'pc_reports_sub',
+        'columns': {
+            'files': 'pc_report',
+            'text': 'date_text',
+            'date': 'date_date'
+        }
     }
 }
