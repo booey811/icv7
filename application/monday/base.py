@@ -133,15 +133,15 @@ class BaseItem(BaseItemStructure):
             # This occurs on a submission error (data supplied to moncli does not match the schema)
             self.log('Commit Failed - Attempting Incremental Change')
             for item in self.staged_changes:
+                col_id = item
+                value = self.staged_changes[col_id]
                 try:
-                    col_id = item
-                    value = self.staged_changes[col_id]
                     self.log(f'Changing Column[{col_id}] to {value}')
                     self.moncli_obj.change_multiple_column_values({col_id: value})
                     self.log('Success!')
                 except moncli_error:
-                    self.log('Failure - Terminating Process')
-                    raise HardLog(self)
+                    self.log(f'Failure - {item} -> {value}')
+                    self.logger.soft_log()
 
     def new_item(self, name: str, convert_eric=False) -> moncli.entities.Item:
         """
