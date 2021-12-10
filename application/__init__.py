@@ -9,6 +9,7 @@ from .monday import BaseItem, inventory
 from .utilities import clients
 from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting
+from .zendesk.ticket import EricTicket
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 

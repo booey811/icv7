@@ -6,9 +6,9 @@ from moncli.entities import MondayClient
 from zenpy import Zenpy
 
 
-@pytest.fixture(scope='function')
-def clients_object():
-    return ClientsObject()
+# @pytest.fixture(scope='function')
+# def clients_object():
+#     return ClientsObject()
 
 
 @pytest.mark.parametrize('client_name', ['system', 'error', 'email'])
