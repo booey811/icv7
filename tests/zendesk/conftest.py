@@ -3,13 +3,13 @@ import pytest
 from application.zendesk.ticket import get_zenpy_ticket, EricTicket
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def zenpy_ticket(logger):
     ticket = get_zenpy_ticket(logger, 13421)
     return ticket
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def eric_ticket(logger, zenpy_ticket):
     return EricTicket(logger, zenpy_ticket)
 
