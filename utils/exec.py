@@ -50,8 +50,3 @@ def sync_zendesk_fields():
         response = zen_help.send_direct_request(data=data, url=url, method="PUT")
 
         print()
-
-
-
-
-sync_zendesk_fields()
