@@ -1,16 +1,7 @@
-from application import clients, BaseItem, CustomLogger, zen_help
+from application import BaseItem, CustomLogger, zen_help
 
 
 def sync_zendesk_fields():
-    """
-
-    Args:
-        field (str): which zendesk field to update (device, repair)
-
-    Returns:
-        prints 'Success' or 'Failure'
-    """
-
     keys = {  # contains Zendesk Ticket Field IDs to adjust
         'repairs': 360008842297,
         'device': 4413411999249,
@@ -18,7 +9,6 @@ def sync_zendesk_fields():
         'service': 360010444117,
         'repair_type': 360010444077
     }
-
 
     fields = [item for item in keys]
 
@@ -49,4 +39,7 @@ def sync_zendesk_fields():
 
         response = zen_help.send_direct_request(data=data, url=url, method="PUT")
 
-        print()
+        if response.status_code == 200:
+            print(f"{attribute} field updated")
+        else:
+            raise Exception(f"Could Not Update {attribute} field: {response.text}")
