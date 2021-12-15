@@ -9,6 +9,7 @@ from application.utilities import clients
 from application.exceptions import HardLog
 from .mappings import MappingObject
 from .config import BOARD_MAPPING_DICT
+from application.zendesk import helper as zen_help
 
 
 class BaseItemStructure:
@@ -121,6 +122,9 @@ class BaseItem(BaseItemStructure):
             raise Exception('Attempting to Commit Changes with no Staged Changes')
 
         self.log('Commit Requested')
+
+        if self.board_id == '349212843':
+            zen_help.sync_fields(self)
 
         # Try to apply the changes
         try:

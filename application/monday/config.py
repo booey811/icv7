@@ -53,7 +53,8 @@ BOARD_MAPPING_DICT = {
             "text5": 'email',
             "text00": "phone",
             "status8": "device_colour",
-            "text8": "passcode"
+            "text8": "passcode",
+            "text6": "zendesk_id"
         },
         "zendesk": [
             'status4',  # Status

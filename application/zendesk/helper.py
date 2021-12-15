@@ -4,6 +4,7 @@ import os
 import requests
 
 from application import BaseItem
+from .ticket import EricTicket
 
 
 def send_direct_request(data, url, method, as_json=True):
@@ -27,11 +28,3 @@ def send_direct_request(data, url, method, as_json=True):
     return r
 
 
-def sync_fields(main_board_item:BaseItem):
-    """This function will accept a Main Board Monday Item and sync IMEI, passcode, device, repairs, clients, service,
-    type
-
-    Args:
-        main_board_item (BaseItem): the main board item to sync"""
-
-    pass
