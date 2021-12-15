@@ -1,9 +1,6 @@
 import os
 from typing import Union
-import base64
-import json
 
-import requests
 import zenpy.lib.api_objects
 from zenpy.lib.exception import RecordNotFoundException
 
@@ -109,38 +106,3 @@ def process_organisation_data(logger, zenpy_ticket_obj: zenpy.lib.api_objects.Ti
         return {}
 
 
-def update_custom_field():
-
-    def encode_to_64(string):
-
-        string_bytes = string.encode("ascii")
-        b64_bytes = base64.b64encode(string_bytes)
-        b64_string = b64_bytes.decode("ascii")
-
-        return b64_string
-
-
-
-    url = "https://icorrect.zendesk.com/api/v2/ticket_fields/4413411999249"  # 4413411999249 ID for device field
-
-    method = "PUT"
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Basic " + encode_to_64(f"admin@icorrect.co.uk/token:{os.environ['ZENDESKADMIN']}")
-    }
-
-    data = {"ticket_field": {
-                "custom_field_options": [
-                    {"name": "Apple Pie", "value": "apple"},
-                    {"name": "Pecan Pie", "value": "pecan"}
-                ]
-            }
-        }
-
-    r = requests.request(method, url, headers=headers, data=json.dumps(data))
-
-    print()
-
-
-update_custom_field()

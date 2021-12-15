@@ -43,6 +43,9 @@ BOARD_MAPPING_DICT = {
         'name': 'main',
         'columns': {
             'status4': 'repair_status',
+            'service': 'service',
+            'status': 'client',
+            'status24': 'repair_type',
             'repair': 'repairs',
             "device0": "device",
             'text4': 'imeisn',
