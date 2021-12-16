@@ -532,6 +532,20 @@ class TestHourValue:
             eric_system_item.text.value = input_type
 
 
+class TestZendeskSyncing:
+
+    @pytest.mark.parametrize("column,zen_sync", [
+        ('imeisn', True),
+        ('repair_status', True),
+        ('device', True),
+        ('repairs', True),
+        ('passcode', True),
+        ('device_colour', False)
+    ])
+    def test_registration_of_zendesk_sync_feature(self, temp_mainboard_item, column, zen_sync):
+        col = getattr(temp_mainboard_item, column)
+
+        assert col.zen_sync == zen_sync
 
 # @pytest.mark.slow
 # class TestColumnValueSearches:

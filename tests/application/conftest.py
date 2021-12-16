@@ -11,7 +11,7 @@ def clients_object():
     return clients
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def logger():
     logger = CustomLogger()
     yield logger

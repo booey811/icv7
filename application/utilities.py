@@ -2,8 +2,7 @@ import os
 
 import moncli.api_v2
 from moncli.entities import MondayClient
-
-import settings
+from zenpy import Zenpy
 
 
 def create_monday_client(user: str = 'system') -> MondayClient:
@@ -24,6 +23,20 @@ Function to create and return a moncli client relating to the specified user
 
     client = MondayClient()
     client.api_key_v2 = key
+    return client
+
+
+def create_zendesk_client():
+    creds = {
+        "email": 'admin@icorrect.co.uk',
+        "token": os.environ["ZENDESKADMIN"],
+        "subdomain": "icorrect"
+    }
+    client = Zenpy(
+        email='admin@icorrect.co.uk',
+        token=os.environ["ZENDESKADMIN"],
+        subdomain="icorrect"
+    )
     return client
 
 
@@ -99,8 +112,8 @@ Used to access the Monday Client acting as the 'Error' User
 class ClientsObject:
     def __init__(self):
         self.monday = MondayClientCollection()
-        self.zendesk = None
-        self.vend = None
+        self.zendesk = create_zendesk_client()
+
 
 
 clients = ClientsObject()

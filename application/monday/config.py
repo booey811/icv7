@@ -42,14 +42,27 @@ BOARD_MAPPING_DICT = {
     '349212843': {
         'name': 'main',
         'columns': {
+            'status4': 'repair_status',
+            'service': 'service',
+            'status': 'client',
+            'status24': 'repair_type',
             'repair': 'repairs',
             "device0": "device",
             'text4': 'imeisn',
             'status_18': "notifications_status",
             "text5": 'email',
             "text00": "phone",
-            "status8": "device_colour"
-        }
+            "status8": "device_colour",
+            "text8": "passcode",
+            "text6": "zendesk_id"
+        },
+        "zendesk": [
+            'status4',  # Status
+            'text4',  # IMEI/SN
+            'text8',  # Passcode
+            'device0',  # Device
+            'repair'  # Repair
+        ]
     },
     "984924063": {
         'name': "repairs",
