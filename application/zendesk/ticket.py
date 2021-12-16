@@ -1,11 +1,11 @@
 import os
 from typing import Union
 
-import zenpy.lib.api_objects
+from zenpy.lib.api_objects import CustomField, Ticket
 from zenpy.lib.exception import RecordNotFoundException
 
 from application.utilities import clients
-from . import exceptions
+from . import exceptions, config
 
 
 class EricTicket:
@@ -15,7 +15,7 @@ class EricTicket:
 
         if type(ticket_id_or_obj) is str or type(ticket_id_or_obj) is int:
             self.zenpy_ticket = get_zenpy_ticket(logger, ticket_id_or_obj)
-        elif type(ticket_id_or_obj) is zenpy.lib.api_objects.Ticket:
+        elif type(ticket_id_or_obj) is Ticket:
             self.zenpy_ticket = ticket_id_or_obj
         else:
             raise Exception(
@@ -26,6 +26,54 @@ class EricTicket:
         self.user = process_requester_data(self.logger, self.zenpy_ticket)
 
         self.organisation = process_organisation_data(self.logger, self.zenpy_ticket)
+
+        for field in self.zenpy_ticket.custom_fields:
+            try:
+                eric_field = TicketField(field, self.zenpy_ticket)
+                setattr(self, eric_field.attribute, eric_field)
+            except KeyError:
+                pass
+
+    def add_tags(self, list_of_tags: list):
+        self.logger.log(f"Adding Tags: {list_of_tags}")
+        self.zenpy_ticket.tags.extend(list_of_tags)
+
+    def set_tags(self, list_of_tags: list):
+        self.logger.log(f"Setting Tags: {list_of_tags}")
+        self.zenpy_ticket.set_tags(list_of_tags)
+
+    def commit(self):
+        self.logger.log("Committing Ticket Changes")
+        audit = clients.zendesk.tickets.update(self.zenpy_ticket)
+        return audit.ticket
+
+
+class TicketField:
+
+    def __init__(self, zenpy_custom_field_dict, zenpy_ticket):
+        self.id = zenpy_custom_field_dict["id"]
+        self.zenpy_ticket = zenpy_ticket
+        self.attribute = config.TICKET_FIELDS[str(self.id)][0]
+        self.value = zenpy_custom_field_dict["value"]
+        self.type = config.TICKET_FIELDS[str(self.id)][1]
+
+    def adjust(self, value):
+        if self.type == "text":
+            return self._adjust_text(value)
+        elif self.type == "dropdown":
+            self._adjust_select(value)
+        elif self.type == "multi":
+            self._adjust_select(value)
+        else:
+            raise Exception("Unexpected Zendesk Ticket Field Type Received")
+
+    def _adjust_text(self, value):
+        if type(value) is not str:
+            raise Exception("Cannot Adjust Text Value with anything but string")
+        self.zenpy_ticket.custom_fields.append(CustomField(id=self.id, value=value))
+
+    def _adjust_select(self, value_tag):
+        self.zenpy_ticket.tags.extend([value_tag])
 
 
 def get_zenpy_ticket(logger, ticket_id: Union[str, int]):
@@ -48,7 +96,7 @@ def get_zenpy_ticket(logger, ticket_id: Union[str, int]):
         raise exceptions.TicketNotFound(ticket_id)
 
 
-def process_requester_data(logger, zenpy_ticket_obj: zenpy.lib.api_objects.Ticket):
+def process_requester_data(logger, zenpy_ticket_obj: Ticket):
     """
     Processes requetser data into Eric friendly values
     Args:
@@ -78,7 +126,7 @@ def process_requester_data(logger, zenpy_ticket_obj: zenpy.lib.api_objects.Ticke
         return {}
 
 
-def process_organisation_data(logger, zenpy_ticket_obj: zenpy.lib.api_objects.Ticket):
+def process_organisation_data(logger, zenpy_ticket_obj: Ticket):
     """takes organisation info from Zenpy Object and returns nicely formatted dictionary
 
     Args:
@@ -104,5 +152,3 @@ def process_organisation_data(logger, zenpy_ticket_obj: zenpy.lib.api_objects.Ti
     else:
         logger.log("No Organisation Data found")
         return {}
-
-

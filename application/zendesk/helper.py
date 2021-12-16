@@ -3,10 +3,6 @@ import base64
 import os
 import requests
 
-from application import BaseItem
-from .ticket import EricTicket
-
-
 def send_direct_request(data, url, method, as_json=True):
     def encode_to_64(string):
         string_bytes = string.encode("ascii")

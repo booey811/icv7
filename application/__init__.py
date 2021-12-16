@@ -6,7 +6,7 @@ import flask
 
 from . import config
 from .monday import BaseItem, inventory
-from .utilities import clients, sync_fields
+from .utilities import clients
 from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting
 from .zendesk.ticket import EricTicket
