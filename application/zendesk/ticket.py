@@ -5,7 +5,7 @@ from zenpy.lib.api_objects import CustomField, Ticket
 from zenpy.lib.exception import RecordNotFoundException
 
 from application.utilities import clients
-from . import exceptions, config
+from . import exceptions, config, fields
 
 
 class EricTicket:
@@ -27,12 +27,7 @@ class EricTicket:
 
         self.organisation = process_organisation_data(self.logger, self.zenpy_ticket)
 
-        for field in self.zenpy_ticket.custom_fields:
-            try:
-                eric_field = TicketField(field, self.zenpy_ticket)
-                setattr(self, eric_field.attribute, eric_field)
-            except KeyError:
-                pass
+        self.fields = fields.TicketFieldCollection(self)
 
     def add_tags(self, list_of_tags: list):
         self.logger.log(f"Adding Tags: {list_of_tags}")

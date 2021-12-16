@@ -11,6 +11,7 @@ from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting
 from .zendesk.ticket import EricTicket
 from .zendesk import helper as zen_help
+from .zendesk import fields
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 
