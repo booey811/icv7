@@ -7,7 +7,8 @@ def sync_zendesk_fields():
         'device': 4413411999249,
         'client': 360010408778,
         'service': 360010444117,
-        'repair_type': 360010444077
+        'repair_type': 360010444077,
+        'repair_status': 360005728837
     }
 
     fields = [item for item in keys]

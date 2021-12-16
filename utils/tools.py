@@ -47,12 +47,12 @@ def sync_fields_from_monday(main_board_item: BaseItem = None, eric_ticket=None):
 
     # list and get syncable attributes - tag values
     tag_atts_dropdown = ['device', 'repairs']
-    tag_atts_status = []
+    tag_atts_status = ['repair_status', 'client', 'service', 'repair_type']
     current_tags = [item for item in zen.zenpy_ticket.tags]
     new_tags = [item for item in current_tags]
-    
+
+    # remove currently set multi/dropdown tags
     for attribute in tag_atts_dropdown + tag_atts_status:
-        # remove currently set multi/dropdown tags
         to_remove = [item for item in current_tags if f"{attribute}-" in item]
         new_tags = list(set(new_tags) - set(to_remove))
 
@@ -62,7 +62,10 @@ def sync_fields_from_monday(main_board_item: BaseItem = None, eric_ticket=None):
         for dd_id in mon_col.ids:
             new_tags.append(f"{attribute}-{dd_id}")
 
-
+    # generate new tags from monday status columns
+    for attribute in tag_atts_status:
+        mon_col = getattr(main, attribute)
+        new_tags.append(f"{attribute}-{mon_col.index}")
 
     clients.zendesk.tickets.set_tags(zen.id, new_tags)
 

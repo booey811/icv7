@@ -73,7 +73,7 @@ class TicketField:
         self.zenpy_ticket.custom_fields.append(CustomField(id=self.id, value=value))
 
     def _adjust_select(self, value_tag):
-        self.zenpy_ticket.tags.extend([value_tag])
+        raise Exception("Cannot Adjust Tag Controlled Settings Through EricTicket.TicketField")
 
 
 def get_zenpy_ticket(logger, ticket_id: Union[str, int]):
