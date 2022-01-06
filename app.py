@@ -69,6 +69,7 @@ def repairers_pc_report_fetch(test_id=None):
     return ''
 
 
+# Check Stock for a repair and print to the Main Board Item
 @app.route("/monday/main/check-stock", methods=["POST"])
 def check_stock_for_mainboard_item(test_id=None):
     webhook = flask.request.get_data()
@@ -83,6 +84,27 @@ def check_stock_for_mainboard_item(test_id=None):
         eric.print_stock_info_for_mainboard(None, test_id)
     elif os.environ['ENV'] in ['devserver', 'production']:
         result = q_hi.enqueue(eric.print_stock_info_for_mainboard, data)
+    else:
+        raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
+
+    return ''
+
+
+# Create a Zendesk Ticket for New Enquiries
+@app.route("/monday/enquiries/new-enquiry", methods=["POST"])
+def create_zendesk_ticket_for_enquiry(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    if os.environ['ENV'] == 'devlocal':
+        if not test_id:
+            raise Exception('test_id is required when testing locally')
+        eric.create_enquiry_ticket(None, test_id)
+    elif os.environ['ENV'] in ['devserver', 'production']:
+        result = q_def.enqueue(eric.create_enquiry_ticket, data)
     else:
         raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
 
