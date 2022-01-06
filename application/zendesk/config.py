@@ -11,3 +11,10 @@ TICKET_FIELDS = {
     "360010444117": ["service", "dropdown"],
     "360010408778": ["client", "dropdown"]
 }
+
+BRAND_IDS = {
+    360000293258: "icorrect",
+    "icorrect": 360000293258,
+    360004939497: "panrix",
+    "panrix": 360004939497
+}

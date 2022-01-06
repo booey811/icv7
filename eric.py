@@ -1,8 +1,10 @@
 import os
 import datetime
 
+from moncli.api_v2.exceptions import MondayApiError
 
-from application import BaseItem, clients, CustomLogger, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, EricTicket
+from application import BaseItem, clients, CustomLogger, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
+    EricTicket
 
 
 def process_stock_count(webhook, test=None):
@@ -166,6 +168,92 @@ def print_stock_info_for_mainboard(webhook, test=None):
         logger.log("Monday API Error Occurred")
         logger.log(e.messages)
         logger.hard_log()
+
+    logger.clear()
+
+    return True
+
+
+# noinspection PyTypeChecker
+def create_enquiry_ticket(webhook, test=None):
+    def extract_enquiry_data(enquiry_item):
+
+        # params to extract
+        name = enquiry_item.name
+        device_type = "Not Provided"
+        model = "Not Provided"
+        message = "Not Provided"
+
+        try:
+            value = enquiry_item.device_type.value
+            if value:
+                device_type = value
+        except AttributeError:
+            pass
+
+        try:
+            value = enquiry_item.model.value
+            if value:
+                model = value
+        except AttributeError:
+            pass
+
+        try:
+            value = enquiry_item.message.value
+            if value:
+                message = value
+        except AttributeError:
+            pass
+
+        return [name, device_type, model, message]
+
+    logger = CustomLogger()
+    logger.log("Creating Panrix Enquiry Ticket")
+
+    if test:
+        item = BaseItem(logger, test)
+    else:
+        item = BaseItem(logger, webhook["pulseId"])
+
+    # create eric ticket for panrix brand
+    uncommitted_ticket = EricTicket(logger, None, new=item)
+    uncommitted_ticket.zenpy_ticket.brand_id = 360004939497  # panrix brand ID
+
+    enq_type = item.moncli_board_obj.name
+
+    enq_data = extract_enquiry_data(item)
+
+    # add enquiry message
+    comment = \
+        f"""Enquiry Type: {enq_type}
+Client Name: {enq_data[0]}
+Device: {enq_data[1]}
+Model: {enq_data[2]}
+
+Message: {enq_data[3]}
+"""
+    if enq_type == "Diagnostic Requests":
+        turn_on_value = "Not Provided"
+        exposed_to_liquid = "Not Provided"
+        try:
+            turn_on_value = item.turn_on_status.value
+        except AttributeError:
+            pass
+
+        try:
+            exposed_to_liquid = item.exposed_to_liquid.value
+        except AttributeError:
+            pass
+
+        comment += f"\n\nDoes the device turn on?\n{turn_on_value}\n\nHas the device been exposed to liquid?\n{exposed_to_liquid}"
+
+    uncommitted_ticket.add_comment(comment)
+    new_zen_ticket = uncommitted_ticket.commit()
+
+    # add other data
+    new_eric_ticket = EricTicket(logger, new_zen_ticket)
+
+    new_eric_ticket.commit()
 
     logger.clear()
 

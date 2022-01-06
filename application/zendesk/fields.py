@@ -42,7 +42,7 @@ class DropdownField(TicketField):
         try:
             str(int(new_id))
         except ValueError:
-            raise Exception(f"Cannot provide TextField adjust with {type(new_id)}")
+            raise Exception(f"Cannot provide DropdownField adjust with {type(new_id)}")
 
         self._collection.eric.zenpy_ticket.tags.remove(self.related_tags[0])
         self._collection.eric.zenpy_ticket.tags.extend([f"{self.attribute_name}-{new_id}"])
@@ -127,7 +127,8 @@ class TicketFieldCollection:
         self.main_id = TicketField
         self.enquiry_id = TicketField
 
-        self._initialise_ticket_fields(eric_ticket.zenpy_ticket.custom_fields)
+        if eric_ticket.zenpy_ticket.custom_fields:
+            self._initialise_ticket_fields(eric_ticket.zenpy_ticket.custom_fields)
 
     def _initialise_ticket_fields(self, zenpy_ticket_custom_fields):
         for field in zenpy_ticket_custom_fields:

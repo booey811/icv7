@@ -54,7 +54,7 @@ class BaseItem(BaseItemStructure):
 
             # Set derived basic info
             self.mon_id = str(self.moncli_obj.id)
-            self.moncli_board_obj = self.moncli_obj.board
+            self.moncli_board_obj = clients.monday.system.get_board_by_id(self.moncli_obj.board.id)
             self.name = self.moncli_obj.name
 
             # Set columns

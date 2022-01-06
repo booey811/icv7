@@ -1,33 +1,52 @@
 import os
 from typing import Union
 
-from zenpy.lib.api_objects import CustomField, Ticket
+from zenpy.lib.api_objects import CustomField, Ticket, Comment
 from zenpy.lib.exception import RecordNotFoundException
 
 from application.utilities import clients
-from . import exceptions, config, fields
+from . import exceptions, config, fields, helper
 
 
 class EricTicket:
 
-    def __init__(self, logger, ticket_id_or_obj):
+    def __init__(self, logger, ticket_id_or_obj, new=False):
         self.logger = logger
 
-        if type(ticket_id_or_obj) is str or type(ticket_id_or_obj) is int:
-            self.zenpy_ticket = get_zenpy_ticket(logger, ticket_id_or_obj)
-        elif type(ticket_id_or_obj) is Ticket:
-            self.zenpy_ticket = ticket_id_or_obj
-        else:
-            raise Exception(
-                f'EricTicket Instantiated with {type(ticket_id_or_obj)} - should be str, int or Zenpy Ticket')
+        if new:
+            self.id = None
+            self.user = {}
+            self.organisation = {}
+            user = helper.user_search(new, logger)
+            ticket = Ticket(
+                requester_id=user.id,
+                description = "Apple Device Repairs"
+            )
+            self.zenpy_ticket = ticket
 
-        self.id = self.zenpy_ticket.id
+        else:
+            if type(ticket_id_or_obj) is str or type(ticket_id_or_obj) is int:
+                self.zenpy_ticket = get_zenpy_ticket(logger, ticket_id_or_obj)
+            elif type(ticket_id_or_obj) is Ticket:
+                self.zenpy_ticket = ticket_id_or_obj
+            else:
+                raise Exception(
+                    f'EricTicket Instantiated with {type(ticket_id_or_obj)} - should be str, int or Zenpy Ticket')
+            self.id = self.zenpy_ticket.id
+            self.organisation = process_organisation_data(self.logger, self.zenpy_ticket)
 
         self.user = process_requester_data(self.logger, self.zenpy_ticket)
 
-        self.organisation = process_organisation_data(self.logger, self.zenpy_ticket)
-
         self.fields = fields.TicketFieldCollection(self)
+
+    def add_comment(self, comment_body, public=False):
+        comment = Comment(
+            public=public,
+            body=comment_body
+        )
+
+        self.zenpy_ticket.comment = comment
+        return self.zenpy_ticket
 
     def add_tags(self, list_of_tags: list):
         self.logger.log(f"Adding Tags: {list_of_tags}")
@@ -39,7 +58,10 @@ class EricTicket:
 
     def commit(self):
         self.logger.log("Committing Ticket Changes")
-        audit = clients.zendesk.tickets.update(self.zenpy_ticket)
+        if not self.zenpy_ticket.id:
+            audit = clients.zendesk.tickets.create(self.zenpy_ticket)
+        else:
+            audit = clients.zendesk.tickets.update(self.zenpy_ticket)
         return audit.ticket
 
 

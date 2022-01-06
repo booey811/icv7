@@ -107,5 +107,33 @@ BOARD_MAPPING_DICT = {
             'text': 'date_text',
             'date': 'date_date'
         }
+    },
+    '2066318731': {
+        'name': 'enq_bookings',
+        'columns': {
+            'date': 'date_date',
+            'text': 'email',
+            'text4': 'device_type',
+            "long_text": "message",
+            "text1": "zen_id",
+            "text0": "model"
+        }
+    },
+    "2066698364": {
+        "name": "enq_diagnostics",
+        "columns": {
+            "date4": "date_date",
+            "long_text": "message",
+            "text": "email",
+            "text3": "device_type"
+        }
+    },
+    "2066891548": {
+        "name": "enq_contact",
+        "columns": {
+            "date4": "date_date",
+            "long_text": "message",
+            "text": "email"
+        }
     }
 }
