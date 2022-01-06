@@ -76,7 +76,7 @@ class TestNumberValue:
     def test_moncli_string_and_eric_string_match(self, eric_read_only_item, read_only_number_column_value):
         """Tests whether the number values of the read only test item are the same for the moncli object and
         the eric object"""
-        moncli = float(read_only_number_column_value.number)
+        moncli = float(read_only_number_column_value.value)
         eric = float(eric_read_only_item.numbers.value)
         assert moncli == eric
 
@@ -139,7 +139,7 @@ class TestStatusValue:
     ):
         """Tests whether the label value of the read only test item is the same for the moncli object and
         the eric object"""
-        assert read_only_status_column_value.label == eric_read_only_item.status.label
+        assert read_only_status_column_value.text == eric_read_only_item.status.label
 
     def test_moncli_index_and_eric_index_match(
             self,
@@ -148,7 +148,10 @@ class TestStatusValue:
     ):
         """Tests whether the index value of the read only test item is the same for the moncli object and
         the eric object"""
-        assert read_only_status_column_value.index == int(eric_read_only_item.status.index)
+
+        moncli_index = eric_read_only_item.status._settings[read_only_status_column_value.value]
+
+        assert int(moncli_index) == int(eric_read_only_item.status.index)
 
     def test_staged_changes_are_correct_when_a_label_is_used_to_effect_change(
             self,
@@ -212,7 +215,7 @@ class TestStatusValue:
         eric_system_item.status.label = test_label
         eric_system_item.commit()
         new_moncli_item = clients_object.monday.system.get_items(ids=[eric_system_item.mon_id])[0]
-        new_moncli_value = str(new_moncli_item.get_column_value(id=eric_system_item.status.id).label)
+        new_moncli_value = str(new_moncli_item.get_column_value(id=eric_system_item.status.id).text)
         assert new_moncli_value == test_label
 
     @pytest.mark.parametrize('input_type', [
@@ -256,7 +259,7 @@ class TestDropDownValue:
     ):
         """Tests whether the label value of the read only test item is the same for the moncli object and
         the eric object"""
-        moncli_labels = [item['name'] for item in read_only_dropdown_column_value.labels]
+        moncli_labels = read_only_dropdown_column_value.value
         assert moncli_labels == eric_read_only_item.dropdown.labels
 
     def test_moncli_ids_and_eric_ids_match(
@@ -266,8 +269,9 @@ class TestDropDownValue:
     ):
         """Tests whether the index value of the read only test item is the same for the moncli object and
         the eric object"""
-        moncli_ids = [item['id'] for item in read_only_dropdown_column_value.labels]
-        assert moncli_ids == eric_read_only_item.dropdown.ids
+        moncli_labels = read_only_dropdown_column_value.value
+        moncli_ids = [int(eric_read_only_item.dropdown._settings[item]) for item in moncli_labels]
+        assert sorted(moncli_ids) == sorted(eric_read_only_item.dropdown.ids)
 
     def test_labels_convert_to_ids_correctly(
             self,
@@ -420,8 +424,8 @@ class TestLinkValue:
     def test_moncli_strings_and_eric_strings_match(self, eric_read_only_item, read_only_link_column_value):
         """Tests whether the text values of the read only test item are the same for the moncli object and
         the eric object"""
-        moncli_text = read_only_link_column_value.url_text
-        moncli_url = read_only_link_column_value.url
+        moncli_text = read_only_link_column_value.value.text
+        moncli_url = read_only_link_column_value.value.url
         assert moncli_text == eric_read_only_item.link.text
         assert moncli_url == eric_read_only_item.link.url
 
@@ -463,7 +467,7 @@ class TestCheckBoxValue:
         """Tests whether the text values of the read only test item are the same for the moncli object and
         the eric object"""
         eric = eric_read_only_item.checkbox.value
-        monc = read_only_checkbox_column_value.checked
+        monc = read_only_checkbox_column_value.value
         if not monc:
             monc = False
         else:
@@ -488,11 +492,11 @@ class TestHourValue:
     def test_moncli_strings_and_eric_strings_match(self, eric_read_only_item, read_only_hour_column_value):
         """Tests whether the text values of the read only test item are the same for the moncli object and
         the eric object"""
-        moncli_hour = read_only_hour_column_value.hour
+        moncli_hour = read_only_hour_column_value.value.hour
         eric_hour = eric_read_only_item.hour.hour
         assert moncli_hour == eric_hour
 
-        moncli_min = read_only_hour_column_value.minute
+        moncli_min = read_only_hour_column_value.value.minute
         eric_min = eric_read_only_item.hour.minute
         assert moncli_min == eric_min
 

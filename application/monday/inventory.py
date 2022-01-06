@@ -53,7 +53,7 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem):
                     terms.append(f"{mainboard_item.device.ids[0]}-{repair_id}-16")
                     continue
                 else:
-                    search_term = f"{mainboard_item.device.ids[0]}-{repair_id}-{mainboard_item.device_colour.index}"
+                    search_term = f"{int(mainboard_item.device.ids[0])}-{int(repair_id)}-{int(mainboard_item.device_colour.index)}"
             else:
                 search_term = f"{mainboard_item.device.ids[0]}-{repair_id}"
 

@@ -22,7 +22,7 @@ Function to create and return a moncli client relating to the specified user
         raise Exception(f'"{user}" provided as user for Moncli client, not valid')
 
     client = MondayClient()
-    client.api_key_v2 = key
+    client.api_key = key
     return client
 
 

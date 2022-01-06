@@ -1,7 +1,6 @@
 import os
 import datetime
 
-from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, CustomLogger, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, EricTicket
 
@@ -27,10 +26,10 @@ def process_stock_count(webhook, test=None):
             group_id = webhook['groupId']
             new_count_group = count_board.get_groups(ids=[group_id])[0]
         logger.log('Got Items')
-    except MondayApiError as e:
+    except Exception as e:
         logger.log('Monday API Error Occurred')
-        messages = "/n".join(e.messages)
-        logger.log(f'MESSAGES:\n\n{messages}')
+        # messages = "/n".join(e.messages)
+        # logger.log(f'MESSAGES:\n\n{messages}')
         logger.hard_log()
         return False
 

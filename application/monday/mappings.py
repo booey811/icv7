@@ -3,7 +3,7 @@ from typing import Union
 import json
 
 import moncli.entities
-from moncli.entities import column_value
+from moncli.column_value import simple, complex, readonly
 
 from .config import BOARD_MAPPING_DICT
 from application.monday import exceptions
@@ -37,7 +37,11 @@ class MappingObject:
             try:
                 eric_col_val = COLUMN_TYPE_MAPPINGS[type(moncli_col_val)](moncli_col_val, staged_changes)
             except KeyError:
-                eric_col_val = ReadOnlyColumn(moncli_col_val, staged_changes)
+                # with moncli v2, StatusValues cannot be used as key for COLUMN_TYPE_MAPPINGS dict - hard coded for now
+                if "labels_colors" in moncli_col_val.settings:
+                    eric_col_val = StatusColumn(moncli_col_val, staged_changes)
+                else:
+                    eric_col_val = ReadOnlyColumn(moncli_col_val, staged_changes)
 
         return eric_col_val
 
@@ -108,7 +112,7 @@ class TextColumn(BaseColumnValue):
         """returns list of item ids when using this monday column to search with the parameter"""
         self._eric.log(f"Searching MainBoard[{self.title}] for {value_to_search_for}")
         search = self._eric.moncli_board_obj.get_column_value(self.id)
-        search.value = f'"{value_to_search_for}"'
+        search.text = f'{value_to_search_for}'
         items = self._eric.moncli_board_obj.get_items_by_column_values(search, 'id')
         ids = [item['id'] for item in items]
         self._eric.log(f"Got IDS: {ids}")
@@ -153,11 +157,22 @@ class LongTextColumn(BaseColumnValue):
 class StatusColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
+
+        # Set up the _settings attribute (dict), which is used to convert label inputs into index and vice versa
+        simple_settings = json.loads(moncli_column_value.settings_str)['labels']
+        self._settings = {}
+        for item in simple_settings:
+            self._settings[item] = simple_settings[item]
+            self._settings[simple_settings[item]] = item
+
         # Setup from item (object or ID)
         if from_item:
             # Take basic column info from the moncli value & set up value attribute to return the label
-            self._label = str(moncli_column_value.label)
-            self._index = moncli_column_value.index
+            self._label = str(moncli_column_value.text)
+            if self.label:
+                self._index = int(self._settings[self._label])
+            else:
+                self._index = None
             self._value = self._label
 
         # Setup from board ID
@@ -166,12 +181,7 @@ class StatusColumn(BaseColumnValue):
             self._index = None
             self._value = self._label
 
-        # Set up the _settings attribute (dict), which is used to convert label inputs into index and vice versa
-        simple_settings = json.loads(moncli_column_value.settings_str)['labels']
-        self._settings = {}
-        for item in simple_settings:
-            self._settings[item] = simple_settings[item]
-            self._settings[simple_settings[item]] = item
+
 
     @property
     def value(self):
@@ -268,16 +278,6 @@ class StatusColumn(BaseColumnValue):
 class DropdownColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
-        # Setup from item (object or ID)
-        if from_item:
-            # Take basic info from column value and set up _value to return labels
-            self._ids = [item.id for item in moncli_column_value.labels]
-            self._labels = [item.name for item in moncli_column_value.labels]
-
-        # Setup from board ID
-        else:
-            self._ids = []
-            self._labels = []
 
         # Set up _settings attribute containing all labels and associated ids
         self._settings = {}
@@ -285,6 +285,19 @@ class DropdownColumn(BaseColumnValue):
         for item in simple_settings:
             self._settings[str(item['id'])] = item['name']
             self._settings[item['name']] = str(item['id'])
+
+        # Setup from item (object or ID)
+        if from_item:
+            # Take basic info from column value and set up _value to return labels
+            self._labels = [item for item in moncli_column_value.value]
+            self._ids = [int(self._settings[item]) for item in self._labels]
+
+        # Setup from board ID
+        else:
+            self._ids = []
+            self._labels = []
+
+
 
     @property
     def value(self):
@@ -437,7 +450,7 @@ class DateColumn(BaseColumnValue):
             self._value = moncli_column_value.text
             try:
                 self._date = self._value.split()[0]
-                self._time = moncli_column_value.time
+                self._time = self._value.split()[1]
             except IndexError:
                 self._date = ""
                 self._time = ""
@@ -476,9 +489,9 @@ class LinkColumn(BaseColumnValue):
         # Setup from item (object or ID)
         if from_item:
             # Set private variables
-            self._value = moncli_column_value.text
-            self._text = moncli_column_value.url_text
-            self._url = moncli_column_value.url
+            self._value = moncli_column_value.value
+            self._text = moncli_column_value.value.text
+            self._url = moncli_column_value.value.url
 
         # Setup from board ID
         else:
@@ -549,7 +562,7 @@ class FileColumn(BaseColumnValue):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
             try:
-                self._files = [item['name'] for item in moncli_column_value.files]
+                self._files = [item['name'] for item in moncli_column_value.value]
             except TypeError:
                 self._files = []
 
@@ -569,7 +582,7 @@ class CheckboxColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
-            if not moncli_column_value.checked:
+            if not moncli_column_value.value:
                 self._value = False
             else:
                 self._value = True
@@ -606,8 +619,8 @@ class HourColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
-            self._hour = moncli_column_value.hour
-            self._minute = moncli_column_value.minute
+            self._hour = moncli_column_value.value.hour
+            self._minute = moncli_column_value.value.minute
             self._value = f'{self._hour}:{self._minute}'
 
         else:
@@ -680,7 +693,7 @@ class PeopleColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
-            self._ids = [item['id'] for item in moncli_column_value.persons_and_teams]
+            self._ids = [item for item in moncli_column_value.value]
             self._value = self._ids
 
         else:
@@ -716,7 +729,7 @@ class SubItemsValue(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
         if from_item:
-            self._ids = self._moncli_value.item_ids
+            self._ids = [str(item) for item in self._moncli_value.value]
 
         else:
             self._ids = []
@@ -755,7 +768,7 @@ class ConnectBoardsValue(BaseColumnValue):
         super().__init__(moncli_column_value, staged_changes)
         # Setup from item (object or ID)
         if from_item:
-            self._value = moncli_column_value.item_ids
+            self._value = moncli_column_value.value
         # Setup from board ID
         else:
             self._value = []
@@ -800,30 +813,30 @@ class ReadOnlyColumn(BaseColumnValue):
 
 # Dictionary to convert moncli column values to Eric column values
 COLUMN_TYPE_MAPPINGS = {
-    column_value.TextValue: TextColumn,
+    simple.TextValue: TextColumn,
     'text': TextColumn,
-    column_value.LongTextValue: LongTextColumn,
+    simple.LongTextValue: LongTextColumn,
     'long-text': LongTextColumn,
-    column_value.StatusValue: StatusColumn,
+    simple.StatusValue: StatusColumn,
     'color': StatusColumn,
-    column_value.DropdownValue: DropdownColumn,
+    simple.DropdownValue: DropdownColumn,
     'dropdown': DropdownColumn,
-    column_value.NumberValue: NumberColumn,
+    simple.NumberValue: NumberColumn,
     'numeric': NumberColumn,
-    column_value.DateValue: DateColumn,
+    simple.DateValue: DateColumn,
     'date': DateColumn,
-    column_value.LinkValue: LinkColumn,
+    simple.LinkValue: LinkColumn,
     'link': LinkColumn,
-    column_value.FileValue: FileColumn,
+    readonly.FileValue: FileColumn,
     'file': FileColumn,
-    column_value.CheckboxValue: CheckboxColumn,
+    complex.CheckboxValue: CheckboxColumn,
     'boolean': CheckboxColumn,
-    column_value.HourValue: HourColumn,
+    complex.HourValue: HourColumn,
     'hour': HourColumn,
-    column_value.PeopleValue: PeopleColumn,
+    simple.PeopleValue: PeopleColumn,
     'multiple-person': PeopleColumn,
-    column_value.SubitemsValue: SubItemsValue,
+    readonly.SubitemsValue: SubItemsValue,
     'subtasks': SubItemsValue,
-    column_value.ItemLinkValue: ConnectBoardsValue,
+    complex.ItemLinkValue: ConnectBoardsValue,
     'board-relation': ConnectBoardsValue
 }
