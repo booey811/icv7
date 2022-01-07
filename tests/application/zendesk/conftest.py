@@ -1,5 +1,6 @@
 import pytest
 
+from application import BaseItem
 from application.zendesk.ticket import get_zenpy_ticket, EricTicket
 
 
@@ -12,6 +13,13 @@ def zenpy_ticket(logger):
 @pytest.fixture(scope="module")
 def eric_ticket(logger, zenpy_ticket):
     return EricTicket(logger, zenpy_ticket)
+
+
+@pytest.fixture(scope="module")
+def temp_main_item_for_zen(logger):
+    uncomitted = BaseItem(logger, board_id=349212843)
+    uncomitted.email.value = "luonghuang@testcompany1.com"
+    return uncomitted
 
 
 def test_zenpy_ticket_fixture(zenpy_ticket):

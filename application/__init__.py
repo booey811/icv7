@@ -95,7 +95,7 @@ class CustomLogger:
             log_item.add_file(file_column, self._log_file_path)
 
         self.clear()
-        raise Exception(f'Hard Log Requested: {self._log_name}')
+        raise HardLog(f'Hard Log Requested: {self._log_name}')
 
     def clear(self):
         """Delete the generated log file"""
@@ -124,7 +124,7 @@ def verify_monday(webhook):
 
 
 def create_app():
-    # Detect Environment & Retreive config
+    # Detect Environment & Retrieve config
     env = os.environ['ENV']
     if env == 'production':
         print('Config:Production')
@@ -149,3 +149,9 @@ class ChallengeReceived(Exception):
 
     def __init__(self, token):
         self.token = token
+
+
+class HardLog(Exception):
+
+    def __init__(self, message):
+        print(message)

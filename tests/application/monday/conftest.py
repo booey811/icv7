@@ -97,12 +97,3 @@ def temp_mainboard_item():
     item.moncli_obj.delete()
 
 
-@pytest.fixture
-def temp_devtest_item():
-    item = BaseItem(CustomLogger(), board_id=1139943160)
-    item.text.value = "TEST TEXT"
-    item.numbers.value = 98426742
-    item.new_item('Test Item', convert_eric=True)
-    time.sleep(8)
-    yield item
-    item.moncli_obj.delete()

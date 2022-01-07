@@ -30,34 +30,16 @@ def send_direct_request(data, url, method, as_json=True):
 
 
 def user_search(eric_object_with_email, logger, name=None):
-
-    def create_user(name, email, phone, logger):
-
-        if phone:
-            logger.log(f"Creating Zen User with {name} {email} {phone}")
-            user_temp = User(
-                name=name,
-                email=email,
-                phone=phone
-            )
-        else:
-            logger.log(f"Creating Zen User with {name} {email}")
-            user_temp = User(
-                name=name,
-                email=email
-            )
-        zen_user = clients.zendesk.users.create(user_temp)
-        return zen_user
-
     # extract data from eric object
     name = eric_object_with_email.name
     phone = 0
+
     try:
         email = eric_object_with_email.email.value
     except AttributeError:
         logger.log(f"Eric Item[{eric_object_with_email.mon_id}] has no email attribute")
         logger.hard_log()
-        raise Exception("User Search Hard Log")
+        raise AttributeError("User Search Hard Log - No Email on Eric Object")
     try:
         phone = eric_object_with_email.phone.value
     except AttributeError:
@@ -80,6 +62,28 @@ def user_search(eric_object_with_email, logger, name=None):
     elif len(results) == 0 and name:
         logger.log("No results found")
         user = create_user(name, email, phone, logger)
+    elif len(results) == 0:
+        logger.log("No Users Found with Email, and no Name Provided to create a user")
+        logger.hard_log()
+        raise Exception
     else:
         raise Exception
     return user
+
+
+def create_user(name, email, phone, logger):
+    if phone:
+        logger.log(f"Creating Zen User with {name} {email} {phone}")
+        user_temp = User(
+            name=name,
+            email=email,
+            phone=phone
+        )
+    else:
+        logger.log(f"Creating Zen User with {name} {email}")
+        user_temp = User(
+            name=name,
+            email=email
+        )
+    zen_user = clients.zendesk.users.create(user_temp)
+    return zen_user

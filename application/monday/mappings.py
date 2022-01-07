@@ -181,8 +181,6 @@ class StatusColumn(BaseColumnValue):
             self._index = None
             self._value = self._label
 
-
-
     @property
     def value(self):
         return self._value
@@ -296,8 +294,6 @@ class DropdownColumn(BaseColumnValue):
         else:
             self._ids = []
             self._labels = []
-
-
 
     @property
     def value(self):
@@ -486,18 +482,19 @@ class DateColumn(BaseColumnValue):
 class LinkColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
-        # Setup from item (object or ID)
-        if from_item:
-            # Set private variables
-            self._value = moncli_column_value.value
-            self._text = moncli_column_value.value.text
-            self._url = moncli_column_value.value.url
 
         # Setup from board ID
-        else:
-            self._value = ''
-            self._text = ''
-            self._url = ''
+        self._value = ''
+        self._text = ''
+        self._url = ''
+
+        # Setup from item (object or ID)
+        if from_item:
+            if moncli_column_value.value:
+                # Set private variables
+                self._value = moncli_column_value.value
+                self._text = moncli_column_value.value.text
+                self._url = moncli_column_value.value.url
 
     @property
     def value(self):
@@ -618,15 +615,16 @@ class CheckboxColumn(BaseColumnValue):
 class HourColumn(BaseColumnValue):
     def __init__(self, moncli_column_value, staged_changes, from_item=True):
         super().__init__(moncli_column_value, staged_changes)
-        if from_item:
-            self._hour = moncli_column_value.value.hour
-            self._minute = moncli_column_value.value.minute
-            self._value = f'{self._hour}:{self._minute}'
 
-        else:
-            self._hour = None
-            self._minute = None
-            self._value = ''
+        self._hour = None
+        self._minute = None
+        self._value = ''
+
+        if from_item:
+            if moncli_column_value.value:
+                self._hour = moncli_column_value.value.hour
+                self._minute = moncli_column_value.value.minute
+                self._value = f'{self._hour}:{self._minute}'
 
     @property
     def value(self):
