@@ -250,10 +250,10 @@ Message: {enq_data[3]}
     uncommitted_ticket.add_comment(comment)
     new_zen_ticket = uncommitted_ticket.commit()
 
-    # add other data
+    # add other data & intro macro
     new_eric_ticket = EricTicket(logger, new_zen_ticket)
-
-    new_eric_ticket.commit()
+    macro_effect = clients.zendesk.tickets.show_macro_effect(new_eric_ticket.zenpy_ticket, 360128472418)  # New Panrix Enquiry Macro
+    clients.zendesk.tickets.update(macro_effect.ticket)
 
     logger.clear()
 
