@@ -210,7 +210,8 @@ BOARD_MAPPING_DICT = {
             "numbers95": "sale_price",
             "status11": "repair_status",
             "dup__of_nfc": "w_flashlight",
-            "dup__of_flashlight": "i_flashlight"
+            "dup__of_flashlight": "i_flashlight",
+            "long_text5": "report_summary"
         }
     }
 }

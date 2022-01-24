@@ -357,6 +357,7 @@ def refurb_phones_initial_pc_report(webhook, test=None):
     print()
 
     item.pc_report_status_pre.label = "Captured"
+    item.report_summary.value = summary
     item.pc_report_id.value = report_info["A4Reports"]
     item.add_update(summary)
     item.commit()

@@ -1,6 +1,5 @@
 import os
 
-import moncli.api_v2
 from moncli.entities import MondayClient
 from zenpy import Zenpy
 
