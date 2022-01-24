@@ -77,7 +77,7 @@ class CustomLogger:
             log_item.add_file(file_column, self._log_file_path)
             return log_item
 
-    def hard_log(self):
+    def hard_log(self) -> Exception:
         """creates a log entry in the logs board and halts execution"""
         self.log('==== HARD LOG REQUESTED =====')
 

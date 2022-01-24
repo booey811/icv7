@@ -111,5 +111,26 @@ def create_zendesk_ticket_for_enquiry(test_id=None):
     return ''
 
 
+# Get & process Phonecheck Data for rrefurb phones
+@app.route("/monday/refurbs/pc_report_pre", methods=["POST"])
+def refurb_phones_initial_pc_report(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    if os.environ['ENV'] == 'devlocal':
+        if not test_id:
+            raise Exception('test_id is required when testing locally')
+        eric.refurb_phones_initial_pc_report(None, test_id)
+    elif os.environ['ENV'] in ['devserver', 'production']:
+        result = q_def.enqueue(eric.refurb_phones_initial_pc_report, data)
+    else:
+        raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
+
+    return ''
+
+
 if __name__ == '__main__':
     app.run()

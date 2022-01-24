@@ -183,9 +183,15 @@ class BaseItem(BaseItemStructure):
 
         self.log(f'Item[{self.mon_id}] Created')
 
-
-
         return new_item
+
+    def add_update(self, message_body, client=None):
+        message_body = message_body.replace('"', '')
+        message_body = message_body.replace("/", '')
+        message_body = message_body.replace("-", ' ')
+        message_body = message_body.replace("'", '')
+
+        self.moncli_obj.add_update(message_body)
 
     def log(self, log_line):
         self.logger.log(log_line)

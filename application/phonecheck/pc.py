@@ -4,9 +4,13 @@ import pydf
 import requests
 import json
 
+from . import config
+
 
 class PhonecheckManager:
     """Object that will manage interactions with the Phonecheck database"""
+
+    DEFECTS_DICT = config.standard_checks
 
     def __init__(self):
         self.api_key = os.environ['PHONECHECK']

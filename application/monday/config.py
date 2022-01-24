@@ -142,6 +142,7 @@ BOARD_MAPPING_DICT = {
             "status9": "overall_status",
             "status4": "v_model",
             "status6": "v_storage",
+            "dup__of_vendor_storage": "a_storage",
             "status2": "v_colour",
             "dup__of_vendor_colour": "a_colour",
             "status1": "v_network",
@@ -207,7 +208,9 @@ BOARD_MAPPING_DICT = {
             "status692": "sale_platform",
             "text847": "sale_id",
             "numbers95": "sale_price",
-            "status11": "repair_status"
+            "status11": "repair_status",
+            "dup__of_nfc": "w_flashlight",
+            "dup__of_flashlight": "i_flashlight"
         }
     }
 }

@@ -252,9 +252,113 @@ Message: {enq_data[3]}
 
     # add other data & intro macro
     new_eric_ticket = EricTicket(logger, new_zen_ticket)
-    macro_effect = clients.zendesk.tickets.show_macro_effect(new_eric_ticket.zenpy_ticket, 360128472418)  # New Panrix Enquiry Macro
+    macro_effect = clients.zendesk.tickets.show_macro_effect(new_eric_ticket.zenpy_ticket,
+                                                             360128472418)  # New Panrix Enquiry Macro
     clients.zendesk.tickets.update(macro_effect.ticket)
 
     logger.clear()
 
     return True
+
+
+def refurb_phones_initial_pc_report(webhook, test=None):
+    logger = CustomLogger()
+    logger.log("Fetching Phonecheck Data for Refurb iPhones")
+
+    if test:
+        item = BaseItem(logger, test)
+    else:
+        item = BaseItem(logger, webhook["pulseId"])
+
+    # Get info from phonecheck
+    try:
+        logger.log(f"Searching for IMEI[{item.imeisn.value}]")
+        report_info = phonecheck.get_info(item.imeisn.value)
+    except CannotFindReportThroughIMEI as e:
+        # Cannot find report - IMEI entered incorrectly or device not checked
+        item.pc_report_status_pre.label = "No Report Found"
+        item.add_update(f"Cannot Find A Report for IMEI: {item.imeisn.value}. Check the IMEI number or make sure you "
+                        f"have completed a phonecheck test run for this device.")
+        logger.log("No report found")
+        logger.hard_log()
+        raise e
+
+    summary = f"PHONECHECK REPORT DATA\nDate of Check: {report_info['DeviceUpdatedDate']}\n\n===== FAILED =====\n"
+
+    failures = []
+    logger.log("Assessing Failures")
+    for defect in report_info["Failed"].split(","):
+        logger.log(f"Assessing {defect}")
+        if defect:
+            summary += defect + "\n"
+            try:
+                converted = phonecheck.DEFECTS_DICT[defect]
+                logger.log(f"Converted {defect} to {converted}")
+            except KeyError:
+                failures.append(defect)
+                continue
+            if converted:
+                initial = getattr(item, "i_" + converted)
+                working = getattr(item, "w_" + converted)
+                initial.label = "Repair Required"
+                working.label = "Repair Required"
+            else:
+                logger.log(f'{defect} does not have an applicable column on the refurbs board')
+
+    summary += "\n===== PASSED =====\n"
+    logger.log("Assessing Passes")
+    for func in report_info["Passed"].split(","):
+        logger.log(f"Assessing {func}")
+        if func:
+            summary += func + "\n"
+            try:
+                converted = phonecheck.DEFECTS_DICT[func]
+                logger.log(f"Converted {func} to {converted}")
+            except KeyError:
+                failures.append(func)
+                continue
+            if converted:
+                initial = getattr(item, "i_" + converted)
+                working = getattr(item, "w_" + converted)
+                initial.label = "No Repair Required"
+                working.label = "No Repair Required"
+            else:
+                logger.log(f'{func} does not have an applicable column on the refurbs board')
+
+    logger.log("Adding Extra Info")
+    batt_health = report_info["BatteryHealthPercentage"]
+    batt_cycles = report_info["BatteryCycle"]
+    colour = report_info["Color"]
+    model = report_info["Model"]
+    storage = report_info["Memory"]
+
+    item.i_battery_health.value = batt_health
+    item.w_battery_health.value = batt_health
+    logger.log(f"Battery Health: {batt_health}")
+    if int(batt_health) < 85:
+        logger.log("Replacing Battery")
+        item.i_battery.label = "Repair Required"
+        item.w_battery.label = "Repair Required"
+    else:
+        logger.log("Battery Health Sufficient")
+        item.i_battery.label = "No Repair Required"
+        item.w_battery.label = "No Repair Required"
+    summary += f"\n===== BATTERY STATS =====\nHealth: {batt_health}\nCycles: {batt_cycles}"
+
+    logger.log(f"Setting Colour: {colour}")
+    item.a_colour.label = colour
+
+    logger.log(f"Setting Model: {model}")
+    item.a_model.label = model
+
+    logger.log(f"Setting Storage: {storage}")
+    item.a_storage.label = storage
+
+    print()
+
+    item.pc_report_status_pre.label = "Captured"
+    item.pc_report_id.value = report_info["A4Reports"]
+    item.add_update(summary)
+    item.commit()
+
+    logger.soft_log()

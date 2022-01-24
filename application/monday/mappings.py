@@ -462,15 +462,19 @@ class DateColumn(BaseColumnValue):
         return self._value
 
     @value.setter
-    def value(self, date: str):
-        if date and date is not str:
-            raise ValueError(
-                f'DateColumn "date" ({self.title}) value setter supplied with incorrect type ({type(date)})')
+    def value(self, list_year_month_day):
+        for param in list_year_month_day:
+            if type(param) in [str, int]:
+                if param.capitalize() == "TODAY":
+                    self._date = datetime.datetime.today().strftime('%Y-%m-%d')
+                    self._stage_change()
+                    return True
+                continue
+            else:
+                raise ValueError(
+                    f'DateColumn "date" ({self.title}) value setter supplied with incorrect type ({type(param)})')
 
-        if date.capitalize() == 'TODAY':
-            self._date = datetime.datetime.today().strftime('%Y-%m-%d')
-        else:
-            raise Exception('DateColumn Setting to non-today Date has not yet been developed')
+        self._date = f"{list_year_month_day[0]}-{list_year_month_day[1]}-{list_year_month_day[2]}"
 
         # Stage change
         self._stage_change()
