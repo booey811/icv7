@@ -283,7 +283,26 @@ def refurb_phones_initial_pc_report(webhook, test=None):
         logger.hard_log()
         raise e
 
-    summary = f"PHONECHECK REPORT DATA\nDate of Check: {report_info['DeviceUpdatedDate']}\n\n===== FAILED =====\n"
+    # Sync Actual Condition Values (set by user when receiving) with Init and Working Values
+    # TODO: function for syncing these values
+    condition_values = ["face_id", "lens", "rear"]
+    for attribute in condition_values:
+        actual = getattr(item, "a_" + attribute)
+        init = getattr(item, "i_" + attribute)
+        working = getattr(item, "w_" + attribute)
+
+        init.label = actual.label
+        if actual.label == "No Repair Required":
+            working.label = "No Repair Required"
+        else:
+            working.label = "Repair Required"
+
+
+
+    # Use Phonecheck Data to set required repairs
+    # TODO: Make this into abstracted function (will be used again when completing the post-repair checks)
+    summary = f"PHONECHECK REPORT DATA\nDate of Check: {report_info['DeviceUpdatedDate']}\n" \
+              f"Target Grade: {item.target_grade.label}\n\n\fFace ID Condition: {item.a_face_id.label}\n\n===== FAILED =====\n"
 
     failures = []
     logger.log("Assessing Failures")
@@ -353,8 +372,6 @@ def refurb_phones_initial_pc_report(webhook, test=None):
 
     logger.log(f"Setting Storage: {storage}")
     item.a_storage.label = storage
-
-    print()
 
     item.pc_report_status_pre.label = "Captured"
     item.report_summary.value = summary
