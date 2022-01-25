@@ -285,7 +285,7 @@ def refurb_phones_initial_pc_report(webhook, test=None):
 
     # Sync Actual Condition Values (set by user when receiving) with Init and Working Values
     # TODO: function for syncing these values
-    condition_values = ["face_id", "lens", "rear"]
+    condition_values = ["face_id", "lens", "rear", "charging", "wireless"]
     for attribute in condition_values:
         actual = getattr(item, "a_" + attribute)
         init = getattr(item, "i_" + attribute)
@@ -296,8 +296,6 @@ def refurb_phones_initial_pc_report(webhook, test=None):
             working.label = "No Repair Required"
         else:
             working.label = "Repair Required"
-
-
 
     # Use Phonecheck Data to set required repairs
     # TODO: Make this into abstracted function (will be used again when completing the post-repair checks)
