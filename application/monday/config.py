@@ -214,7 +214,10 @@ BOARD_MAPPING_DICT = {
             "status11": "repair_status",
             "dup__of_nfc": "w_flashlight",
             "dup__of_flashlight": "i_flashlight",
-            "long_text5": "report_summary"
+            "long_text5": "report_summary",
+            "files8": "inter_report",
+            "files2": "sale_report",
+            "files": "pre_report"
         }
     }
 }

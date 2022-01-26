@@ -302,6 +302,11 @@ def refurb_phones_initial_pc_report(webhook, test=None):
     summary = f"PHONECHECK REPORT DATA\nDate of Check: {report_info['DeviceUpdatedDate']}\n" \
               f"Target Grade: {item.target_grade.label}\n\n\fFace ID Condition: {item.a_face_id.label}\n\n===== FAILED =====\n"
 
+    report_string = phonecheck.get_certificate(report_info["A4Reports"])
+    path_to_report = phonecheck.new_convert_to_pdf(report_string, report_info["A4Reports"])
+    if path_to_report:
+        item.pre_report.files = f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf'
+
     failures = []
     logger.log("Assessing Failures")
     for defect in report_info["Failed"].split(","):

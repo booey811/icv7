@@ -66,6 +66,9 @@ class PhonecheckManager:
 
     @staticmethod
     def new_convert_to_pdf(html_string, report_id):
+        if os.environ["ENV"] == "devlocal":
+            # Cannot create PDFs locally (whktopdf package is fiddly)
+            return False
         pdf = pydf.generate_pdf(html_string)
         with open(f'tmp/pc_reports/report-{report_id}.pdf', 'wb') as f:
             f.write(pdf)
