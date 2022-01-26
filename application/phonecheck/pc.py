@@ -72,6 +72,7 @@ class PhonecheckManager:
         pdf = pydf.generate_pdf(html_string)
         with open(f'tmp/pc_reports/report-{report_id}.pdf', 'wb') as f:
             f.write(pdf)
+        return f'tmp/pc_reports/report-{report_id}.pdf'
 
 
 class CannotFindReportThroughIMEI(Exception):

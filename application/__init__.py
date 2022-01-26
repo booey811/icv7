@@ -64,7 +64,7 @@ class CustomLogger:
 
         self.log('==== SOFT LOG REQUESTED =====')
         print('==== SOFT LOG REQUESTED =====')
-        if os.environ['ENV'] == 'prod':
+        if os.environ['ENV'] == 'production':
             self._create_log()
             col_vals = {
                 'status': {'label': 'Soft'}
@@ -81,7 +81,7 @@ class CustomLogger:
         """creates a log entry in the logs board and halts execution"""
         self.log('==== HARD LOG REQUESTED =====')
 
-        if os.environ['ENV'] == 'prod':
+        if os.environ['ENV'] == 'production':
             # Create the log file
             self._create_log()
             col_vals = {
