@@ -5,6 +5,7 @@ from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, CustomLogger, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
     EricTicket
+from utils.tools import refurbs
 
 
 def process_stock_count(webhook, test=None):
@@ -138,7 +139,7 @@ def fetch_pc_report(webhook, test=None):
     # Delete the report file - helps clean local development dir clean
     os.remove(f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf')
 
-    logger.clear()
+    logger.soft_log()
 
     return True
 
@@ -169,7 +170,7 @@ def print_stock_info_for_mainboard(webhook, test=None):
         logger.log(e.messages)
         logger.hard_log()
 
-    logger.clear()
+    logger.soft_log()
 
     return True
 
@@ -256,7 +257,7 @@ Message: {enq_data[3]}
                                                              360128472418)  # New Panrix Enquiry Macro
     clients.zendesk.tickets.update(macro_effect.ticket)
 
-    logger.clear()
+    logger.soft_log()
 
     return True
 
@@ -284,97 +285,67 @@ def refurb_phones_initial_pc_report(webhook, test=None):
         raise e
 
     # Sync Actual Condition Values (set by user when receiving) with Init and Working Values
-    # TODO: function for syncing these values
-    condition_values = ["face_id", "lens", "rear", "charging", "wireless"]
-    for attribute in condition_values:
-        actual = getattr(item, "a_" + attribute)
-        init = getattr(item, "i_" + attribute)
-        working = getattr(item, "w_" + attribute)
-
-        init.label = actual.label
-        if actual.label == "No Repair Required":
-            working.label = "No Repair Required"
-        else:
-            working.label = "Repair Required"
+    refurbs.sync_i_a_and_w_values(item)
 
     # Use Phonecheck Data to set required repairs
-    # TODO: Make this into abstracted function (will be used again when completing the post-repair checks)
     summary = f"PHONECHECK REPORT DATA\nDate of Check: {report_info['DeviceUpdatedDate']}\n" \
               f"Target Grade: {item.target_grade.label}\n\n\fFace ID Condition: {item.a_face_id.label}\n\n===== FAILED =====\n"
 
-    report_string = phonecheck.get_certificate(report_info["A4Reports"])
-    path_to_report = phonecheck.new_convert_to_pdf(report_string, report_info["A4Reports"])
-    if path_to_report:
-        item.pre_report.files = f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf'
+    phonecheck.generate_and_store_pc_report(item.imeisn.value, item.pre_report)
 
-    failures = []
-    logger.log("Assessing Failures")
-    for defect in report_info["Failed"].split(","):
-        logger.log(f"Assessing {defect}")
-        if defect:
-            summary += defect + "\n"
-            try:
-                converted = phonecheck.DEFECTS_DICT[defect]
-                logger.log(f"Converted {defect} to {converted}")
-            except KeyError:
-                failures.append(defect)
-                continue
-            if converted:
-                initial = getattr(item, "i_" + converted)
-                working = getattr(item, "w_" + converted)
-                initial.label = "Repair Required"
-                working.label = "Repair Required"
-            else:
-                logger.log(f'{defect} does not have an applicable column on the refurbs board')
+    refurbs.sync_pc_to_status_values(item, report_info, summary)
 
-    summary += "\n===== PASSED =====\n"
-    logger.log("Assessing Passes")
-    for func in report_info["Passed"].split(","):
-        logger.log(f"Assessing {func}")
-        if func:
-            summary += func + "\n"
-            try:
-                converted = phonecheck.DEFECTS_DICT[func]
-                logger.log(f"Converted {func} to {converted}")
-            except KeyError:
-                failures.append(func)
-                continue
-            if converted:
-                initial = getattr(item, "i_" + converted)
-                working = getattr(item, "w_" + converted)
-                initial.label = "No Repair Required"
-                working.label = "No Repair Required"
-            else:
-                logger.log(f'{func} does not have an applicable column on the refurbs board')
+    # failures = []
+    # logger.log("Assessing Failures")
+    # for defect in report_info["Failed"].split(","):
+    #     logger.log(f"Assessing {defect}")
+    #     if defect:
+    #         summary += defect + "\n"
+    #         try:
+    #             converted = phonecheck.DEFECTS_DICT[defect]
+    #             logger.log(f"Converted {defect} to {converted}")
+    #         except KeyError:
+    #             logger.log(f"Failed to convert {defect} Defect to eric attribute reference")
+    #             failures.append(defect)
+    #             continue
+    #
+    #         if converted:
+    #             logger.log(f"Eric Atttribute {converted} -> Repair Required")
+    #             initial = getattr(item, "i_" + converted)
+    #             working = getattr(item, "w_" + converted)
+    #             initial.label = "Repair Required"
+    #             working.label = "Repair Required"
+    #         else:
+    #             logger.log(f'{defect} does not have an applicable column on the refurbs board')
+    #
+    # summary += "\n===== PASSED =====\n"
+    # logger.log("Assessing Passes")
+    # for func in report_info["Passed"].split(","):
+    #     logger.log(f"Assessing {func}")
+    #     if func:
+    #         summary += func + "\n"
+    #         try:
+    #             converted = phonecheck.DEFECTS_DICT[func]
+    #             logger.log(f"Converted {func} to {converted}")
+    #         except KeyError:
+    #             logger.log(f"Failed to convert {func} Passed Test to eric attribute reference")
+    #             failures.append(func)
+    #             continue
+    #         if converted:
+    #             logger.log(f"Eric Atttribute {converted} -> No Repair Required")
+    #             initial = getattr(item, "i_" + converted)
+    #             working = getattr(item, "w_" + converted)
+    #             initial.label = "No Repair Required"
+    #             working.label = "No Repair Required"
+    #         else:
+    #             logger.log(f'{func} does not have an applicable column on the refurbs board')
 
-    logger.log("Adding Extra Info")
     batt_health = report_info["BatteryHealthPercentage"]
     batt_cycles = report_info["BatteryCycle"]
-    colour = report_info["Color"]
-    model = report_info["Model"]
-    storage = report_info["Memory"]
 
-    item.i_battery_health.value = batt_health
-    item.w_battery_health.value = batt_health
-    logger.log(f"Battery Health: {batt_health}")
-    if int(batt_health) < 85:
-        logger.log("Replacing Battery")
-        item.i_battery.label = "Repair Required"
-        item.w_battery.label = "Repair Required"
-    else:
-        logger.log("Battery Health Sufficient")
-        item.i_battery.label = "No Repair Required"
-        item.w_battery.label = "No Repair Required"
+    refurbs.process_battery_data(item, batt_health, initial=True)
+
     summary += f"\n===== BATTERY STATS =====\nHealth: {batt_health}\nCycles: {batt_cycles}"
-
-    logger.log(f"Setting Colour: {colour}")
-    item.a_colour.label = colour
-
-    logger.log(f"Setting Model: {model}")
-    item.a_model.label = model
-
-    logger.log(f"Setting Storage: {storage}")
-    item.a_storage.label = storage
 
     item.pc_report_status_pre.label = "Captured"
     item.report_summary.value = summary

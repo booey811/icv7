@@ -58,12 +58,6 @@ class PhonecheckManager:
             raise Exception(f'Phonecheck.get_certificate returned an invalid response: '
                             f'{response.status_code}: {response.text})')
 
-    # def convert_to_pdf(self, html_string, report_id):
-    #     pdf = self.pdf.make_pdf(html_string)
-    #     with open(f'tmp/pc_reports/report-{report_id}.pdf', 'wb') as f:
-    #         f.write(pdf)
-    #     return f'tmp/pc_reports/report-{report_id}.pdf'
-
     @staticmethod
     def new_convert_to_pdf(html_string, report_id):
         if os.environ["ENV"] == "devlocal":
@@ -73,6 +67,13 @@ class PhonecheckManager:
         with open(f'tmp/pc_reports/report-{report_id}.pdf', 'wb') as f:
             f.write(pdf)
         return f'tmp/pc_reports/report-{report_id}.pdf'
+
+    def generate_and_store_pc_report(self, imei, eric_file_column):
+        info = self.get_info(imei)
+        report_string = self.get_certificate(info["A4Reports"])
+        path_to_report = self.new_convert_to_pdf(report_string, info["A4Reports"])
+        if path_to_report:
+            eric_file_column.files = path_to_report
 
 
 class CannotFindReportThroughIMEI(Exception):

@@ -1,4 +1,4 @@
-from application import BaseItem, EricTicket, clients, CustomLogger
+from application import BaseItem, EricTicket, clients, CustomLogger, phonecheck
 from application.monday import mappings
 
 
@@ -47,7 +47,6 @@ def sync_fields_from_monday_new(main_board_item: BaseItem = None, eric_ticket=No
         field = getattr(zen.fields, attribute)
         field.adjust(mon_col.value)
 
-
     # list and get syncable attributes - tag values
     tag_atts_dropdown = ['device', 'repairs']
     tag_atts_status = ['repair_status', 'client', 'service', 'repair_type']
@@ -67,6 +66,7 @@ def sync_fields_from_monday_new(main_board_item: BaseItem = None, eric_ticket=No
         zen_field.adjust(mon_col.index)
 
     clients.zendesk.tickets.update(zen.zenpy_ticket)
+
 
 def sync_fields_from_monday(main_board_item: BaseItem = None, eric_ticket=None):
     """This function will accept a Main Board Monday Item and/or an EricTicket and sync IMEI, passcode, device,
@@ -136,8 +136,127 @@ def sync_fields_from_monday(main_board_item: BaseItem = None, eric_ticket=None):
     clients.zendesk.tickets.set_tags(zen.id, new_tags)
 
 
+class RefurbishedDevicesHelper:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def sync_i_a_and_w_values(refurb_item):
+        """Without committing, syncs the -i, -a and -w values for refurb phones, to be used during the initial checks
+
+        Args:
+            refurb_item (BaseItem): Refurb Devices Board Item
+        """
+        refurb_item.logger.log("Syncing -A, -W and -I values")
+
+        condition_values = ["face_id", "lens", "rear", "charging", "wireless"]
+        for attribute in condition_values:
+            refurb_item.logger.log(f"Syncing: {attribute}")
+            actual = getattr(refurb_item, "a_" + attribute)
+            init = getattr(refurb_item, "i_" + attribute)
+            working = getattr(refurb_item, "w_" + attribute)
+            init.label = actual.label
+            if actual.label == "No Repair Required":
+                refurb_item.logger.log("-No Repair Required")
+                working.label = "No Repair Required"
+            else:
+                refurb_item.logger.log("-Repair Required")
+                working.label = "Repair Required"
+
+    @staticmethod
+    def set_device_specific_info_from_initial_pc_report(refurb_item, report_info):
+        """Sets -A values for Colour, Model and Memory"""
+
+        refurb_item.logger.log("Adding Initial Device Specific Info")
+
+        colour = report_info["Color"]
+        model = report_info["Model"]
+        storage = report_info["Memory"]
+
+        refurb_item.logger.log(f"Setting Colour: {colour}")
+        refurb_item.a_colour.label = colour
+
+        refurb_item.logger.log(f"Setting Model: {model}")
+        refurb_item.a_model.label = model
+
+        refurb_item.logger.log(f"Setting Storage: {storage}")
+        refurb_item.a_storage.label = storage
+
+    @staticmethod
+    def process_battery_data(refurb_item, battery_health, initial=False):
+        """Extracts Battery Health Data and Requisitions a Replacement if Possible"""
+
+        refurb_item.logger.log(f"Processing Phonecheck Battery Data | Initial={initial}")
+        if initial:
+            refurb_item.i_battery_health.value = battery_health
+        refurb_item.w_battery_health.value = battery_health
+        refurb_item.logger.log(f"Battery Health: {battery_health}")
+        if int(battery_health) < 85:
+            refurb_item.logger.log("Replacing Battery")
+            if initial:
+                refurb_item.i_battery.label = "Repair Required"
+            refurb_item.w_battery.label = "Repair Required"
+        else:
+            refurb_item.logger.log("Battery Health Sufficient")
+            if initial:
+                refurb_item.i_battery.label = "No Repair Required"
+            refurb_item.w_battery.label = "No Repair Required"
+
+    @staticmethod
+    def sync_pc_to_status_values(refurb_item, report_info, summary):
+        """Checks through the provided PC report and converts the required repairs into Refurb Board status columns"""
+
+        failures = []
+        refurb_item.logger.log("Assessing Failures")
+        for defect in report_info["Failed"].split(","):
+            refurb_item.logger.log(f"Assessing {defect}")
+            if defect:
+                summary += defect + "\n"
+                try:
+                    converted = phonecheck.DEFECTS_DICT[defect]
+                    refurb_item.logger.log(f"Converted {defect} to {converted}")
+                except KeyError:
+                    refurb_item.logger.log(f"Failed to convert {defect} Defect to eric attribute reference")
+                    failures.append(defect)
+                    continue
+
+                if converted:
+                    refurb_item.logger.log(f"Eric Atttribute {converted} -> Repair Required")
+                    initial = getattr(refurb_item, "i_" + converted)
+                    working = getattr(refurb_item, "w_" + converted)
+                    initial.label = "Repair Required"
+                    working.label = "Repair Required"
+                else:
+                    refurb_item.logger.log(f'{defect} does not have an applicable column on the refurbs board')
+
+        summary += "\n===== PASSED =====\n"
+        refurb_item.logger.log("Assessing Passes")
+        for func in report_info["Passed"].split(","):
+            refurb_item.logger.log(f"Assessing {func}")
+            if func:
+                summary += func + "\n"
+                try:
+                    converted = phonecheck.DEFECTS_DICT[func]
+                    refurb_item.logger.log(f"Converted {func} to {converted}")
+                except KeyError:
+                    refurb_item.logger.log(f"Failed to convert {func} Passed Test to eric attribute reference")
+                    failures.append(func)
+                    continue
+                if converted:
+                    refurb_item.logger.log(f"Eric Attribute {converted} -> No Repair Required")
+                    initial = getattr(refurb_item, "i_" + converted)
+                    working = getattr(refurb_item, "w_" + converted)
+                    initial.label = "No Repair Required"
+                    working.label = "No Repair Required"
+                else:
+                    refurb_item.logger.log(f'{func} does not have an applicable column on the refurbs board')
+
+
 class SyncErrorNoZendeskID(Exception):
 
     def __init__(self):
         pass
 
+
+refurbs = RefurbishedDevicesHelper()
