@@ -295,51 +295,6 @@ def refurb_phones_initial_pc_report(webhook, test=None):
 
     refurbs.sync_pc_to_status_values(item, report_info, summary)
 
-    # failures = []
-    # logger.log("Assessing Failures")
-    # for defect in report_info["Failed"].split(","):
-    #     logger.log(f"Assessing {defect}")
-    #     if defect:
-    #         summary += defect + "\n"
-    #         try:
-    #             converted = phonecheck.DEFECTS_DICT[defect]
-    #             logger.log(f"Converted {defect} to {converted}")
-    #         except KeyError:
-    #             logger.log(f"Failed to convert {defect} Defect to eric attribute reference")
-    #             failures.append(defect)
-    #             continue
-    #
-    #         if converted:
-    #             logger.log(f"Eric Atttribute {converted} -> Repair Required")
-    #             initial = getattr(item, "i_" + converted)
-    #             working = getattr(item, "w_" + converted)
-    #             initial.label = "Repair Required"
-    #             working.label = "Repair Required"
-    #         else:
-    #             logger.log(f'{defect} does not have an applicable column on the refurbs board')
-    #
-    # summary += "\n===== PASSED =====\n"
-    # logger.log("Assessing Passes")
-    # for func in report_info["Passed"].split(","):
-    #     logger.log(f"Assessing {func}")
-    #     if func:
-    #         summary += func + "\n"
-    #         try:
-    #             converted = phonecheck.DEFECTS_DICT[func]
-    #             logger.log(f"Converted {func} to {converted}")
-    #         except KeyError:
-    #             logger.log(f"Failed to convert {func} Passed Test to eric attribute reference")
-    #             failures.append(func)
-    #             continue
-    #         if converted:
-    #             logger.log(f"Eric Atttribute {converted} -> No Repair Required")
-    #             initial = getattr(item, "i_" + converted)
-    #             working = getattr(item, "w_" + converted)
-    #             initial.label = "No Repair Required"
-    #             working.label = "No Repair Required"
-    #         else:
-    #             logger.log(f'{func} does not have an applicable column on the refurbs board')
-
     batt_health = report_info["BatteryHealthPercentage"]
     batt_cycles = report_info["BatteryCycle"]
 
