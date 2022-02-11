@@ -58,57 +58,64 @@ def generate_repair_set(forced_repair_ids=()):
     }
 
     COLOURS = [
-        "Black", "White", "Space Grey", "Green", "Gold", "Rose Gold"
+        "Black", "White", "Space Grey"
     ]
 
     # Get generator Item
-    gennie_item = BaseItem(CustomLogger(), 1093049167)  # Product Creator Item ID
+    gennie = BaseItem(CustomLogger(), 1093049167)  # Product Creator Item ID
+    gennie.log("Generating Repair Set")
 
     # Check a device has been supplied to the generator item
-    if not gennie_item.device.ids:
-        raise Exception("Cannot Generate Repairs - Please Provide Device Column with a Value")
+    if not gennie.device.ids:
+        gennie.log(f"Device Column Not Supplied on the Product Generator: "
+                   f"https://icorrect.monday.com/boards/349212843/pulses/1093049167")
+        gennie.logger.hard_log()
 
     # Acquire necessary repair IDS from REPAIR OPTIONS, exception if this cannot be found
     repair_ids = []
     device_type = "Device"
     if forced_repair_ids:
         repair_ids = forced_repair_ids
+        gennie.log(f"Forcing Repair IDs: {repair_ids}")
     else:
         for option in REPAIR_OPTIONS:
-            if option in gennie_item.device.labels[0]:
+            if option in gennie.device.labels[0]:
                 repair_ids = REPAIR_OPTIONS[option]
                 device_type = option
+                gennie.log(f"Requested Generation: {gennie.device.labels[0]}")
+                gennie.log(f"Generating Repais for IDs: {repair_ids}")
                 break
 
     if not repair_ids:
-        raise Exception("Cannot Generate Repairs - Please Ensure the Device is present in REPAIR_OPTIONS or supply "
-                        "forced_repair_ids")
+        gennie.log("Cannot Generate Repairs - Please Ensure the Device is present in REPAIR_OPTIONS or supply "
+                   "forced_repair_ids")
+        gennie.log(f"Device Column: {gennie.device.labels[0]} | OPTIONS: {REPAIR_OPTIONS.keys()}")
+        gennie.logger.hard_log()
 
     # Construct Repair Item Construction Terms (Device)
-    device_id = gennie_item.device.ids[0]
-    device_label = gennie_item.device.labels[0]
+    device_id = gennie.device.ids[0]
+    device_label = gennie.device.labels[0]
 
     # Iterate through Repair IDs to construct items
     for repair_id in repair_ids:
         coloured = False
-        repair_label = gennie_item.repairs.settings[str(repair_id)]
+        repair_label = gennie.repairs.settings[str(repair_id)]
 
         # Check if part is coloured
         if repair_label in inventory.COLOURED_PARTS:
             for colour in COLOURS:
                 colour = colour
-                colour_id = gennie_item.device_colour.settings[colour]
+                colour_id = gennie.device_colour.settings[colour]
                 new_repair = inventory.create_repair_item(
-                    gennie_item.logger,
+                    gennie.logger,
                     dropdown_ids=[device_id, repair_id, colour_id],
                     dropdown_names=[device_label, repair_label, colour],
                     device_type=device_type
                 )
         else:
             new_repair = inventory.create_repair_item(
-                gennie_item.logger,
+                gennie.logger,
                 dropdown_ids=[device_id, repair_id],
                 dropdown_names=[device_label, repair_label],
                 device_type=device_type
             )
-

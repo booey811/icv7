@@ -221,10 +221,15 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
 
 
 def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_type: str):
+
+    logger.log("Creating Repair Item")
+
     # Construct Combined ID & Name
     combined_id = "-".join([str(item) for item in dropdown_ids])
     dual_only = combined_id
     repair_name = " ".join(dropdown_names)
+
+    logger.log(f"{repair_name} | Comb ID: {combined_id} | {device_type}")
 
     if len(dropdown_ids) > 2:
         dual_only = f"{dropdown_ids[0]}-{dropdown_ids[1]}"
