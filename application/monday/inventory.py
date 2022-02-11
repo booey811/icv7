@@ -200,7 +200,7 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
     # Get search terms from device and repairs (and colour) columns
     for item in construct_search_terms_for_parts(mainboard_item):
         # Search using search item's relevant column search method
-        found_ids = repairs_search_item.combined_id.search(item)
+        found_ids = [item["id"] for item in repairs_search_item.combined_id.search(item)]
 
         # If no repairs found
         if not found_ids:
@@ -235,6 +235,14 @@ def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_
         dual_only = f"{dropdown_ids[0]}-{dropdown_ids[1]}"
 
     blank_item = BaseItem(logger, board_id=984924063)
+
+    # Search Repairs Board to see if this combined ID already exists
+    found_items = blank_item.combined_id.search(combined_id)
+    if found_items:
+        logger.log(f"Already found items with Combined ID: {combined_id}")
+        for item in found_items:
+            logger.log(f"{item.name} has Combined ID {combined_id}")
+        logger.hard_log()
 
     # Set IDs
     blank_item.combined_id.value = combined_id

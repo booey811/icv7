@@ -1,4 +1,5 @@
-from application import BaseItem, CustomLogger, zen_help, inventory
+import application
+from application import BaseItem, CustomLogger, zen_help, inventory, HardLog
 
 
 def sync_zendesk_fields():
@@ -106,16 +107,22 @@ def generate_repair_set(forced_repair_ids=()):
             for colour in COLOURS:
                 colour = colour
                 colour_id = gennie.device_colour.settings[colour]
+                try:
+                    new_repair = inventory.create_repair_item(
+                        gennie.logger,
+                        dropdown_ids=[device_id, repair_id, colour_id],
+                        dropdown_names=[device_label, repair_label, colour],
+                        device_type=device_type
+                    )
+                except HardLog:
+                    continue
+        else:
+            try:
                 new_repair = inventory.create_repair_item(
                     gennie.logger,
-                    dropdown_ids=[device_id, repair_id, colour_id],
-                    dropdown_names=[device_label, repair_label, colour],
+                    dropdown_ids=[device_id, repair_id],
+                    dropdown_names=[device_label, repair_label],
                     device_type=device_type
                 )
-        else:
-            new_repair = inventory.create_repair_item(
-                gennie.logger,
-                dropdown_ids=[device_id, repair_id],
-                dropdown_names=[device_label, repair_label],
-                device_type=device_type
-            )
+            except HardLog:
+                continue

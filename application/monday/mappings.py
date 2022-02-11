@@ -110,14 +110,14 @@ class TextColumn(BaseColumnValue):
         return {self.id: self._value}
 
     def search(self, value_to_search_for):
-        """returns list of item ids when using this monday column to search with the parameter"""
+        """returns list of moncli items when using this monday column to search with the parameter"""
         self._eric.log(f"Searching MainBoard[{self.title}] for {value_to_search_for}")
         search = self._eric.moncli_board_obj.get_column_value(self.id)
-        search.text = f'{value_to_search_for}'
+        search.value = f'{value_to_search_for}'
         items = self._eric.moncli_board_obj.get_items_by_column_values(search, 'id')
-        ids = [item['id'] for item in items]
-        self._eric.log(f"Got IDS: {ids}")
-        return ids
+        mon_items = [item for item in items]
+        self._eric.log(f"Got IDS: {[item['id'] for item in mon_items]}")
+        return mon_items
 
 
 class LongTextColumn(BaseColumnValue):
