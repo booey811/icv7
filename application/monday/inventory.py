@@ -13,6 +13,7 @@ COLOURED_PARTS = [
     'Headphone Jack',
     'Home Button',
     'Front Screen Universal',
+    'Front Screen',
     'Rear Glass',
     'Front Screen (LG)',
     'Front Screen (Tosh)',
@@ -22,7 +23,6 @@ COLOURED_PARTS = [
 
 
 def construct_search_terms_for_parts(mainboard_item: BaseItem):
-
     mainboard_item.log(f"Generating Search Terms for {mainboard_item.name}: {mainboard_item.mon_id}")
 
     terms = []
@@ -42,7 +42,7 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem):
     else:
         for repair_id in mainboard_item.repairs.ids:
 
-            label = mainboard_item.repairs._settings[str(repair_id)]
+            label = mainboard_item.repairs.settings[str(repair_id)]
 
             mainboard_item.log(f"Generating for {label}")
 
@@ -186,7 +186,7 @@ def get_stock_info(mainboard_item: BaseItem):
     return result
 
 
-def get_repairs(mainboard_item: BaseItem):
+def get_repairs(mainboard_item: BaseItem, create_if_not=False):
     """"""
 
     mainboard_item.log(f"Getting Repairs for {mainboard_item.name}: {mainboard_item.mon_id}")
@@ -199,8 +199,15 @@ def get_repairs(mainboard_item: BaseItem):
 
     # Get search terms from device and repairs (and colour) columns
     for item in construct_search_terms_for_parts(mainboard_item):
-        # Search using search items relevant column search method
+        # Search using search item's relevant column search method
         found_ids = repairs_search_item.combined_id.search(item)
+
+        # If no repairs found
+        if not found_ids:
+            # If create is selected, create the repair
+            if create_if_not:
+                raise Exception("Development Required")
+
         mainboard_item.log(f"Found IDS: {found_ids}")
         diff = list(set(found_ids) - set(repair_ids))
         mainboard_item.log(f"New IDs: {diff}")
@@ -211,3 +218,39 @@ def get_repairs(mainboard_item: BaseItem):
         eric_parts.append(BaseItem(mainboard_item.logger, repair_id))
 
     return eric_parts
+
+
+def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_type: str):
+    # Construct Combined ID & Name
+    combined_id = "-".join([str(item) for item in dropdown_ids])
+    dual_only = combined_id
+    repair_name = " ".join(dropdown_names)
+
+    if len(dropdown_ids) > 2:
+        dual_only = f"{dropdown_ids[0]}-{dropdown_ids[1]}"
+
+    blank_item = BaseItem(logger, board_id=984924063)
+
+    # Set IDs
+    blank_item.combined_id.value = combined_id
+    blank_item.dual_id.value = dual_only
+    blank_item.d_id.value = dropdown_ids[0]
+    blank_item.r_id.value = dropdown_ids[1]
+    try:
+        blank_item.c_id.value = dropdown_ids[2]
+    except IndexError:
+        pass
+
+    # Set Labels
+    blank_item.d_label.value = dropdown_names[0]
+    blank_item.r_label.value = dropdown_names[1]
+    try:
+        blank_item.c_label.value = dropdown_names[2]
+    except IndexError:
+        pass
+
+    # Set Other
+    blank_item.device_type.label = device_type
+
+    # Commit
+    blank_item.new_item(repair_name)
