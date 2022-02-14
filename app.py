@@ -8,6 +8,7 @@ from worker import conn
 
 from application import create_app, verify_monday, ChallengeReceived
 import eric
+from utils import exec as utils_exec
 
 # App Creation
 app = create_app()
@@ -108,6 +109,13 @@ def create_zendesk_ticket_for_enquiry(test_id=None):
     else:
         raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
 
+    return ''
+
+
+# Generate Set of Repairs for Given model on Product Creator Item (Main Board)
+@app.route("/executables/generate_repair_set", methods=["PUT"])
+def generate_repair_set(test_id=None):
+    result = q_lo.enqueue(utils_exec.generate_repair_set())
     return ''
 
 
