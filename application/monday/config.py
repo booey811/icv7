@@ -68,7 +68,22 @@ BOARD_MAPPING_DICT = {
         'name': "repairs",
         'columns': {
             "combined_id": 'combined_id',
-            "connect_boards5": "connect_parts"
+            "dual_only_id": "dual_id",
+
+            "repair_id": "r_id",
+            "colour_id": "c_id",
+            "device_id": "d_id",
+
+            "colour_label": "c_label",
+            "repair_label": "r_label",
+            "device_label": "d_label",
+
+            "connect_boards5": "connect_parts",
+
+            "quantity": "stock_level",
+            "sale_price": "sale_price",
+            "status6": "device_type",
+            "partboard_id": "parts_id"
         }
     },
     '985177480': {

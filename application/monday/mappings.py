@@ -16,6 +16,7 @@ class MappingObject:
             raise Exception(f'Board ID {board_id} does not exist in config MAPPING_DICT')
 
         self._raw_mapping_dict = BOARD_MAPPING_DICT[str(board_id)]
+        self.eric_name = self._raw_mapping_dict["name"]
 
     @staticmethod
     def process_column(moncli_col_val, staged_changes):
@@ -109,14 +110,14 @@ class TextColumn(BaseColumnValue):
         return {self.id: self._value}
 
     def search(self, value_to_search_for):
-        """returns list of item ids when using this monday column to search with the parameter"""
+        """returns list of moncli items when using this monday column to search with the parameter"""
         self._eric.log(f"Searching MainBoard[{self.title}] for {value_to_search_for}")
         search = self._eric.moncli_board_obj.get_column_value(self.id)
-        search.text = f'{value_to_search_for}'
+        search.value = f'{value_to_search_for}'
         items = self._eric.moncli_board_obj.get_items_by_column_values(search, 'id')
-        ids = [item['id'] for item in items]
-        self._eric.log(f"Got IDS: {ids}")
-        return ids
+        mon_items = [item for item in items]
+        self._eric.log(f"Got IDS: {[item['id'] for item in mon_items]}")
+        return mon_items
 
 
 class LongTextColumn(BaseColumnValue):
@@ -160,17 +161,17 @@ class StatusColumn(BaseColumnValue):
 
         # Set up the _settings attribute (dict), which is used to convert label inputs into index and vice versa
         simple_settings = json.loads(moncli_column_value.settings_str)['labels']
-        self._settings = {}
+        self.settings = {}
         for item in simple_settings:
-            self._settings[item] = simple_settings[item]
-            self._settings[simple_settings[item]] = item
+            self.settings[item] = simple_settings[item]
+            self.settings[simple_settings[item]] = item
 
         # Setup from item (object or ID)
         if from_item:
             # Take basic column info from the moncli value & set up value attribute to return the label
             self._label = str(moncli_column_value.text)
             if self.label:
-                self._index = int(self._settings[self._label])
+                self._index = int(self.settings[self._label])
             else:
                 self._index = None
             self._value = self._label
@@ -195,7 +196,7 @@ class StatusColumn(BaseColumnValue):
         # Check input is valid for column settings through try/except
         try:
             key = str(to_set)
-            val = str(self._settings[key])
+            val = str(self.settings[key])
         except KeyError as e:
             # TODO Add softlog for this exception
             raise ValueError(f'StatusColumn ({self.title}) value setter supplied with a label or index that does not '
@@ -204,10 +205,10 @@ class StatusColumn(BaseColumnValue):
         # Work out whether an index or a label has been provided
         try:
             input_index = str(int(to_set))
-            input_label = str(self._settings[input_index])
+            input_label = str(self.settings[input_index])
         except ValueError as e:
             input_label = str(to_set)
-            input_index = str(self._settings[input_label])
+            input_index = str(self.settings[input_label])
 
         self._eric.log(f'Column[{self.id} | {self.title}].value => LABEL: {input_label} | INDEX: {input_index}')
 
@@ -265,7 +266,7 @@ class StatusColumn(BaseColumnValue):
 
         # Check index is still in column _settings
         try:
-            conversion = self._settings[str(self._index)]
+            conversion = self.settings[str(self._index)]
         except KeyError:
             raise Exception(
                 f'StatusColumn._stage_change ({self.title}) supplied with value not in _settings ({self._value})')
@@ -278,17 +279,17 @@ class DropdownColumn(BaseColumnValue):
         super().__init__(moncli_column_value, staged_changes)
 
         # Set up _settings attribute containing all labels and associated ids
-        self._settings = {}
+        self.settings = {}
         simple_settings = json.loads(moncli_column_value.settings_str)['labels']
         for item in simple_settings:
-            self._settings[str(item['id'])] = item['name']
-            self._settings[item['name']] = str(item['id'])
+            self.settings[str(item['id'])] = item['name']
+            self.settings[item['name']] = str(item['id'])
 
         # Setup from item (object or ID)
         if from_item:
             # Take basic info from column value and set up _value to return labels
             self._labels = [item for item in moncli_column_value.value]
-            self._ids = [int(self._settings[item]) for item in self._labels]
+            self._ids = [int(self.settings[item]) for item in self._labels]
 
         # Setup from board ID
         else:
@@ -312,7 +313,7 @@ class DropdownColumn(BaseColumnValue):
 
         # Set private variables
         self._ids = [int(item) for item in ids_to_set]
-        self._labels = [self._settings[str(item)] for item in self._ids]
+        self._labels = [self.settings[str(item)] for item in self._ids]
 
         # Adjust value
         self._value = self._labels
@@ -345,7 +346,7 @@ class DropdownColumn(BaseColumnValue):
             # Check that value is present in _settings to see if change is possible
             try:
                 key = item
-                val = self._settings[str(key)]
+                val = self.settings[str(key)]
             except KeyError:
                 raise ValueError(
                     f'DropDownColumn ({self.title}) value setter supplied with a label or index that does not '
@@ -356,7 +357,7 @@ class DropdownColumn(BaseColumnValue):
                 input_id = str(int(item))
             except ValueError as e:
                 input_label = str(item)
-                input_id = str(self._settings[input_label])
+                input_id = str(self.settings[input_label])
 
             ids_list.append(input_id)
 

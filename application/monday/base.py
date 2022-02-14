@@ -75,6 +75,12 @@ class BaseItem(BaseItemStructure):
         self.board_id = str(self.moncli_board_obj.id)
         self._convert_column_data_to_eric_values(columns)
 
+    def __str__(self):
+        return f"BaseItem[{self._mapper.eric_name}]"
+
+    def __repr__(self):
+        return f"BaseItem[{self._mapper.eric_name}]"
+
     def _convert_column_data_to_eric_values(self, columns):
         """
         Processes column data taken from monday item or board IDs and sets up the eric item accordingly

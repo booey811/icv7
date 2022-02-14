@@ -149,7 +149,7 @@ class TestStatusValue:
         """Tests whether the index value of the read only test item is the same for the moncli object and
         the eric object"""
 
-        moncli_index = eric_read_only_item.status._settings[read_only_status_column_value.value]
+        moncli_index = eric_read_only_item.status.settings[read_only_status_column_value.value]
 
         assert int(moncli_index) == int(eric_read_only_item.status.index)
 
@@ -270,7 +270,7 @@ class TestDropDownValue:
         """Tests whether the index value of the read only test item is the same for the moncli object and
         the eric object"""
         moncli_labels = read_only_dropdown_column_value.value
-        moncli_ids = [int(eric_read_only_item.dropdown._settings[item]) for item in moncli_labels]
+        moncli_ids = [int(eric_read_only_item.dropdown.settings[item]) for item in moncli_labels]
         assert sorted(moncli_ids) == sorted(eric_read_only_item.dropdown.ids)
 
     def test_labels_convert_to_ids_correctly(

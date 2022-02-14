@@ -32,6 +32,8 @@ class CustomLogger:
 
         self._log_lines = []
 
+        self.log_file_path = True
+
     @staticmethod
     def _generate_log_file_name():
         now = datetime.now()
@@ -49,22 +51,29 @@ class CustomLogger:
 
     @property
     def log_file_path(self):
-        if not self._log_file_path:
-            self._log_file_path = f'tmp/logs/{self._log_name}'
         return self._log_file_path
+
+    @log_file_path.setter
+    def log_file_path(self, value=True):
+        if not self._log_file_path:
+            if os.environ["ENV"] == 'devlocal':
+                directory = os.path.dirname(__file__)[:-12]
+                self._log_file_path = directory + f'/tmp/logs/{self._log_name}'
+            else:
+                self._log_file_path = f'tmp/logs/{self._log_name}'
 
     def log(self, log_line):
         self._log_lines.append(log_line)
         if self.debug:
             print(log_line)
 
-    def soft_log(self):
+    def soft_log(self, for_records=False):
         """creates a log entry in the logs board but does not halt execution"""
         # Create the log file
 
         self.log('==== SOFT LOG REQUESTED =====')
         print('==== SOFT LOG REQUESTED =====')
-        if os.environ['ENV'] == 'production':
+        if os.environ['ENV'] == 'prod' or for_records:
             self._create_log()
             col_vals = {
                 'status': {'label': 'Soft'}
@@ -77,11 +86,11 @@ class CustomLogger:
             log_item.add_file(file_column, self._log_file_path)
             return log_item
 
-    def hard_log(self) -> Exception:
+    def hard_log(self, for_records=False):
         """creates a log entry in the logs board and halts execution"""
         self.log('==== HARD LOG REQUESTED =====')
 
-        if os.environ['ENV'] == 'production':
+        if os.environ['ENV'] == 'prod' or for_records:
             # Create the log file
             self._create_log()
             col_vals = {
@@ -94,7 +103,6 @@ class CustomLogger:
             file_column = log_item.get_column_value(id='file')
             log_item.add_file(file_column, self._log_file_path)
 
-        self.clear()
         raise HardLog(f'Hard Log Requested: {self._log_name}')
 
     def clear(self):
