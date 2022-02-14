@@ -64,7 +64,7 @@ def generate_repair_set(forced_repair_ids=()):
 
     # Get generator Item
     gennie = BaseItem(CustomLogger(), 1093049167)  # Product Creator Item ID
-    gennie.log("Generating Repair Set")
+    gennie.log(f"Generating Repair Set: {gennie.device.labels[0]}")
 
     # Check a device has been supplied to the generator item
     if not gennie.device.ids:
@@ -126,3 +126,5 @@ def generate_repair_set(forced_repair_ids=()):
                 )
             except HardLog:
                 continue
+
+    gennie.logger.soft_log(for_records=True)
