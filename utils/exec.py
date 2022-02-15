@@ -110,10 +110,11 @@ def generate_repair_set(forced_repair_ids=()):
     gennie.logger.soft_log(for_records=True)
 
 
-def repair_item_constructor(gennie_item: BaseItem, id_info: list, label_info: str, device_type_string: str, repair_id):
+def repair_item_constructor(id_info: list, label_info: str, device_type_string: str, repair_id):
     """sub function that actually creates the repair item, as this job must be queued to avoid timeout"""
 
     coloured = False
+    gennie_item = BaseItem(CustomLogger(), 1093049167)  # Product Creator ID (Main Board)
     repair_label = gennie_item.repairs.settings[str(repair_id)]
 
     # Check if part is coloured
