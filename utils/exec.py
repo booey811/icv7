@@ -2,7 +2,9 @@ from rq import Queue
 
 from application import BaseItem, CustomLogger, zen_help, inventory, HardLog
 from worker import conn
-from app import q_lo
+
+q_stock = Queue("stock", connection=conn)
+
 
 def sync_zendesk_fields():
     keys = {  # contains Zendesk Ticket Field IDs to adjust
@@ -132,6 +134,6 @@ def generate_repair_set(forced_repair_ids=()):
 
     # Iterate through Repair IDs to construct items
     for repair_id in repair_ids:
-        q_lo.enqueue(repair_item_constructor, args=([device_id, repair_id], device_label, device_type))
+        q_stock.enqueue(repair_item_constructor, args=([device_id, repair_id], device_label, device_type))
 
     gennie.logger.soft_log(for_records=True)
