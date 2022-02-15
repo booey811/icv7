@@ -1,6 +1,9 @@
-import application
-from application import BaseItem, CustomLogger, zen_help, inventory, HardLog
+from rq import Queue
 
+from application import BaseItem, CustomLogger, zen_help, inventory, HardLog
+from worker import conn
+
+q_stock = Queue("stock", connection=conn)
 
 def sync_zendesk_fields():
     keys = {  # contains Zendesk Ticket Field IDs to adjust
@@ -62,6 +65,37 @@ def generate_repair_set(forced_repair_ids=()):
         "Black", "White", "Space Grey"
     ]
 
+    def repair_item_constructor(gennie_item: BaseItem, id_info: list, label_info: str, device_type_string: str):
+        """sub function that actually creates the repair item, as this job must be queued to avoid timeout"""
+
+        coloured = False
+        repair_label = gennie_item.repairs.settings[str(repair_id)]
+
+        # Check if part is coloured
+        if repair_label in inventory.COLOURED_PARTS:
+            for colour in COLOURS:
+                colour = colour
+                colour_id = gennie_item.device_colour.settings[colour]
+                try:
+                    new_repair = inventory.create_repair_item(
+                        gennie_item.logger,
+                        dropdown_ids=[id_info[0], id_info[1], colour_id],
+                        dropdown_names=[label_info, repair_label, colour],
+                        device_type=device_type_string
+                    )
+                except HardLog:
+                    pass
+        else:
+            try:
+                new_repair = inventory.create_repair_item(
+                    gennie_item.logger,
+                    dropdown_ids=[id_info[0], id_info[1]],
+                    dropdown_names=[label_info, repair_label],
+                    device_type=device_type_string
+                )
+            except HardLog:
+                pass
+
     # Get generator Item
     gennie = BaseItem(CustomLogger(), 1093049167)  # Product Creator Item ID
     gennie.log(f"Generating Repair Set: {gennie.device.labels[0]}")
@@ -99,32 +133,6 @@ def generate_repair_set(forced_repair_ids=()):
 
     # Iterate through Repair IDs to construct items
     for repair_id in repair_ids:
-        coloured = False
-        repair_label = gennie.repairs.settings[str(repair_id)]
-
-        # Check if part is coloured
-        if repair_label in inventory.COLOURED_PARTS:
-            for colour in COLOURS:
-                colour = colour
-                colour_id = gennie.device_colour.settings[colour]
-                try:
-                    new_repair = inventory.create_repair_item(
-                        gennie.logger,
-                        dropdown_ids=[device_id, repair_id, colour_id],
-                        dropdown_names=[device_label, repair_label, colour],
-                        device_type=device_type
-                    )
-                except HardLog:
-                    continue
-        else:
-            try:
-                new_repair = inventory.create_repair_item(
-                    gennie.logger,
-                    dropdown_ids=[device_id, repair_id],
-                    dropdown_names=[device_label, repair_label],
-                    device_type=device_type
-                )
-            except HardLog:
-                continue
+        q_stock.enqueue(repair_item_constructor, args=([device_id, repair_id], device_label, device_type))
 
     gennie.logger.soft_log(for_records=True)
