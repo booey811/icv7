@@ -259,4 +259,26 @@ class SyncErrorNoZendeskID(Exception):
         pass
 
 
+def generate_column_id_list(board_id):
+    """Takes a Board ID and spits out a List of Column IDs vs Title"""
+    from pprint import pprint
+
+    board = clients.monday.system.get_board_by_id(board_id)
+
+    columns = {}
+    for column in board.columns:
+        if column.id in ["item_id", "name"]:
+            continue
+        columns[f"{column.id}"] = f"""{column.title.replace(" ", "_").lower()}"""
+
+    result = {
+        f"{board_id}": {
+            "name": board.name.replace(' ', '_').lower(),
+            "columns": columns
+        }
+    }
+
+    pprint(result)
+
+
 refurbs = RefurbishedDevicesHelper()

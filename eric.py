@@ -313,3 +313,21 @@ def refurb_phones_initial_pc_report(webhook, test=None):
     item.commit()
 
     logger.soft_log()
+
+
+def create_repairs_profile(webhook, test=None):
+    logger = CustomLogger()
+
+    if test:
+        finance = BaseItem(logger, test)
+    else:
+        finance = BaseItem(logger, webhook["pulseId"])
+
+    # Get Main Item
+
+
+    # Fetch Repairs
+    # Ensure Length of Repairs is same length as Repair IDs
+    # Print to Finance Subitem
+    pass
+
