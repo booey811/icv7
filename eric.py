@@ -23,7 +23,6 @@ def process_stock_count(webhook, test=None):
         # Get Current Count Group
         logger.log('Getting Items')
         if test:
-            item = clients.monday.system.get_items(test)[0]
             new_count_group = count_board.get_groups('id', ids=[item.group.id])[0]
         else:
             group_id = webhook['groupId']
@@ -63,8 +62,13 @@ def process_stock_count(webhook, test=None):
 
     # Adjust Part stock levels and Count Item Status & Group
     for result in count_totals:
-        inventory.adjust_stock_level(logger, count_totals[result]['part'], count_totals[result]['actual'],
-                                     absolute=True)
+        inventory.adjust_stock_level(
+            logger=logger,
+            part_reference=count_totals[result]['part'],
+            quantity=count_totals[result]['actual'],
+            source_object=count_totals[result]["count"],
+            absolute=True
+        )
 
         count_totals[result]['count'].count_status.label = 'Confirmed'
         count_totals[result]['count'].count_num.value = count_totals[result]['actual']

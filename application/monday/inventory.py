@@ -4,6 +4,7 @@ or eric objects """
 from moncli.entities import Item as moncli_item
 
 from .base import BaseItem
+from .config import BOARD_MAPPING_DICT
 
 from typing import Union
 
@@ -64,7 +65,8 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem):
         return terms
 
 
-def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolute=False):
+def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quantity, source_object: BaseItem,
+                       absolute=False):
     logger.log('Adjusting Stock Level')
     # Check part_reference input is valid
     if type(part_reference) in [str, int]:
@@ -113,6 +115,62 @@ def adjust_stock_level(logger, part_reference: Union[str, int], quantity, absolu
     return new_level
 
 
+def _create_movement_record(
+        eric_source_item: BaseItem,
+        part_item: BaseItem,
+        starting_stock_level: int,
+        ending_stock_level: int):
+    """
+function to construct an inventory movements item. Must be supplied with an eric source object, which can be a financial
+board subitem (for completed repairs), a stock count item, an order item or a waste item which will be pointed back
+to by the resultant Movements Board Item. Also requires a Parts Item and Stock Adjustment Data.
+    Args:
+        eric_source_item: the eric item that is in charge of checking out the required stock
+        part_item: the eric part that is undergoing adjustment
+        starting_stock_level: the initial stock level of the eric part_item
+        ending_stock_level: the final stock level of the eric part_item
+
+    Returns:
+        moncli_item: resultant moncli item from calling board.create_item()
+    """
+
+    source_board = BOARD_MAPPING_DICT[eric_source_item.board_id]["name"]
+
+    eric_source_item.log(f"Creating Movement Record From: {source_board}[{eric_source_item.name}]")
+
+    if source_board == "stock_counts":
+        eric_source_item.log("Stock Count Movement - Values will be assigned absolutely")
+        url = f"https://icorrect.monday.com/boards/1008986497/pulses/{eric_source_item.mon_id}"
+        text = f"Count: {eric_source_item.name}"
+        mov_type = "Stock Count"
+        mov_dir = "Stock Count"
+    else:
+        raise Exception(
+            f"Movements Record Function Not Completed for Items from {eric_source_item.moncli_board_obj.name}")
+
+    movement = BaseItem(eric_source_item.logger, board_id=989490856)  # Inventory Movements Board ID
+    part_url = f"https://icorrect.monday.com/boards/985177480/pulses/{part_item.mon_id}"
+    part_text = part_item.name
+
+    movement.mov_type.value = mov_type
+    movement.mov_dir.value = mov_dir
+    movement.before.value = starting_stock_level
+    movement.after.value = ending_stock_level,
+    movement.difference.value = int(ending_stock_level) - int(starting_stock_level)
+    movement.source_id.value = eric_source_item.mon_id
+    movement.source_url.value = [url, text]
+    movement.parts_id.value = part_item.mon_id
+    movement.parts_url.value = [part_url, part_text]
+    movement.tags.replace(part_item.tags.labels)
+
+    new_item = movement.new_item(part_item.name)
+
+    eric_source_item.log(f"{part_item.name}: Change ({int(ending_stock_level) - int(starting_stock_level)}) | New "
+                         f"Stock Level: {ending_stock_level}")
+
+    return new_item
+
+
 def _check_stock_against_reorder(part_item: BaseItem) -> str:
     """
     Checks stock level of an item against it's reorder point, returning strings for the required Low Stock Status Label
@@ -137,7 +195,7 @@ def _check_stock_against_reorder(part_item: BaseItem) -> str:
         return "Below Reorder"
     else:
         raise Exception(
-            f'Stock Level and Reorder Point are Mathematically Impossible ({stock_level}, {reorder_point})')
+            f'Stock Level and Reorder Point are Mathematically Impossible ({stock_level} and {reorder_point})')
 
 
 def _check_and_adjust_for_low_stock(part_item: BaseItem):
@@ -221,7 +279,6 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
 
 
 def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_type: str):
-
     logger.log("Creating Repair Item")
 
     # Construct Combined ID & Name

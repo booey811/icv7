@@ -93,11 +93,27 @@ BOARD_MAPPING_DICT = {
             'device_id': 'device_id',
             'repair_id': 'repair_id',
             'colour_id': 'colour_id',
+            "tags": "tags",
             'numbers45': 'count_num',
             'quantity': 'stock_level',
             'numbers37': 'reorder_point',
             'status3': 'low_stock_status',
             'connect_boards18': 'connect_supplier_orders'
+        }
+    },
+    "989490856": {
+        "name": "movements",
+        "columns": {
+            "movement_type": "mov_type",
+            "dup__of_movement_type": "mov_dir",
+            "quantity_before": "before",
+            "quantity_after": "after",
+            "numbers9": "difference",
+            "mainboard_id": "source_id",
+            "link2": "source_url",
+            "text4": "parts_id",
+            "part_url": "part_url",
+            "dropdown": "tags"
         }
     },
     '1008986497': {

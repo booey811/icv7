@@ -108,7 +108,7 @@ class TestInventoryHelper:
         eric_test_part_item.commit()
 
         inventory.adjust_stock_level(eric_test_part_item.logger, eric_test_part_item,
-                                     -10)  # Sets stock_level to 20 - 10 < 15
+                                     -10, eric_test_part_item)  # Sets stock_level to 20 - 10 < 15
 
         refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
 
@@ -122,7 +122,7 @@ class TestInventoryHelper:
         eric_test_part_item.commit()
 
         inventory.adjust_stock_level(eric_test_part_item.logger, eric_test_part_item,
-                                     10)  # Sets stock_level to 15 + 10 > 20
+                                     10, eric_test_part_item)  # Sets stock_level to 15 + 10 > 20
 
         refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
 
