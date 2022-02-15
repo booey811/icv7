@@ -115,7 +115,7 @@ def create_zendesk_ticket_for_enquiry(test_id=None):
 # Generate Set of Repairs for Given model on Product Creator Item (Main Board)
 @app.route("/executables/generate_repair_set", methods=["PUT"])
 def generate_repair_set(test_id=None):
-    result = q_lo.enqueue(utils_exec.generate_repair_set())
+    result = q_lo.enqueue(utils_exec.generate_repair_set)
     return ''
 
 
