@@ -108,6 +108,13 @@ def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quanti
 
     _check_and_adjust_for_low_stock(part)
 
+    new_movement_item = _create_movement_record(
+        eric_source_item=source_object,
+        part_item=part,
+        starting_stock_level=current_level,
+        ending_stock_level=new_level
+    )
+
     # Commit Changes
     part.commit()
 
