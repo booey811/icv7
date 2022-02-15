@@ -104,7 +104,7 @@ def generate_repair_set(forced_repair_ids=()):
     for repair_id in repair_ids:
         q_stock.enqueue(
             f=repair_item_constructor,
-            args=(gennie, [device_id, repair_id], device_label, device_type, repair_id)
+            args=([device_id, repair_id], device_label, device_type, repair_id)
         )
 
     gennie.logger.soft_log(for_records=True)
