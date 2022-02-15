@@ -3,7 +3,7 @@ from rq import Queue
 from application import BaseItem, CustomLogger, zen_help, inventory, HardLog
 from worker import conn
 
-q_stock = Queue("stock", connection=conn)
+q_stock = Queue("low", connection=conn)
 
 def sync_zendesk_fields():
     keys = {  # contains Zendesk Ticket Field IDs to adjust
