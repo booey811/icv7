@@ -424,7 +424,9 @@ class NumberColumn(BaseColumnValue):
         # Check input is correct via try/except (int, str or float only)
         try:
             if value:
-                value = float(value)  # Has to be float as moncli struggles to convert
+                if isinstance(value, tuple):
+                    value = value[0]
+                value = float(int(value))  # Has to be float as moncli struggles to convert
             else:
                 value = 0
             # Adjust eric value
@@ -556,7 +558,7 @@ class LinkColumn(BaseColumnValue):
         self.value = [to_set, self._text]
 
     def _stage_change(self):
-        self._eric.staged_changes[self.id] = {'url': self._url, 'url_text': self._text}
+        self._eric.staged_changes[self.id] = {'url': self._url, 'text': self._text}
 
 
 class FileColumn(BaseColumnValue):

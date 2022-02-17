@@ -1,20 +1,11 @@
 from rq import Queue
 
-from application import BaseItem, CustomLogger, zen_help, inventory, HardLog
+from application import BaseItem, zen_help, inventory, HardLog, CustomLogger
+from application.monday.config import STANDARD_REPAIR_OPTIONS, STANDARD_REPAIR_COLOURS
 from worker import conn
 
 q_stock = Queue("stock", connection=conn)
 
-REPAIR_OPTIONS = {
-    "iPhone": [133, 74, 71, 54, 70, 7, 65, 73, 99, 76, 66, 88, 75, 83, 84],
-    "Apple Watch": [133, 69, 138],
-    "iPad": [133, 30, 69, 54, 99],
-    "MacBook": [133, 71, 54, 119, 32, 38]
-}
-
-COLOURS = [
-    "Black", "White", "Space Grey"
-]
 
 def sync_zendesk_fields():
     keys = {  # contains Zendesk Ticket Field IDs to adjust
@@ -82,9 +73,9 @@ def generate_repair_set(forced_repair_ids=()):
         repair_ids = forced_repair_ids
         gennie.log(f"Forcing Repair IDs: {repair_ids}")
     else:
-        for option in REPAIR_OPTIONS:
+        for option in STANDARD_REPAIR_OPTIONS:
             if option in gennie.device.labels[0]:
-                repair_ids = REPAIR_OPTIONS[option]
+                repair_ids = STANDARD_REPAIR_OPTIONS[option]
                 device_type = option
                 gennie.log(f"Requested Generation: {gennie.device.labels[0]}")
                 gennie.log(f"Generating Repais for IDs: {repair_ids}")
@@ -93,7 +84,7 @@ def generate_repair_set(forced_repair_ids=()):
     if not repair_ids:
         gennie.log("Cannot Generate Repairs - Please Ensure the Device is present in REPAIR_OPTIONS or supply "
                    "forced_repair_ids")
-        gennie.log(f"Device Column: {gennie.device.labels[0]} | OPTIONS: {REPAIR_OPTIONS.keys()}")
+        gennie.log(f"Device Column: {gennie.device.labels[0]} | OPTIONS: {STANDARD_REPAIR_OPTIONS.keys()}")
         gennie.logger.hard_log()
 
     # Construct Repair Item Construction Terms (Device)
@@ -119,7 +110,7 @@ def repair_item_constructor(id_info: list, label_info: str, device_type_string: 
 
     # Check if part is coloured
     if repair_label in inventory.COLOURED_PARTS:
-        for colour in COLOURS:
+        for colour in STANDARD_REPAIR_COLOURS:
             colour = colour
             colour_id = gennie_item.device_colour.settings[colour]
             try:

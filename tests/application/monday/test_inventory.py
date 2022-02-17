@@ -1,6 +1,6 @@
 import pytest
 
-from application import BaseItem, CustomLogger, inventory
+from application import BaseItem, inventory, CustomLogger
 
 
 @pytest.fixture(scope="module")

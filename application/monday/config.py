@@ -98,7 +98,10 @@ BOARD_MAPPING_DICT = {
             'quantity': 'stock_level',
             'numbers37': 'reorder_point',
             'status3': 'low_stock_status',
-            'connect_boards18': 'connect_supplier_orders'
+            'connect_boards18': 'connect_supplier_orders',
+            "status13": "function",
+            "sale_price": 'sale_price',
+            'supply_price': "supply_price"
         }
     },
     "989490856": {
@@ -112,78 +115,78 @@ BOARD_MAPPING_DICT = {
             "mainboard_id": "source_id",
             "link2": "source_url",
             "text4": "parts_id",
-            "part_url": "part_url",
+            "part_url": "parts_url",
             "dropdown": "tags"
         }
     },
     '989883897': {
         'name': 'financial',
         'columns': {
-            'be_generator': 'be_generator',
-            'client': 'client',
-            'colour': 'colour',
-            'company2': 'company',
-            'date3': 'date_of_finance',
-            'date_created': 'date_created',
-            'device': 'device',
-            'diagnostic_time': 'diagnostic_time',
-            'diagnostic_time3': 'diagnostic_time',
-            'dup__of_stock_adjustment': 'invoice_generation',
-            'formula7': '£/hour',
-            'mainboard_id6': 'mainboard_id',
-            'mainboard_link': 'mainboard_link',
-            'margin': 'margin_backend',
-            'margin_frontend': 'margin',
-            'mirror1': 'ticket',
-            'mirror96': 'user_errors',
-            'net_profit': 'net_profit_backend',
-            'net_profit_frontend': 'net_profit',
-            'numbers': 'repair_counter',
-            'numbers3': 'courier_charge_ex',
-            'numbers9': 'max_cost_inc',
-            'order_id4': 'order_id',
-            'parts_status': 'repair_profile',
-            'payment_status': 'payment_status',
-            'refurb_id1': 'refurb_id',
-            'repair_credits': 'total_repair_credits',
-            'repair_time': 'repair_time',
-            'repair_time2': 'repair_time',
-            'repaired_date': 'repaired_date',
-            'repairs': 'repairs',
-            'sale_price': 'sale_price_backend',
-            'sale_price_frontend': 'revenue',
-            'service': 'service',
-            'status25': 'sales_status',
-            'stock_adjustment': 'stock_adjustment',
-            'subitems': 'repairs',
-            'subitems_supply_price': 'supply_price_backend',
-            'technician': 'technician_mirror',
-            'text': 'po_number',
-            'text1': '--force_company',
-            'text3': 'store/cost_centre',
-            'text5': 'external_board_id',
-            'text6': 'invoice_number',
-            'total_time': 'total_time',
-            'type': 'type'
+            'subitems': 'repairs',  # subtasks
+            'repair_credits': 'total_repair_credits',  # lookup
+            'subitems_supply_price': 'supply_price_backend',  # lookup
+            'sale_price': 'sale_price_backend',  # lookup
+            'net_profit': 'net_profit_backend',  # lookup
+            'sale_price_frontend': 'revenue',  # formula
+            'net_profit_frontend': 'net_profit',  # formula
+            'margin_frontend': 'margin',  # formula
+            'numbers9': 'max_cost_(inc_vat)',  # numeric
+            'margin': 'margin_backend',  # lookup
+            'service': 'service',  # lookup
+            'client': 'client',  # lookup
+            'type': 'type',  # lookup
+            'technician': 'technician_mirror',  # lookup
+            'device': 'device',  # lookup
+            'repairs': 'repairs',  # lookup
+            'colour': 'colour',  # lookup
+            'repaired_date': 'repaired_date',  # lookup
+            'total_time': 'total_time',  # lookup
+            'diagnostic_time': 'diagnostic_time',  # lookup
+            'repair_time': 'repair_time',  # lookup
+            'diagnostic_time3': 'diagnostic_time',  # formula
+            'repair_time2': 'repair_time',  # formula
+            'company2': 'company',  # text
+            'refurb_id1': 'refurb_id',  # text
+            'payment_status': 'payment_status',  # lookup
+            'order_id4': 'order_id',  # text
+            'mainboard_id6': 'main_id',  # text
+            'mainboard_link': 'mainboard_link',  # board-relation
+            'parts_status': 'repair_profile',  # color
+            'date_created': 'date_created',  # pulse-log
+            'stock_adjustment': 'stock_adjust',  # color
+            'dup__of_stock_adjustment': 'invoice_generation',  # color
+            'date3': 'date_of_finance',  # date
+            'numbers': 'repair_counter',  # numeric
+            'be_generator': 'be_generator',  # boolean
+            'formula7': '£/hour',  # formula
+            'numbers3': 'courier_charge_(ex_vat)',  # numeric
+            'text': 'po_number',  # text
+            'text3': 'store/cost_centre',  # text
+            'text6': 'invoice_number',  # text
+            'text1': '--force_company',  # text
+            'text5': 'external_board_id',  # text
+            'mirror1': 'ticket',  # lookup
+            'status25': 'sales_status',  # color
+            'mirror96': 'user_errors',  # lookup
         }
     },
     '989906488': {
         'name': 'sub_financial',
         'columns': {
-            'margin': 'margin',
-            'movement_url': 'movement_url',
-            'movementboard_id': 'movement_id',
-            'net_sale_price': 'net_sale_price',
-            'part_url': 'part_url',
-            'partboard_id': 'parts_id',
-            'profit': 'net_profit',
-            'quantity_used': 'quantity_used',
-            'repair_credits': 'repair_credits',
-            'sale_price': 'raw_price',
-            'status2': 'eod_status',
-            'status8': 'vat_margin',
-            'supply_price': 'supply_price',
-            'vat': 'vat'
+            'quantity_used': 'quantity_used',  # numeric
+            'sale_price': 'sale_price',  # numeric
+            'net_sale_price': 'net_sale_price',  # formula
+            'supply_price': 'supply_price',  # numeric
+            'vat': 'vat',  # formula
+            'profit': 'net_profit',  # formula
+            'margin': 'margin',  # formula
+            'part_url': 'parts_url',  # link
+            'movement_url': 'movement_url',  # link
+            'movementboard_id': 'movement_id',  # text
+            'partboard_id': 'parts_id',  # text
+            'status2': 'eod_status',  # color
+            'repair_credits': 'repair_credits',  # numeric
+            'status8': 'vat_margin'  # color
         }
     },
     '1008986497': {
@@ -322,3 +325,13 @@ BOARD_MAPPING_DICT = {
         }
     }
 }
+
+STANDARD_REPAIR_OPTIONS = {
+    "iPhone": [133, 74, 71, 54, 70, 7, 65, 73, 99, 76, 66, 88, 75, 83, 84],
+    "Apple Watch": [133, 69, 138],
+    "iPad": [133, 30, 69, 54, 99],
+    "MacBook": [133, 71, 54, 119, 32, 38]
+}
+STANDARD_REPAIR_COLOURS = [
+    "Black", "White", "Space Grey"
+]

@@ -1,11 +1,11 @@
 import os
-from datetime import datetime
 import json
+from datetime import datetime
 
 import flask
 
 from . import config
-from .monday import BaseItem, inventory
+from .monday import BaseItem, inventory, financial
 from .utilities import clients
 from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting
@@ -14,6 +14,58 @@ from .zendesk import helper as zen_help
 from .zendesk import fields
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
+
+
+# App functions
+def verify_monday(webhook):
+    """Takes webhook information, authenticates if required, and decodes information
+    Args:
+        webhook (request): Payload received from Monday's Webhooks
+    Returns:
+        dictionary: contains various information from Monday, dependent on type of webhook sent
+    """
+
+    data = webhook.decode('utf-8')
+    data = json.loads(data)
+    if "challenge" in data.keys():
+        authtoken = {"challenge": data["challenge"]}
+        raise ChallengeReceived(authtoken)
+    else:
+        return data
+
+
+def create_app():
+    # Detect Environment & Retrieve config
+    env = os.environ['ENV']
+    if env == 'production':
+        print('Config:Production')
+        configuration = config.ProdConfig()
+    elif env in ['devlocal', 'devserver']:
+        print('Config:DevLocal')
+        configuration = config.DevConfig()
+    else:
+        raise Exception('ENV config var is not set correctly - cannot boot')
+
+    # Create and configure app
+    app = flask.Flask('eric')
+    app.config.from_object(configuration)
+    return app
+
+
+class ChallengeReceived(Exception):
+    """
+    Exception that is thrown when the Monday challenge is received, stores the challenge token for return to app
+    level function
+    """
+
+    def __init__(self, token):
+        self.token = token
+
+
+class HardLog(Exception):
+
+    def __init__(self, message):
+        print(message)
 
 
 class CustomLogger:
@@ -72,7 +124,6 @@ class CustomLogger:
         # Create the log file
 
         self.log('==== SOFT LOG REQUESTED =====')
-        print('==== SOFT LOG REQUESTED =====')
         if os.environ['ENV'] == 'prod' or for_records:
             self._create_log()
             col_vals = {
@@ -111,55 +162,3 @@ class CustomLogger:
             os.remove(self.log_file_path)
         except FileNotFoundError:
             pass
-
-
-# App functions
-def verify_monday(webhook):
-    """Takes webhook information, authenticates if required, and decodes information
-    Args:
-        webhook (request): Payload received from Monday's Webhooks
-    Returns:
-        dictionary: contains various information from Monday, dependent on type of webhook sent
-    """
-
-    data = webhook.decode('utf-8')
-    data = json.loads(data)
-    if "challenge" in data.keys():
-        authtoken = {"challenge": data["challenge"]}
-        raise ChallengeReceived(authtoken)
-    else:
-        return data
-
-
-def create_app():
-    # Detect Environment & Retrieve config
-    env = os.environ['ENV']
-    if env == 'production':
-        print('Config:Production')
-        configuration = config.ProdConfig()
-    elif env in ['devlocal', 'devserver']:
-        print('Config:DevLocal')
-        configuration = config.DevConfig()
-    else:
-        raise Exception('ENV config var is not set correctly - cannot boot')
-
-    # Create and configure app
-    app = flask.Flask('eric')
-    app.config.from_object(configuration)
-    return app
-
-
-class ChallengeReceived(Exception):
-    """
-    Exception that is thrown when the Monday challenge is received, stores the challenge token for return to app
-    level function
-    """
-
-    def __init__(self, token):
-        self.token = token
-
-
-class HardLog(Exception):
-
-    def __init__(self, message):
-        print(message)

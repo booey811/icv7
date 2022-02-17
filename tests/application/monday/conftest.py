@@ -6,7 +6,7 @@ import time
 import datetime
 import pytest
 
-from application import CustomLogger, BaseItem, clients
+from application import BaseItem, clients, CustomLogger
 
 
 @pytest.fixture

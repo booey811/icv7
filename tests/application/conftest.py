@@ -3,7 +3,7 @@ import time
 import pytest
 
 from application.utilities import clients
-from application import CustomLogger, BaseItem
+from application import BaseItem, CustomLogger
 
 
 @pytest.fixture(scope='session')

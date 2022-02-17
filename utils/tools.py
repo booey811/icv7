@@ -1,4 +1,4 @@
-from application import BaseItem, EricTicket, clients, CustomLogger, phonecheck
+from application import BaseItem, EricTicket, clients, phonecheck, CustomLogger
 from application.monday import mappings
 
 
@@ -265,20 +265,21 @@ def generate_column_id_list(board_id):
 
     board = clients.monday.system.get_board_by_id(board_id)
 
-    columns = {}
+    columns = []
     for column in board.columns:
         if column.id in ["item_id", "name"]:
             continue
-        columns[f"{column.id}"] = f"""{column.title.replace(" ", "_").lower()}"""
+        columns.append(f"""'{column.id}': '{column.title.replace(" ", "_").lower()}',  # {column.type}""")
 
-    result = {
-        f"{board_id}": {
-            "name": board.name.replace(' ', '_').lower(),
-            "columns": columns
-        }
-    }
+    formatted_columns = "\n".join(columns)
 
-    pprint(result)
+    result = f"""'{board_id}': {{
+    'name': '{board.name}',
+    'columns': {{{formatted_columns}
+    }}
+}}"""
+
+    print(result)
 
 
 refurbs = RefurbishedDevicesHelper()

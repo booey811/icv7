@@ -3,6 +3,7 @@ or eric objects """
 
 from moncli.entities import Item as moncli_item
 
+import application
 from .base import BaseItem
 from .config import BOARD_MAPPING_DICT
 
@@ -99,7 +100,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quanti
     if absolute:
         new_level = quantity
     else:
-        new_level = current_level + quantity
+        new_level = current_level - quantity
 
     part.stock_level.value = new_level
 
@@ -119,7 +120,7 @@ def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quanti
     part.commit()
 
     logger.log('Stock Level Adjusted')
-    return new_level
+    return new_movement_item
 
 
 def _create_movement_record(
@@ -151,6 +152,12 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
         text = f"Count: {eric_source_item.name}"
         mov_type = "Stock Count"
         mov_dir = "Stock Count"
+    elif source_board == "main":
+        eric_source_item.log("Device Repairs Movement - Values will be adjusted according to consumption")
+        url = f"https://icorrect.monday.com/boards/349212843/pulses/{eric_source_item.mon_id}"
+        text = f"Repair: {eric_source_item.name}"
+        mov_type = "iCorrect Repairs"
+        mov_dir = "Out"
     else:
         raise Exception(
             f"Movements Record Function Not Completed for Items from {eric_source_item.moncli_board_obj.name}")
@@ -161,8 +168,8 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
 
     movement.mov_type.value = mov_type
     movement.mov_dir.value = mov_dir
-    movement.before.value = starting_stock_level
-    movement.after.value = ending_stock_level,
+    movement.before.value = int(starting_stock_level),
+    movement.after.value = int(ending_stock_level),
     movement.difference.value = int(ending_stock_level) - int(starting_stock_level)
     movement.source_id.value = eric_source_item.mon_id
     movement.source_url.value = [url, text]
@@ -260,7 +267,7 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
     repairs_search_item = BaseItem(mainboard_item.logger, board_id=984924063)
 
     repair_ids = []
-    eric_parts = []
+    eric_repairs = []
 
     # Get search terms from device and repairs (and colour) columns
     for item in construct_search_terms_for_parts(mainboard_item):
@@ -271,7 +278,9 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
         if not found_ids:
             # If create is selected, create the repair
             if create_if_not:
-                raise Exception("Development Required")
+                eric_repairs.append(item)
+            else:
+                eric_repairs.append(False)
 
         mainboard_item.log(f"Found IDS: {found_ids}")
         diff = list(set(found_ids) - set(repair_ids))
@@ -280,12 +289,16 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
 
     # Get eric parts
     for repair_id in repair_ids:
-        eric_parts.append(BaseItem(mainboard_item.logger, repair_id))
+        eric_repairs.append(BaseItem(mainboard_item.logger, repair_id))
 
-    return eric_parts
+    return eric_repairs
 
 
 def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_type: str):
+
+    if isinstance(logger, str):
+        logger = application.CustomLogger()
+
     logger.log("Creating Repair Item")
 
     # Construct Combined ID & Name

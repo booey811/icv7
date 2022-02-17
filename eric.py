@@ -1,11 +1,16 @@
 import os
 import datetime
+import rq
 
 from moncli.api_v2.exceptions import MondayApiError
 
-from application import BaseItem, clients, CustomLogger, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-    EricTicket
+from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
+    EricTicket, financial, CustomLogger
 from utils.tools import refurbs
+from application.monday import config as mon_config
+from worker import conn
+
+q_hi = rq.Queue("high", connection=conn)
 
 
 def process_stock_count(webhook, test=None):
@@ -316,6 +321,23 @@ def refurb_phones_initial_pc_report(webhook, test=None):
 
 
 def create_repairs_profile(webhook, test=None):
+    def add_financial_subitem(financial_item, repair_item):
+
+        if isinstance(financial_item, (str, int)):
+            financial_item = BaseItem(CustomLogger(), financial_item)
+        if isinstance(repair_item, (str, int)):
+            repair_item = BaseItem(CustomLogger(), repair_item)
+
+        blank_subitem = BaseItem(financial_item.logger, board_id=989906488)
+
+        blank_subitem.parts_id.value = repair_item.parts_id.value
+        blank_subitem.quantity_used.value = 1
+
+        financial_item.moncli_obj.create_subitem(
+            item_name=repair_item.name,
+            column_values=blank_subitem.staged_changes
+        )
+
     logger = CustomLogger()
 
     if test:
@@ -324,10 +346,77 @@ def create_repairs_profile(webhook, test=None):
         finance = BaseItem(logger, webhook["pulseId"])
 
     # Get Main Item
-
+    main = BaseItem(logger, finance.main_id.value)
 
     # Fetch Repairs
+    repairs = inventory.get_repairs(main, create_if_not=True)
+
+    repair_profile = "Complete"
+    stock_adjust = "Do Now!"
+
+    for repair in repairs:
+        if isinstance(repair, BaseItem):
+            if repair.parts_id.value == "1112258883":  # No Parts Used Item ID
+                stock_adjust = "Manual"
+            # noinspection PyTypeChecker
+            add_financial_subitem(finance, repair)
+        elif isinstance(repair, str):
+            stock_adjust = "Manual"
+            repair_profile = "Failed - Creation"
+            device_type = "Device"
+            for option in mon_config.STANDARD_REPAIR_OPTIONS:
+                if option in main.device.labels[0]:
+                    device_type = option
+            dropdown_ids = repair.split("-")
+            if len(dropdown_ids) == 3:
+                dropdown_labels = [
+                    main.device.settings[str(dropdown_ids[0])],
+                    main.repair.settings[str(dropdown_ids[1])],
+                    main.colour.settings[str(dropdown_ids[2])]
+                ]
+            else:
+                dropdown_labels = [main.device.settings[str(dropdown_ids[0])],
+                                   main.repairs.settings[str(dropdown_ids[1])]]
+
+            if os.environ["ENV"] == 'devlocal':
+                inventory.create_repair_item(
+                    logger=logger,
+                    dropdown_ids=dropdown_ids,
+                    dropdown_names=dropdown_labels,
+                    device_type=device_type
+                )
+            else:
+                q_hi.enqueue(f=inventory.create_repair_item, args=("new", dropdown_ids, dropdown_labels, device_type))
+
+    finance.repair_profile.label = repair_profile
+    finance.stock_adjust.label = stock_adjust
+    finance.commit()
+
     # Ensure Length of Repairs is same length as Repair IDs
     # Print to Finance Subitem
     pass
 
+
+def checkout_stock_from_subitems(webhook, test=None):
+
+    logger = CustomLogger()
+
+    if test:
+        finance = BaseItem(logger, test)
+    else:
+        finance = BaseItem(logger, webhook["pulseId"])
+
+    if finance.repair_profile.label != "Complete":
+        logger.log("Cannot Checkout Stock Items - Repair Profile is Incomplete")
+        logger.hard_log()
+
+    if os.environ["ENV"] == 'devlocal':
+        for subitem in finance.moncli_obj.subitems:
+            financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
+        financial.mark_entry_as_complete(finance)
+
+    else:
+        queued_jobs = []
+        for subitem in finance.moncli_obj.subitems:
+            queued_jobs.append(q_hi.enqueue(financial.checkout_stock_for_line_item, (subitem.id, finance.main_id.value)))
+        q_hi.enqueue(financial.mark_entry_as_complete, finance.mon_id, depends_on=queued_jobs)
