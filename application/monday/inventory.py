@@ -158,6 +158,12 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
         text = f"Repair: {eric_source_item.name}"
         mov_type = "iCorrect Repairs"
         mov_dir = "Out"
+    elif source_board == "parts":
+        eric_source_item.log("Parts Movement - Values will be adjusted according to provided values (testing)")
+        url = f"https://icorrect.monday.com/boards/985177480/pulses/{eric_source_item.mon_id}"
+        text = f"Parts: {eric_source_item.name}"
+        mov_type = "Parts Manipulation"
+        mov_dir = "Parts Manipulation"
     else:
         raise Exception(
             f"Movements Record Function Not Completed for Items from {eric_source_item.moncli_board_obj.name}")

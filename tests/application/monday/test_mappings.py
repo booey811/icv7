@@ -63,6 +63,7 @@ class TestTextValue:
             eric_system_item.text.value = input_type
 
 
+@pytest.mark.working
 class TestNumberValue:
 
     @pytest.fixture(scope='class')

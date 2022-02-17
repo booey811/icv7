@@ -14,6 +14,7 @@ def blank_eric_devtest_item(logger, dev_test_board_id):
     item = BaseItem(logger, board_id=dev_test_board_id)
     return item
 
+
 @pytest.fixture(scope='session')
 def read_only_item_id():
     return '1649471278'
@@ -96,4 +97,17 @@ def temp_mainboard_item():
     yield item
     item.moncli_obj.delete()
 
+
+@pytest.fixture
+def part_test_item():
+    item = BaseItem(CustomLogger(), 1226905145)
+    return item
+
+
+@pytest.fixture
+def financial_test_item():
+    item = BaseItem(CustomLogger(), 2309382170)
+    yield item
+    for sub in item.moncli_obj.subitems:
+        sub.delete()
 
