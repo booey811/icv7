@@ -18,12 +18,12 @@ def checkout_stock_for_line_item(subitem_id, main_reference):
 
     line = application.BaseItem(logger, subitem_id)
 
+    logger.log(f"Checking Out Stock: {main.name} | {line.name}")
+
     part = application.BaseItem(logger, line.parts_id.value)
 
     consumption = line.quantity_used.value
-
     new_movement = adjust_stock_level(logger, part, consumption, main)
-
     line.sale_price.value = part.sale_price.value
     line.supply_price.value = part.supply_price.value
     line.parts_url.value = [
@@ -39,6 +39,7 @@ def checkout_stock_for_line_item(subitem_id, main_reference):
     if part.function.label == "Admin":
         line.eod_status.label = "Admin"
 
+    logger.log("Line Checkout Complete")
     line.commit()
 
 
@@ -49,6 +50,8 @@ def mark_entry_as_complete(finance_reference):
 
     else:
         finance_item = finance_reference
+
+    finance_item.log("Checkout Complete")
 
     finance_item.stock_adjust.label = "Complete"
 

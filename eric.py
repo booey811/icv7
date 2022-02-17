@@ -333,12 +333,16 @@ def create_repairs_profile(webhook, test=None):
         blank_subitem.parts_id.value = repair_item.parts_id.value
         blank_subitem.quantity_used.value = 1
 
+        financial_item.logger.log(f"Adding Subitem - {financial_item.name} | {repair_item.name}")
+
         financial_item.moncli_obj.create_subitem(
             item_name=repair_item.name,
             column_values=blank_subitem.staged_changes
         )
 
     logger = CustomLogger()
+
+    logger.log("Creating Repairs Financial Profile")
 
     if test:
         finance = BaseItem(logger, test)
@@ -357,10 +361,12 @@ def create_repairs_profile(webhook, test=None):
     for repair in repairs:
         if isinstance(repair, BaseItem):
             if repair.parts_id.value == "1112258883":  # No Parts Used Item ID
+                logger.log("No Parts Used Detected - Switching to Manual Stock Checkout")
                 stock_adjust = "Manual"
             # noinspection PyTypeChecker
             add_financial_subitem(finance, repair)
         elif isinstance(repair, str):
+            logger.log("Repair Not Found - Beginning Creation Process and Setting Stock Checkout to Manual")
             stock_adjust = "Manual"
             repair_profile = "Failed - Creation"
             device_type = "Device"
@@ -390,11 +396,8 @@ def create_repairs_profile(webhook, test=None):
 
     finance.repair_profile.label = repair_profile
     finance.stock_adjust.label = stock_adjust
+    logger.log("Financial Profile Creation Complete")
     finance.commit()
-
-    # Ensure Length of Repairs is same length as Repair IDs
-    # Print to Finance Subitem
-    pass
 
 
 def checkout_stock_from_subitems(webhook, test=None):
@@ -405,6 +408,8 @@ def checkout_stock_from_subitems(webhook, test=None):
         finance = BaseItem(logger, test)
     else:
         finance = BaseItem(logger, webhook["pulseId"])
+
+    logger.log(f"Checking Out Stock: {finance.name}")
 
     if finance.repair_profile.label != "Complete":
         logger.log("Cannot Checkout Stock Items - Repair Profile is Incomplete")
