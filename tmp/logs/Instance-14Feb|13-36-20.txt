@@ -1,0 +1,1364 @@
+Instantiate BaseItem from Monday ID: 1093049167
+Board[main]
+ColumnID[subitems6] not found in monday.config[main] - skip processing
+ColumnID[check] not found in monday.config[main] - skip processing
+ColumnID[link1] not found in monday.config[main] - skip processing
+Processing Column[notifications_status|status_18|Notifications]
+Column Processing Finished
+
+Processing Column[repair_status|status4|Status]
+Column Processing Finished
+
+Processing Column[service|service|Service]
+Column Processing Finished
+
+Processing Column[client|status|Client]
+Column Processing Finished
+
+Processing Column[repair_type|status24|Type]
+Column Processing Finished
+
+ColumnID[status_14] not found in monday.config[main] - skip processing
+ColumnID[text15] not found in monday.config[main] - skip processing
+Processing Column[email|text5|Email]
+Column Processing Finished
+
+Processing Column[phone|text00|Phone Number]
+Column Processing Finished
+
+ColumnID[date6] not found in monday.config[main] - skip processing
+ColumnID[date36] not found in monday.config[main] - skip processing
+ColumnID[person] not found in monday.config[main] - skip processing
+Processing Column[device|device0|Device]
+Column Processing Finished
+
+Processing Column[repairs|repair|Repairs]
+Column Processing Finished
+
+Processing Column[device_colour|status8|Device Colour]
+Column Processing Finished
+
+ColumnID[screen_condition] not found in monday.config[main] - skip processing
+ColumnID[status_15] not found in monday.config[main] - skip processing
+Processing Column[imeisn|text4|IMEI/SN]
+Column Processing Finished
+
+ColumnID[status55] not found in monday.config[main] - skip processing
+Processing Column[passcode|text8|Passcode]
+Column Processing Finished
+
+ColumnID[dup__of_passcode] not found in monday.config[main] - skip processing
+ColumnID[passcode] not found in monday.config[main] - skip processing
+ColumnID[text93] not found in monday.config[main] - skip processing
+ColumnID[date4] not found in monday.config[main] - skip processing
+ColumnID[collection_date] not found in monday.config[main] - skip processing
+ColumnID[date3] not found in monday.config[main] - skip processing
+ColumnID[time_tracking98] not found in monday.config[main] - skip processing
+ColumnID[time_tracking] not found in monday.config[main] - skip processing
+ColumnID[time_tracking9] not found in monday.config[main] - skip processing
+Processing Column[zendesk_id|text6|ZenDeskID]
+Column Processing Finished
+
+ColumnID[text88] not found in monday.config[main] - skip processing
+ColumnID[dropdown8] not found in monday.config[main] - skip processing
+ColumnID[status_112] not found in monday.config[main] - skip processing
+ColumnID[text84] not found in monday.config[main] - skip processing
+ColumnID[status_12] not found in monday.config[main] - skip processing
+ColumnID[payment_status] not found in monday.config[main] - skip processing
+ColumnID[payment_method] not found in monday.config[main] - skip processing
+ColumnID[enquiry] not found in monday.config[main] - skip processing
+ColumnID[order_id] not found in monday.config[main] - skip processing
+ColumnID[notes9] not found in monday.config[main] - skip processing
+ColumnID[be_courier_collection] not found in monday.config[main] - skip processing
+ColumnID[be_courier_return] not found in monday.config[main] - skip processing
+ColumnID[add_to_finance8] not found in monday.config[main] - skip processing
+ColumnID[status_173] not found in monday.config[main] - skip processing
+ColumnID[be_stock_checker] not found in monday.config[main] - skip processing
+ColumnID[numbers1] not found in monday.config[main] - skip processing
+ColumnID[item_id] not found in monday.config[main] - skip processing
+ColumnID[add_to_vend] not found in monday.config[main] - skip processing
+ColumnID[dup__of_add_to_vend] not found in monday.config[main] - skip processing
+ColumnID[text7] not found in monday.config[main] - skip processing
+ColumnID[status_1650] not found in monday.config[main] - skip processing
+ColumnID[status_160] not found in monday.config[main] - skip processing
+ColumnID[long_text5] not found in monday.config[main] - skip processing
+ColumnID[status_161] not found in monday.config[main] - skip processing
+ColumnID[numbers9] not found in monday.config[main] - skip processing
+ColumnID[status_183] not found in monday.config[main] - skip processing
+Generating Repair Set: iPhone 6 Plus
+Requested Generation: iPhone 6 Plus
+Generating Repais for IDs: [133, 74, 71, 54, 70, 7, 65, 73, 99, 76, 66, 88, 75]
+Creating Repair Item
+iPhone 6 Plus Front Screen Black | Comb ID: 7-133-10 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-133-10
+Got IDS: ['2287188008']
+Already found items with Combined ID: 7-133-10
+iPhone 6 Plus Front Screen Black has Combined ID 7-133-10
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Front Screen White | Comb ID: 7-133-16 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-133-16
+Got IDS: ['2287188305']
+Already found items with Combined ID: 7-133-16
+iPhone 6 Plus Front Screen White has Combined ID 7-133-16
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Front Screen Space Grey | Comb ID: 7-133-17 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-133-17
+Got IDS: ['2287188541']
+Already found items with Combined ID: 7-133-17
+iPhone 6 Plus Front Screen Space Grey has Combined ID 7-133-17
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus After Market OLED | Comb ID: 7-74 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-74
+Got IDS: ['1270943701']
+Already found items with Combined ID: 7-74
+iPhone 6 Plus Front Screen Generic has Combined ID 7-74
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Battery | Comb ID: 7-71 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-71
+Got IDS: ['1010017632']
+Already found items with Combined ID: 7-71
+iPhone 6 Plus Battery has Combined ID 7-71
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Charging Port Black | Comb ID: 7-54-10 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-54-10
+Got IDS: ['1157657099']
+Already found items with Combined ID: 7-54-10
+iPhone 6 Plus Charging Port Black has Combined ID 7-54-10
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Charging Port White | Comb ID: 7-54-16 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-54-16
+Got IDS: ['1157669683']
+Already found items with Combined ID: 7-54-16
+iPhone 6 Plus Charging Port White has Combined ID 7-54-16
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Charging Port Space Grey | Comb ID: 7-54-17 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-54-17
+Got IDS: ['2287189880']
+Already found items with Combined ID: 7-54-17
+iPhone 6 Plus Charging Port Space Grey has Combined ID 7-54-17
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Rear Camera | Comb ID: 7-70 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-70
+Got IDS: ['1157720864']
+Already found items with Combined ID: 7-70
+iPhone 6 Plus Rear Camera has Combined ID 7-70
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Rear Lens | Comb ID: 7-7 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-7
+Got IDS: ['2287190263']
+Already found items with Combined ID: 7-7
+iPhone 6 Plus Rear Lens has Combined ID 7-7
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Rear Housing Black | Comb ID: 7-65-10 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-65-10
+Got IDS: ['2287190380']
+Already found items with Combined ID: 7-65-10
+iPhone 6 Plus Rear Housing Black has Combined ID 7-65-10
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Rear Housing White | Comb ID: 7-65-16 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-65-16
+Got IDS: ['2287190558']
+Already found items with Combined ID: 7-65-16
+iPhone 6 Plus Rear Housing White has Combined ID 7-65-16
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Rear Housing Space Grey | Comb ID: 7-65-17 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-65-17
+Got IDS: ['2287190667']
+Already found items with Combined ID: 7-65-17
+iPhone 6 Plus Rear Housing Space Grey has Combined ID 7-65-17
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Earpiece | Comb ID: 7-73 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-73
+Got IDS: ['2287190832']
+Already found items with Combined ID: 7-73
+iPhone 6 Plus Earpiece has Combined ID 7-73
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Face ID | Comb ID: 7-99 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-99
+Got IDS: ['2287191070']
+Already found items with Combined ID: 7-99
+iPhone 6 Plus Face ID has Combined ID 7-99
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Front Camera | Comb ID: 7-76 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-76
+Got IDS: ['1164239297']
+Already found items with Combined ID: 7-76
+iPhone 6 Plus Front Camera has Combined ID 7-76
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Microphone | Comb ID: 7-66 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-66
+Got IDS: ['2287191476']
+Already found items with Combined ID: 7-66
+iPhone 6 Plus Microphone has Combined ID 7-66
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Loudspeaker | Comb ID: 7-88 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-88
+Got IDS: ['2287191697']
+Already found items with Combined ID: 7-88
+iPhone 6 Plus Loudspeaker has Combined ID 7-88
+==== HARD LOG REQUESTED =====
+Creating Repair Item
+iPhone 6 Plus Volume Button | Comb ID: 7-75 | iPhone
+Insantiate Empty BaseItem from Board ID 984924063
+Board[repairs]
+Skipping "name" Column
+Processing Column[combined_id|combined_id|combined id]
+Column Processing Finished
+
+ColumnID[item_id] not found in monday.config[repairs] - skip processing
+ColumnID[colour] not found in monday.config[repairs] - skip processing
+Processing Column[d_label|device_label|Device Label]
+Column Processing Finished
+
+Processing Column[r_label|repair_label|Repair Label]
+Column Processing Finished
+
+Processing Column[c_label|colour_label|Colour Label]
+Column Processing Finished
+
+Processing Column[d_id|device_id|device_id]
+Column Processing Finished
+
+Processing Column[r_id|repair_id|repair_id]
+Column Processing Finished
+
+Processing Column[c_id|colour_id|colour_id]
+Column Processing Finished
+
+Processing Column[stock_level|quantity|Quantity]
+Could Not Assign A Value for ReadOnlyColumn[Quantity | quantity]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[dup__of_quantity] not found in monday.config[repairs] - skip processing
+Processing Column[sale_price|sale_price|Sale Price]
+Could Not Assign A Value for ReadOnlyColumn[Sale Price | sale_price]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+ColumnID[supply_price] not found in monday.config[repairs] - skip processing
+ColumnID[glass_only] not found in monday.config[repairs] - skip processing
+ColumnID[glass___touch] not found in monday.config[repairs] - skip processing
+ColumnID[glass__touch___lcd] not found in monday.config[repairs] - skip processing
+Processing Column[parts_id|partboard_id|PartBoard ID]
+Could Not Assign A Value for ReadOnlyColumn[PartBoard ID | partboard_id]
+==== SOFT LOG REQUESTED =====
+Column Processing Finished
+
+Processing Column[connect_parts|connect_boards5|Part]
+Column Processing Finished
+
+ColumnID[tracking] not found in monday.config[repairs] - skip processing
+Processing Column[dual_id|dual_only_id|Dual Only ID]
+Column Processing Finished
+
+ColumnID[formula8] not found in monday.config[repairs] - skip processing
+ColumnID[repair_credits] not found in monday.config[repairs] - skip processing
+Processing Column[device_type|status6|Device Type]
+Column Processing Finished
+
+ColumnID[numbers7] not found in monday.config[repairs] - skip processing
+ColumnID[button] not found in monday.config[repairs] - skip processing
+Searching MainBoard[combined id] for 7-75
+Got IDS: ['1157804106']
+Already found items with Combined ID: 7-75
+iPhone 6 Plus Volume Button has Combined ID 7-75
+==== HARD LOG REQUESTED =====
+==== SOFT LOG REQUESTED =====
