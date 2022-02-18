@@ -20,10 +20,12 @@ def ip8_batt_screen_repair(temp_mainboard_item):
     item.commit()
     return item
 
+
 @pytest.fixture
 def mainboard_test_item_for_finance_all_repairs_created():
     item = BaseItem(CustomLogger(), 2309376088)  # FINANCIAL PROCESS TESTER ID
     return item
+
 
 @pytest.fixture
 def mainboard_test_item_for_finance_half_repairs_created():
@@ -166,8 +168,8 @@ def test_get_repairs_collects_right_number_of_repairs(mainboard_test_item_for_fi
     assert len(repairs) == 2
 
 
-
-def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs(mainboard_test_item_for_finance_half_repairs_created):
+def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs(
+        mainboard_test_item_for_finance_half_repairs_created):
     """test should retrieve repairs for the test item, and the repairs list should contain a Repair Item and a False, as
     the function return False when used to get a repair that does nott exist (and creation is not enabled)"""
     repairs = inventory.get_repairs(mainboard_test_item_for_finance_half_repairs_created)
@@ -175,8 +177,9 @@ def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs(mainb
     assert not all(repairs)
 
 
-@pytest.mark.working
-def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs_and_asked_to_create(mainboard_test_item_for_finance_half_repairs_created):
+def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs_and_asked_to_create(
+        mainboard_test_item_for_finance_half_repairs_created):
+
     repairs = inventory.get_repairs(mainboard_test_item_for_finance_half_repairs_created, create_if_not=True)
 
     strings_for_new_repairs = []

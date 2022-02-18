@@ -426,7 +426,7 @@ class NumberColumn(BaseColumnValue):
             if value:
                 if isinstance(value, tuple):
                     value = value[0]
-                value = float(int(value))  # Has to be float as moncli struggles to convert
+                value = float(value)  # Has to be float as moncli struggles to convert
             else:
                 value = 0
             # Adjust eric value

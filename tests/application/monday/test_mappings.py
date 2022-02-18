@@ -63,7 +63,6 @@ class TestTextValue:
             eric_system_item.text.value = input_type
 
 
-@pytest.mark.working
 class TestNumberValue:
 
     @pytest.fixture(scope='class')
@@ -551,11 +550,3 @@ class TestZendeskSyncing:
         col = getattr(temp_mainboard_item, column)
 
         assert col.zen_sync == zen_sync
-
-# @pytest.mark.slow
-# class TestColumnValueSearches:
-#
-#     def test_text_column_search(self, temp_devtest_item):
-#         test_item = temp_devtest_item
-#         item_ids = test_item.text.search(test_item.text.value)
-#         assert item_ids == [test_item.mon_id]
