@@ -193,6 +193,7 @@
           <option value="icv7.monday.base.BaseItem" />
           <option value="icv7.monday.base.BaseItem.*" />
           <option value="eric.monday.base.BaseItem.*" />
+          <option value="application.monday.base.BaseItem.*" />
         </list>
       </option>
     </inspection_tool>
