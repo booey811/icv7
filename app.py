@@ -112,6 +112,27 @@ def create_repairs_profile(test_id=None):
     return ''
 
 
+# Repair Profile Stock Checkouts
+@app.route("/monday/financial/checkout_stock_profile", methods=["POST"])
+def checkout_stock_profile(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    if os.environ['ENV'] == 'devlocal':
+        if not test_id:
+            raise Exception('test_id is required when testing locally')
+        eric.checkout_stock_profile(None, test_id)
+    elif os.environ['ENV'] in ['devserver', 'production']:
+        result = q_hi.enqueue(eric.checkout_stock_profile, data)
+    else:
+        raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
+
+    return ''
+
+
 # Create a Zendesk Ticket for New Enquiries
 @app.route("/monday/enquiries/new-enquiry", methods=["POST"])
 def create_zendesk_ticket_for_enquiry(test_id=None):

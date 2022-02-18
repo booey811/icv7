@@ -400,7 +400,7 @@ def create_repairs_profile(webhook, test=None):
     finance.commit()
 
 
-def checkout_stock_from_subitems(webhook, test=None):
+def checkout_stock_profile(webhook, test=None):
 
     logger = CustomLogger()
 
