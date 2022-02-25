@@ -178,7 +178,8 @@ class CustomLogger:
         self._create_log()
         col_vals = {
             'new_log_type': {'label': log_label},
-            "text7": str(self.func)
+            "text7": str(self.func),
+            "text2": str(os.getenv("ENV"))
         }
         log_item = self._log_board.add_item(
             item_name=self._log_name,
