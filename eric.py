@@ -404,3 +404,8 @@ def checkout_stock_profile(webhook, logger, test=None):
             job = q_hi.enqueue(financial.checkout_stock_for_line_item, args=(subitem.id, finance.main_id.value))
             queued_jobs.append(job)
         q_hi.enqueue(financial.mark_entry_as_complete, finance.mon_id, depends_on=queued_jobs)
+
+
+@log_catcher_decor
+def void_financial_profile(webhook, logger, test=None):
+    pass

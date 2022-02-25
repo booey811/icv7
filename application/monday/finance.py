@@ -2,13 +2,12 @@ from rq import Queue
 
 from worker import conn
 import application
-from .inventory import adjust_stock_level
+from .inventory import adjust_stock_level, void_stock_change
 
 q_hi = Queue("high", connection=conn)
 
 
 def checkout_stock_for_line_item(subitem_id, main_reference):
-
     if isinstance(main_reference, str):
         logger = application.CustomLogger()
         main = application.BaseItem(logger, main_reference)
@@ -44,7 +43,6 @@ def checkout_stock_for_line_item(subitem_id, main_reference):
 
 
 def mark_entry_as_complete(finance_reference):
-
     if isinstance(finance_reference, (str, int)):
         finance_item = application.BaseItem(application.CustomLogger(), finance_reference)
 
@@ -56,3 +54,12 @@ def mark_entry_as_complete(finance_reference):
     finance_item.stock_adjust.label = "Complete"
 
     finance_item.commit()
+
+
+def void_financial_line(finance_subitem):
+
+    if finance_subitem.movementboard_id.value:
+        void_stock_change(finance_subitem.logger, finance_subitem.movementboard_id.value)
+
+
+    finance_subitem.moncli_obj.delete()

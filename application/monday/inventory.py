@@ -353,3 +353,19 @@ def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_
 
     # Commit
     blank_item.new_item(repair_name)
+
+
+def void_stock_change(logger, movementboard_reference):
+
+    if isinstance(movementboard_reference, (str, int)):
+        movement = BaseItem(logger, movementboard_reference)
+    elif isinstance(movementboard_reference, BaseItem):
+        movement = movementboard_reference
+    else:
+        raise Exception(f"void_stock_change requires a movement board item, got: {type(movementboard_reference)}")
+
+    part = BaseItem(logger, movement.partboard_id.value)
+
+    diff = int(movement.difference.value) * -1
+
+    adjust_stock_level(logger, part, diff, movement)
