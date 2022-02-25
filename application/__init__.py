@@ -162,3 +162,27 @@ class CustomLogger:
             os.remove(self.log_file_path)
         except FileNotFoundError:
             pass
+
+    def commit(self, log_level="success"):
+
+        LABELS = {
+            "success": "Success",
+            "raised": "Raised",
+            "error": "Unexpected"
+        }
+
+        log_label = LABELS[log_level]
+
+        self._create_log()
+        col_vals = {
+            'new_log_type': {'label': log_label}
+        }
+        log_item = self._log_board.add_item(
+            item_name=self._log_name,
+            column_values=col_vals
+        )
+
+        if log_level != 'success':
+            file_column = log_item.get_column_value(id='file')
+            log_item.add_file(file_column, self._log_file_path)
+

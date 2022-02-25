@@ -15,17 +15,17 @@ q_hi = rq.Queue("high", connection=conn)
 
 def log_catcher_decor(eric_function):
     def wrapper(webhook, test=None):
-
         logger = CustomLogger()
-
-        # Attempt execute the Eric function
+        # Attempt to execute the Eric function
         try:
-            print("before the function")
-
             eric_function(webhook, logger, test)
-
-        except MondayApiError:
-            print("Monday API Error")
+        except MondayApiError as e:
+            logger.log("============================ MONDAY SUBMISSION ERROR ==============================")
+            for item in e.messages:
+                logger.log(item)
+            logger.commit(log_level="raised")
+        else:
+            logger.commit(log_level="error")
 
     return wrapper
 
@@ -41,22 +41,15 @@ def process_stock_count(webhook, logger, test=None):
     logger.log('Creating Group')
     processed_group = count_board.add_group(f'Count | {datetime.datetime.today().strftime("%A %d %m %y")}')
 
-    try:
-        # Get Current Count Group
-        logger.log('Getting Items')
-        if test:
-            mon_item = BaseItem(logger, test)
-            new_count_group = count_board.get_groups('id', ids=[mon_item.group.id])[0]
-        else:
-            group_id = webhook['groupId']
-            new_count_group = count_board.get_groups(ids=[group_id])[0]
-        logger.log('Got Items')
-    except Exception as e:
-        logger.log('Monday API Error Occurred')
-        # messages = "/n".join(e.messages)
-        # logger.log(f'MESSAGES:\n\n{messages}')
-        logger.hard_log()
-        return False
+    # Get Current Count Group
+    logger.log('Getting Items')
+    if test:
+        mon_item = BaseItem(logger, test)
+        new_count_group = count_board.get_groups('id', ids=[mon_item.group.id])[0]
+    else:
+        group_id = webhook['groupId']
+        new_count_group = count_board.get_groups(ids=[group_id])[0]
+    logger.log('Got Items')
 
     # Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
     count_totals = {}  # dict of Part ID against Eric Part Item, Expected Quantity and Counted Quantity
@@ -120,52 +113,19 @@ def fetch_pc_report(webhook, logger, test=None):
         repair_item.commit()
         logger.hard_log()
         return ''
-    except Exception as e:
-        logger.log('phonecheck get info by IMEI failed with an unknown error')
-        logger.log(f'Raised Exception: {e}')
-        logger.hard_log()
-        return ''
 
-    try:
-        #  Fetch the HTML Report for the check instance via report ID
-        logger.log(f'Fetching HTML Report {report_info["A4Reports"]}')
-        html_report = phonecheck.get_certificate(report_info['A4Reports'])
-    except Exception as e:
-        # Unknown Error
-        logger.log('An Unknown Error Occurred while fetching the HTML Report')
-        logger.log(f'Raised Exception: {e}')
-        repair_item.pc_reports_status.label = 'Error'
-        repair_item.commit()
-        logger.hard_log()
-        return ''
+    #  Fetch the HTML Report for the check instance via report ID
+    logger.log(f'Fetching HTML Report {report_info["A4Reports"]}')
+    html_report = phonecheck.get_certificate(report_info['A4Reports'])
 
-    try:
-        # Converting to PDF
-        path_to_pdf_report = phonecheck.new_convert_to_pdf(html_report, report_info['A4Reports'])
-    except Exception as e:
-        # Unknown Error - This is a very volatile function currently
-        logger.log('An Unknown Error Occurred while converting to PDF')
-        logger.log(f'Raised Exception: {e}')
-        repair_item.pc_reports_status.label = 'Error'
-        repair_item.commit()
-        logger.hard_log()
-        return ''
+    # Converting to PDF
+    path_to_pdf_report = phonecheck.new_convert_to_pdf(html_report, report_info['A4Reports'])
 
-    try:
-        # Add PDF File to Repair Item
-        repair_item.pc_reports.files = f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf'
-
-    except Exception as e:
-        logger.log('An Unknown Error Occurred while converting to PDF')
-        logger.log(f'Raised Exception: {e}')
-        repair_item.pc_reports_status.label = 'Error'
-        repair_item.commit()
-        logger.hard_log()
+    # Add PDF File to Repair Item
+    repair_item.pc_reports.files = f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf'
 
     # Delete the report file - helps clean local development dir clean
     os.remove(f'tmp/pc_reports/report-{report_info["A4Reports"]}.pdf')
-
-    logger.soft_log()
 
     return True
 
