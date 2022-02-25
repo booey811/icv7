@@ -223,7 +223,7 @@ def _check_and_adjust_for_low_stock(part_item: BaseItem):
 
     part_item.log(f"Checking Low Stock Status for {part_item.name}")
 
-    if str(part_item.board_id_id) != "985177480":
+    if str(part_item.board_id) != "985177480":
         raise Exception(f"_check_and_adjust_for_low_stock provided with NON part item ({part_item.name} | {part_item.mon_id} | {part_item._mapper.eric_name})")
 
     # compare stock level with reorder point
