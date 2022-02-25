@@ -13,8 +13,24 @@ from worker import conn
 q_hi = rq.Queue("high", connection=conn)
 
 
-def process_stock_count(webhook, test=None):
-    logger = CustomLogger()
+def log_catcher_decor(eric_function):
+    def wrapper(webhook, test=None):
+
+        logger = CustomLogger()
+
+        # Attempt execute the Eric function
+        try:
+            print("before the function")
+
+            eric_function(webhook, logger, test)
+
+        except MondayApiError:
+            print("Monday API Error")
+
+    return wrapper
+
+
+def process_stock_count(webhook, logger, test=None):
     logger.log('Process Stock Count Requested')
 
     # Get Stock Count Board (Needed for creating New Group and getting New Count Group)
@@ -86,8 +102,7 @@ def process_stock_count(webhook, test=None):
     return True
 
 
-def fetch_pc_report(webhook, test=None):
-    logger = CustomLogger()
+def fetch_pc_report(webhook, logger, test=None):
 
     if test:
         repair_item = BaseItem(logger, test)
@@ -154,8 +169,7 @@ def fetch_pc_report(webhook, test=None):
     return True
 
 
-def print_stock_info_for_mainboard(webhook, test=None):
-    logger = CustomLogger()
+def print_stock_info_for_mainboard(webhook, logger, test=None):
     logger.log("Checking Stock For MainBoard Item")
 
     if test:
@@ -186,7 +200,7 @@ def print_stock_info_for_mainboard(webhook, test=None):
 
 
 # noinspection PyTypeChecker
-def create_enquiry_ticket(webhook, test=None):
+def create_enquiry_ticket(webhook, logger, test=None):
     def extract_enquiry_data(enquiry_item):
 
         # params to extract
@@ -218,7 +232,6 @@ def create_enquiry_ticket(webhook, test=None):
 
         return [name, device_type, model, message]
 
-    logger = CustomLogger()
     logger.log("Creating Panrix Enquiry Ticket")
 
     if test:
@@ -272,8 +285,7 @@ Message: {enq_data[3]}
     return True
 
 
-def refurb_phones_initial_pc_report(webhook, test=None):
-    logger = CustomLogger()
+def refurb_phones_initial_pc_report(webhook, logger, test=None):
     logger.log("Fetching Phonecheck Data for Refurb iPhones")
 
     if test:
@@ -321,7 +333,7 @@ def refurb_phones_initial_pc_report(webhook, test=None):
     logger.soft_log()
 
 
-def create_repairs_profile(webhook, test=None):
+def create_repairs_profile(webhook, logger, test=None):
     def add_financial_subitem(financial_item, repair_item):
 
         if isinstance(financial_item, (str, int)):
@@ -340,8 +352,6 @@ def create_repairs_profile(webhook, test=None):
             item_name=repair_item.name,
             column_values=blank_subitem.staged_changes
         )
-
-    logger = CustomLogger()
 
     logger.log("Creating Repairs Financial Profile")
 
@@ -401,10 +411,7 @@ def create_repairs_profile(webhook, test=None):
     finance.commit()
 
 
-def checkout_stock_profile(webhook, test=None):
-
-    logger = CustomLogger()
-
+def checkout_stock_profile(webhook, logger, test=None):
     if test:
         finance = BaseItem(logger, test)
     else:
