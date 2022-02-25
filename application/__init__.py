@@ -72,11 +72,13 @@ class CustomLogger:
     """Object for managing logging as Flask logging is a nightmare
     Dumps information to a monday item with log file"""
 
-    def __init__(self):
+    def __init__(self, func_name="test"):
         if os.environ['ENV'] in ['production', 'test']:
             self.debug = False
         else:
             self.debug = True
+
+        self.func = func_name
 
         self._log_file_path = None
         self._log_name = self._generate_log_file_name()
@@ -175,7 +177,8 @@ class CustomLogger:
 
         self._create_log()
         col_vals = {
-            'new_log_type': {'label': log_label}
+            'new_log_type': {'label': log_label},
+            "text7": str(self.func)
         }
         log_item = self._log_board.add_item(
             item_name=self._log_name,
