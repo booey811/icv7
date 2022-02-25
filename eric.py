@@ -15,7 +15,7 @@ q_hi = rq.Queue("high", connection=conn)
 
 def log_catcher_decor(eric_function):
     def wrapper(webhook, test=None):
-        logger = CustomLogger(eric_function.__name__)
+        logger = CustomLogger()
         # Attempt to execute the Eric function
         try:
             eric_function(webhook, logger, test)
