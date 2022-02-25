@@ -15,17 +15,18 @@ q_hi = rq.Queue("high", connection=conn)
 
 def log_catcher_decor(eric_function):
     def wrapper(webhook, test=None):
-        logger = CustomLogger()
+        logger = CustomLogger(eric_function.__name__)
         # Attempt to execute the Eric function
         try:
             eric_function(webhook, logger, test)
+            logger.commit("success")
         except MondayApiError as e:
             logger.log("============================ MONDAY SUBMISSION ERROR ==============================")
             for item in e.messages:
                 logger.log(item)
-            logger.commit(log_level="raised")
+            logger.commit("raised")
         else:
-            logger.commit(log_level="error")
+            logger.commit("error")
 
     return wrapper
 
