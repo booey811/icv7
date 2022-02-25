@@ -30,6 +30,7 @@ def log_catcher_decor(eric_function):
     return wrapper
 
 
+@log_catcher_decor
 def process_stock_count(webhook, logger, test=None):
     logger.log('Process Stock Count Requested')
 
@@ -102,8 +103,8 @@ def process_stock_count(webhook, logger, test=None):
     return True
 
 
+@log_catcher_decor
 def fetch_pc_report(webhook, logger, test=None):
-
     if test:
         repair_item = BaseItem(logger, test)
     else:
@@ -169,6 +170,7 @@ def fetch_pc_report(webhook, logger, test=None):
     return True
 
 
+@log_catcher_decor
 def print_stock_info_for_mainboard(webhook, logger, test=None):
     logger.log("Checking Stock For MainBoard Item")
 
@@ -200,6 +202,7 @@ def print_stock_info_for_mainboard(webhook, logger, test=None):
 
 
 # noinspection PyTypeChecker
+@log_catcher_decor
 def create_enquiry_ticket(webhook, logger, test=None):
     def extract_enquiry_data(enquiry_item):
 
@@ -285,6 +288,7 @@ Message: {enq_data[3]}
     return True
 
 
+@log_catcher_decor
 def refurb_phones_initial_pc_report(webhook, logger, test=None):
     logger.log("Fetching Phonecheck Data for Refurb iPhones")
 
@@ -333,6 +337,7 @@ def refurb_phones_initial_pc_report(webhook, logger, test=None):
     logger.soft_log()
 
 
+@log_catcher_decor
 def create_repairs_profile(webhook, logger, test=None):
     def add_financial_subitem(financial_item, repair_item):
 
@@ -411,6 +416,7 @@ def create_repairs_profile(webhook, logger, test=None):
     finance.commit()
 
 
+@log_catcher_decor
 def checkout_stock_profile(webhook, logger, test=None):
     if test:
         finance = BaseItem(logger, test)
