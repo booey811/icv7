@@ -111,18 +111,18 @@ class TestInventoryHelper:
 
         assert calculated_low_stock_status == "Above Reorder"
 
-    @pytest.mark.develop
+    @pytest.mark.working
     @pytest.mark.fully_functional
-    def test_integrated_stock_adjustment_also_adjusts_stock_status_level_to_low_stock(self, eric_test_part_item):
+    def test_integrated_stock_adjustment_also_adjusts_stock_status_level_to_low_stock(self, part_test_item):
         # Set stock_level < reorder
-        eric_test_part_item.stock_level.value = 20  # Arbitrary
-        eric_test_part_item.reorder_point.value = 15  # Arbitrary
-        eric_test_part_item.commit()
+        part_test_item.stock_level.value = 20  # Arbitrary
+        part_test_item.reorder_point.value = 15  # Arbitrary
+        part_test_item.commit()
 
-        inventory.adjust_stock_level(eric_test_part_item.logger, eric_test_part_item,
-                                     -10, eric_test_part_item)  # Sets stock_level to 20 - 10 < 15
+        inventory.adjust_stock_level(part_test_item.logger, part_test_item,
+                                     10, part_test_item)  # Sets stock_level to 20 - 10 < 15
 
-        refresh_eric = BaseItem(CustomLogger(), eric_test_part_item.mon_id)
+        refresh_eric = BaseItem(CustomLogger(), part_test_item.mon_id)
 
         assert refresh_eric.low_stock_status.label == "Below Reorder"
 
@@ -179,7 +179,6 @@ def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs(
 
 def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs_and_asked_to_create(
         mainboard_test_item_for_finance_half_repairs_created):
-
     repairs = inventory.get_repairs(mainboard_test_item_for_finance_half_repairs_created, create_if_not=True)
 
     strings_for_new_repairs = []
@@ -191,3 +190,17 @@ def test_get_repairs_collects_right_number_of_repairs_when_missing_repairs_and_a
             repair_items.append(repair)
 
     assert len(strings_for_new_repairs) == len(repair_items)
+
+
+def test_creation_of_movement_record_from_parts(part_test_item):
+    mon_item = inventory._create_movement_record(
+        eric_source_item=part_test_item,
+        part_item=part_test_item,
+        starting_stock_level=15,  # Arbitrary
+        ending_stock_level=1  # Arbitrary
+    )
+
+    assert mon_item.id
+    assert mon_item.name == part_test_item.name
+
+    mon_item.delete()

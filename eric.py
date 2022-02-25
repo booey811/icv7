@@ -28,7 +28,8 @@ def process_stock_count(webhook, test=None):
         # Get Current Count Group
         logger.log('Getting Items')
         if test:
-            new_count_group = count_board.get_groups('id', ids=[item.group.id])[0]
+            mon_item = BaseItem(logger, test)
+            new_count_group = count_board.get_groups('id', ids=[mon_item.group.id])[0]
         else:
             group_id = webhook['groupId']
             new_count_group = count_board.get_groups(ids=[group_id])[0]
@@ -377,8 +378,8 @@ def create_repairs_profile(webhook, test=None):
             if len(dropdown_ids) == 3:
                 dropdown_labels = [
                     main.device.settings[str(dropdown_ids[0])],
-                    main.repair.settings[str(dropdown_ids[1])],
-                    main.colour.settings[str(dropdown_ids[2])]
+                    main.repairs.settings[str(dropdown_ids[1])],
+                    main.device_colour.settings[str(dropdown_ids[2])]
                 ]
             else:
                 dropdown_labels = [main.device.settings[str(dropdown_ids[0])],

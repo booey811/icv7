@@ -434,7 +434,7 @@ class TestLinkValue:
         url = 'www.random.com'
         text = 'random display text'
         eric_read_only_item.link.value = [url, text]
-        assert eric_read_only_item.staged_changes[eric_read_only_item.link.id] == {'url': url, 'url_text': text}
+        assert eric_read_only_item.staged_changes[eric_read_only_item.link.id] == {'url': url, 'text': text}
 
     def test_committed_changes_match_new_eric_value(self, eric_system_item):
         """Tests that committing change to a standard value still allows retrieval of the eric value and that this

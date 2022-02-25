@@ -174,8 +174,8 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
 
     movement.mov_type.value = mov_type
     movement.mov_dir.value = mov_dir
-    movement.before.value = int(starting_stock_level),
-    movement.after.value = int(ending_stock_level),
+    movement.before.value = int(starting_stock_level)
+    movement.after.value = int(ending_stock_level)
     movement.difference.value = int(ending_stock_level) - int(starting_stock_level)
     movement.source_id.value = eric_source_item.mon_id
     movement.source_url.value = [url, text]
