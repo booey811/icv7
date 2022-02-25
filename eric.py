@@ -424,5 +424,5 @@ def checkout_stock_profile(webhook, test=None):
     else:
         queued_jobs = []
         for subitem in finance.moncli_obj.subitems:
-            queued_jobs.append(q_hi.enqueue(financial.checkout_stock_for_line_item, (subitem.id, finance.main_id.value)))
-        q_hi.enqueue(financial.mark_entry_as_complete, finance.mon_id, depends_on=queued_jobs)
+            queued_jobs.append(q_hi.enqueue(f=financial.checkout_stock_for_line_item, args=(subitem.id, finance.main_id.value)))
+        q_hi.enqueue(f=financial.mark_entry_as_complete, args=finance.mon_id, depends_on=queued_jobs)
