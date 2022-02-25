@@ -45,7 +45,7 @@ def checkout_stock_for_line_item(subitem_id, main_reference):
 
 def mark_entry_as_complete(finance_reference):
 
-    if isinstance(finance_reference, str):
+    if isinstance(finance_reference, (str, int)):
         finance_item = application.BaseItem(application.CustomLogger(), finance_reference)
 
     else:
