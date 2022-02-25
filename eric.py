@@ -1,5 +1,7 @@
 import os
 import datetime
+from functools import wraps
+
 import rq
 
 from moncli.api_v2.exceptions import MondayApiError
@@ -14,6 +16,7 @@ q_hi = rq.Queue("high", connection=conn)
 
 
 def log_catcher_decor(eric_function):
+    @wraps(eric_function)
     def wrapper(webhook, test=None):
         logger = CustomLogger()
         # Attempt to execute the Eric function
