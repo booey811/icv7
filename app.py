@@ -133,6 +133,27 @@ def checkout_stock_profile(test_id=None):
     return ''
 
 
+# Add the Appropriate Repair to The Appropriate Invoice
+@app.route("/monday/financial/create_or_update_invoice", methods=["POST"])
+def create_or_update_invoice(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    if os.environ['ENV'] == 'devlocal':
+        if not test_id:
+            raise Exception('test_id is required when testing locally')
+        eric.create_or_update_invoice(None, test_id)
+    elif os.environ['ENV'] in ['devserver', 'production']:
+        result = q_hi.enqueue(eric.create_or_update_invoice, data)
+    else:
+        raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
+
+    return ''
+
+
 # Create a Zendesk Ticket for New Enquiries
 @app.route("/monday/enquiries/new-enquiry", methods=["POST"])
 def create_zendesk_ticket_for_enquiry(test_id=None):
@@ -148,6 +169,27 @@ def create_zendesk_ticket_for_enquiry(test_id=None):
         eric.create_enquiry_ticket(None, test_id)
     elif os.environ['ENV'] in ['devserver', 'production']:
         result = q_def.enqueue(eric.create_enquiry_ticket, data)
+    else:
+        raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
+
+    return ''
+
+
+# Generate Rolling Monthly Invoice
+@app.route("/monday/corporate/create_monthly_invoice", methods=["POST"])
+def create_monthly_invoice(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    if os.environ['ENV'] == 'devlocal':
+        if not test_id:
+            raise Exception('test_id is required when testing locally')
+        eric.create_monthly_invoice(None, test_id)
+    elif os.environ['ENV'] in ['devserver', 'production']:
+        result = q_hi.enqueue(eric.create_monthly_invoice, data)
     else:
         raise Exception(f'Unknown ENV: {os.environ["ENV"]}')
 
