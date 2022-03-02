@@ -193,8 +193,10 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
     if not subitems:
         raise exceptions.FinancialError(financial_item, "No Repair Profile")
 
+    unbillable = "No Parts Used"
+
     device = f"{str(main.device.labels[0])} "
-    repairs = ", ".join(main.repairs.labels)
+    repairs = ", ".join([item for item in main.repairs.labels if item not in unbillable])
 
     description1 = device + repairs + " Repair"
     description2 = f"IMEI/SN: {main.imeisn.value}"
@@ -203,6 +205,8 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
 
     line_total = 0
     for subitem in subitems:
+        if subitem.eod_status.value == "Admin":
+            continue
         line_amount = subitem.sale_price.value
         line_total += line_amount
         if not line_amount:
@@ -212,10 +216,15 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
 
     line_total = line_total * 0.8
 
+    # Compare total against max cost (if given)
+    if financial_item.max_cost.value:
+        if float(financial_item.max_cost.value) < float(line_total):
+            line_total = financial_item.max_cost.value
+
     return generate_line_item_dict([full_desc, line_total, 203])
 
 
-def construct_courier_line_item(main_item, corporate_item):
+def construct_courier_line_item(main_item, corporate_item, financial_item):
     service = main_item.service.label
     service_level = corporate_item.courier_service_level.label
 
@@ -230,6 +239,9 @@ def construct_courier_line_item(main_item, corporate_item):
         description = "National Courier Service"
     else:
         raise Exception(f"Construct Courier Costs Received Unexpected Service Type: {service}")
+
+    if financial_item.courier_charge.value:
+        return generate_line_item_dict([description, financial_item.courier_charge.value, 220])
 
     return generate_line_item_dict([description, cost, 220])
 

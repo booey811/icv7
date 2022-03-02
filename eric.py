@@ -315,6 +315,8 @@ def create_repairs_profile(webhook, logger, test=None):
 
         blank_subitem.parts_id.value = repair_item.parts_id.value
         blank_subitem.quantity_used.value = 1
+        if str(repair_item.parts_id.value) == '1112258883':  # No Parts Used Part ID TODO: Setup monday parts[Function] Column to control this automatically
+            blank_subitem.eod_status.value = "Admin"
 
         financial_item.logger.log(f"Adding Subitem - {financial_item.name} | {repair_item.name}")
 
@@ -453,7 +455,7 @@ def create_or_update_invoice(webhook, logger, test=None):
 
     # Construct Line Data from Items
     repair_line_data = accounting.construct_repair_line_item(finance, subitems, main, ticket)
-    courier_line_data = accounting.construct_courier_line_item(main, corporate)
+    courier_line_data = accounting.construct_courier_line_item(main, corporate, financial)
     line_items = [item for item in [repair_line_data, courier_line_data] if item]
 
     update = None
