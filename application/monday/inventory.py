@@ -164,6 +164,12 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
         text = f"Parts: {eric_source_item.name}"
         mov_type = "Parts Manipulation"
         mov_dir = "Parts Manipulation"
+    elif source_board == "movements":
+        eric_source_item.log("Void Request - Returning Part to Stock")
+        url = f"https://icorrect.monday.com/boards/989490856/pulses/{eric_source_item.mon_id}"
+        text = f"Movements: {eric_source_item.name}"
+        mov_type = "Void"
+        mov_dir = "Void"
     else:
         raise Exception(
             f"Movements Record Function Not Completed for Items from {eric_source_item.moncli_board_obj.name}")
@@ -224,7 +230,8 @@ def _check_and_adjust_for_low_stock(part_item: BaseItem):
     part_item.log(f"Checking Low Stock Status for {part_item.name}")
 
     if str(part_item.board_id) != "985177480":
-        raise Exception(f"_check_and_adjust_for_low_stock provided with NON part item ({part_item.name} | {part_item.mon_id} | {part_item._mapper.eric_name})")
+        raise Exception(
+            f"_check_and_adjust_for_low_stock provided with NON part item ({part_item.name} | {part_item.mon_id} | {part_item._mapper.eric_name})")
 
     # compare stock level with reorder point
     low_stock_status = part_item.low_stock_status.label
@@ -304,7 +311,6 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
 
 
 def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_type: str):
-
     if isinstance(logger, str):
         logger = application.CustomLogger()
 
@@ -356,7 +362,6 @@ def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_
 
 
 def void_stock_change(logger, movementboard_reference):
-
     if isinstance(movementboard_reference, (str, int)):
         movement = BaseItem(logger, movementboard_reference)
     elif isinstance(movementboard_reference, BaseItem):
@@ -364,8 +369,10 @@ def void_stock_change(logger, movementboard_reference):
     else:
         raise Exception(f"void_stock_change requires a movement board item, got: {type(movementboard_reference)}")
 
-    part = BaseItem(logger, movement.partboard_id.value)
+    logger.log(f"Voiding Movement Entry")
 
-    diff = int(movement.difference.value) * -1
-
+    part = BaseItem(logger, movement.parts_id.value)
+    diff = int(movement.difference.value)
     adjust_stock_level(logger, part, diff, movement)
+    movement.void_status.label = "Voided"
+    movement.commit()

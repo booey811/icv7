@@ -10,6 +10,7 @@ from application import BaseItem, clients, phonecheck, inventory, CannotFindRepo
     EricTicket, financial, CustomLogger
 from utils.tools import refurbs
 from application.monday import config as mon_config
+from application.xero import exceptions as xero_exceptions
 from worker import conn
 
 q_hi = rq.Queue("high", connection=conn)
@@ -408,4 +409,127 @@ def checkout_stock_profile(webhook, logger, test=None):
 
 @log_catcher_decor
 def void_financial_profile(webhook, logger, test=None):
-    pass
+    if test:
+        finance = BaseItem(logger, test)
+    else:
+        finance = BaseItem(logger, webhook["pulseId"])
+
+    logger.log(f"Voiding Financial Profile: {finance.name}")
+
+    subitems = [BaseItem(finance.logger, item.id) for item in finance.moncli_obj.subitems]
+
+    for item in subitems:
+        if item.movement_id.value:
+            logger.log("Stock Movement Detected - Reversing")
+            movement = BaseItem(logger, item.movement_id.value)
+            inventory.void_stock_change(logger, movement)
+        item.moncli_obj.delete()
+
+    finance.repair_profile.label = "Voided"
+    finance.stock_adjust.label = "Voided"
+
+    finance.commit()
+
+
+@log_catcher_decor
+def create_or_update_invoice(webhook, logger, test=None):
+    if test:
+        finance = BaseItem(logger, test)
+    else:
+        finance = BaseItem(logger, webhook["pulseId"])
+
+    logger.log(f"Creating/Updating Invoice from Financial: {finance.name}")
+
+    # Assemble Items
+    subitems = [BaseItem(finance.logger, item.id) for item in finance.moncli_obj.subitems]
+    main = BaseItem(logger, finance.main_id.value)
+    ticket = EricTicket(logger, main.zendesk_id.value)
+    corp_search_item = BaseItem(logger, board_id=1973442389)  # Corporate Board ID
+    corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
+    if len(corp_items) > 1:
+        # Should never happen
+        raise Exception(f"Found too Many Corporate Accounts When Searching for {ticket.organisation['id']}")
+    corporate = BaseItem(logger, corp_items[0].id)
+
+    # Construct Line Data from Items
+    repair_line_data = accounting.construct_repair_line_item(finance, subitems, main, ticket)
+    courier_line_data = accounting.construct_courier_line_item(main, corporate)
+    line_items = [item for item in [repair_line_data, courier_line_data] if item]
+
+    update = None
+
+    # Calculate Courier Service Type & Level
+    if corporate.payment_method.label == "Business (Xero) Invoice":
+        if corporate.payment_terms.label == "Monthly Payments":
+            # Get invoice and update
+            invoice_search = accounting.get_invoice(corporate.invoice_id.value)["Invoices"]
+            if len(invoice_search) == 1:
+                inv = invoice_search[0]
+                assert inv["Status"] == "DRAFT"
+                inv["LineItems"] += line_items
+                inv = accounting.update_invoice(inv)
+                inv_label = "Complete"
+                inv_number = inv["InvoiceNumber"]
+            else:
+                inv_label = "Failed"
+                inv_number = "Too Many Invoices Found"
+                update = f"Found Too Many Invoices for ID: {corporate.invoice_id.value} | {corporate.name}"
+        elif corporate.payment_terms.label == "Pay Per Repair":
+            # Create one-off invoice
+            inv = accounting.create_invoice(corporate, line_items)
+            inv_label = "Complete"
+            inv_number = inv["InvoiceNumber"]
+        else:
+            inv_label = "Failed"
+            inv_number = "Corp Account Has Incorrect Payment Terms"
+            update = f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}"
+
+    elif corporate.payment_method.label == "Card Payment (In Person)":
+        inv_label = "Failed"
+        inv_number = "Corp Account Expects Payment By Card"
+        update = f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}"
+
+    elif corporate.payment_method.label == "Consumer (Sumup) Invoice":
+        inv_label = "Failed"
+        inv_number = "Corp Account Expects Payment Sumup Invoice"
+        update = f"Corporate Item Expects a Sumup Invoice: {corporate.payment_terms.label} | {corporate.name}"
+
+    else:
+        inv_label = "Failed"
+        inv_number = "Corp Account Has Incompatible Payment Method"
+        update = f"Corporate Item Has Unacceptable Label for 'Payment Method': {corporate.payment_terms.label} | {corporate.name}"
+
+    finance.invoice_number.value = inv_number
+    finance.invoice_generation.value = inv_label
+
+    if update:
+        finance.add_update(update)
+
+    finance.commit()
+
+
+@log_catcher_decor
+def create_monthly_invoice(webhook, logger, test=None):
+    if test:
+        corporate = BaseItem(logger, test)
+    else:
+        corporate = BaseItem(logger, webhook["pulseId"])
+
+    logger.log(f"Creating Invoice (Monthly) From Corporates: {corporate.name}")
+
+    inv = accounting.create_invoice(corporate, monthly=True)
+
+    corporate.invoice_id.value = inv["InvoiceID"]
+    corporate.create_invoice.label = "Complete"
+    corporate.invoice_link.value = [
+        f"https://invoicing.xero.com/edit/{inv['InvoiceID']}",
+        inv["InvoiceNumber"]
+    ]
+
+    corporate.commit()
+
+
+class EricLevelException(Exception):
+
+    def __init__(self):
+        pass

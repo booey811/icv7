@@ -54,7 +54,8 @@ BOARD_MAPPING_DICT = {
             "text00": "phone",
             "status8": "device_colour",
             "text8": "passcode",
-            "text6": "zendesk_id"
+            "text6": "zendesk_id",
+            "collection_date": "repaired_date"
         },
         "zendesk": [
             'status4',  # Status
@@ -116,7 +117,8 @@ BOARD_MAPPING_DICT = {
             "link2": "source_url",
             "text4": "parts_id",
             "part_url": "parts_url",
-            "dropdown": "tags"
+            "dropdown": "tags",
+            "status7": "void_status"
         }
     },
     '989883897': {
@@ -168,6 +170,7 @@ BOARD_MAPPING_DICT = {
             'mirror1': 'ticket',  # lookup
             'status25': 'sales_status',  # color
             'mirror96': 'user_errors',  # lookup
+            "status47": "finance_errors"  # status
         }
     },
     '989906488': {
@@ -322,6 +325,23 @@ BOARD_MAPPING_DICT = {
             "files8": "inter_report",
             "files2": "sale_report",
             "files": "pre_report"
+        }
+    },
+    '1973442389': {
+        'name': 'corporates',
+        'columns': {
+            'subitems': 'subitems',  # subtasks
+            'status2': 'account_status',  # color
+            'text9': 'zendesk_org_id',  # text
+            'text0': 'short_code',  # text
+            'text': 'xero_contact_id',  # text
+            'status8': 'courier_service_level',  # color
+            'status0': 'payment_method',  # color
+            'status7': 'payment_terms',  # color
+            'link': 'zendesk_org_link',  # link
+            "status1": "create_invoice",
+            "link7": "invoice_link",
+            "text1": "invoice_id"
         }
     }
 }
