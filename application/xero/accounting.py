@@ -225,6 +225,11 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
 
 
 def construct_courier_line_item(main_item, corporate_item, financial_item):
+
+    # Walk-Ins have no courier fees, return False
+    if main_item.service.label == "Walk-In":
+        return False
+
     service = main_item.service.label
     service_level = corporate_item.courier_service_level.label
 
