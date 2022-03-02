@@ -455,7 +455,7 @@ def create_or_update_invoice(webhook, logger, test=None):
 
     # Construct Line Data from Items
     repair_line_data = accounting.construct_repair_line_item(finance, subitems, main, ticket)
-    courier_line_data = accounting.construct_courier_line_item(main, corporate, financial)
+    courier_line_data = accounting.construct_courier_line_item(main, corporate, finance)
     line_items = [item for item in [repair_line_data, courier_line_data] if item]
 
     update = None

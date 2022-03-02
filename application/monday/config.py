@@ -132,7 +132,7 @@ BOARD_MAPPING_DICT = {
             'sale_price_frontend': 'revenue',  # formula
             'net_profit_frontend': 'net_profit',  # formula
             'margin_frontend': 'margin',  # formula
-            'numbers9': 'max_cost_(inc_vat)',  # numeric
+            'numbers9': 'max_cost',  # numeric
             'margin': 'margin_backend',  # lookup
             'service': 'service',  # lookup
             'client': 'client',  # lookup
@@ -161,7 +161,7 @@ BOARD_MAPPING_DICT = {
             'numbers': 'repair_counter',  # numeric
             'be_generator': 'be_generator',  # boolean
             'formula7': '£/hour',  # formula
-            'numbers3': 'courier_charge_(ex_vat)',  # numeric
+            'numbers3': 'courier_charge',  # numeric
             'text': 'po_number',  # text
             'text3': 'store/cost_centre',  # text
             'text6': 'invoice_number',  # text
