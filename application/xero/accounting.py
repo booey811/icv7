@@ -222,7 +222,7 @@ def check_financial_against_requirements(corporate, financial):
     if results:
         return results
     else:
-        raise Exception("check_financial_against_requirements raised unexpected error")
+        return True
 
 
 def construct_repair_line_item(financial_item, subitems: list, main, ticket, corporate_item):
