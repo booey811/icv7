@@ -238,7 +238,7 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket, cor
 
     date_list = main.repaired_date.value.split("-")
 
-    date = f"{date_list[1]} {_convert_month(date_list[2])} {date_list[0]}"
+    date = f"{date_list[2]} {_convert_month(date_list[1])} {date_list[0]}"
 
     description1 = device + repairs + " Repair"
     description2 = f"IMEI/SN: {main.imeisn.value}"
