@@ -537,10 +537,10 @@ def create_monthly_invoice(webhook, logger, test=None):
 
     logger.log(f"Creating Invoice (Monthly) From Corporates: {corporate.name}")
 
-    inv = accounting.create_invoice(corporate, monthly=True)
+    inv = accounting.create_invoice(corporate, None, monthly=True)
 
     corporate.invoice_id.value = inv["InvoiceID"]
-    corporate.create_invoice.label = "Complete"
+    corporate.invoice_generation.label = "Complete"
     corporate.invoice_link.value = [
         f"https://invoicing.xero.com/edit/{inv['InvoiceID']}",
         inv["InvoiceNumber"]
