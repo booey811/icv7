@@ -7,7 +7,7 @@ import rq
 from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-    EricTicket, financial, CustomLogger, xero_ex
+    EricTicket, financial, CustomLogger, xero_ex, mon_ex
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from application.xero import exceptions as xero_exceptions
@@ -38,6 +38,7 @@ def log_catcher_decor(eric_function):
             logger.log(str(e))
             logger.commit("error")
             raise Exception(str(e))
+
     return wrapper
 
 
@@ -341,8 +342,29 @@ def create_repairs_profile(webhook, logger, test=None):
     # Get Main Item
     main = BaseItem(logger, finance.main_id.value)
 
+    # Check colour has been selected
+    if main.device_colour.label in ["Not Selected", "PLEASE SELECT"] or not main.device_colour.label:
+        main.add_update("No Colour Provided for this Device, please correct this -"
+                        " Colourless devices would be incredibly difficult for people to use!")
+        main.user_errors.label = "No Colour Given"
+        raise UserError
+
     # Fetch Repairs
     repairs = inventory.get_repairs(main, create_if_not=True)
+
+    # Check Repairs Exist
+    try:
+        inventory.check_repairs_are_valid(logger, repairs)
+    except mon_ex.RepairDoesNotExist as e:
+        main.add_update("This Repair has been submitted but is impossible - please select the correct repair"
+                        "It is likely that you have selected a Screen Manufacturer that is not compatible with your device\n\n"
+                        f"{e.error_message}")
+        main.user_errors.label = "Does Not Exist"
+        main.commit()
+        finance.repair_profile.label = "Failed"
+        finance.commit()
+        finance.add_update(e.error_message)
+        raise UserError
 
     repair_profile = "Complete"
     stock_adjust = "Do Now!"

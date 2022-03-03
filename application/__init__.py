@@ -5,7 +5,7 @@ from datetime import datetime
 import flask
 
 from . import config
-from .monday import BaseItem, inventory, financial
+from .monday import BaseItem, inventory, financial, mon_ex
 from .utilities import clients
 from .zendesk.ticket import EricTicket
 from .phonecheck import phonecheck, CannotFindReportThroughIMEI

@@ -6,6 +6,7 @@ from moncli.entities import Item as moncli_item
 import application
 from .base import BaseItem
 from .config import BOARD_MAPPING_DICT
+from . import exceptions
 
 from typing import Union
 
@@ -376,3 +377,14 @@ def void_stock_change(logger, movementboard_reference):
     adjust_stock_level(logger, part, diff, movement)
     movement.void_status.label = "Voided"
     movement.commit()
+
+
+def check_repairs_are_valid(logger, repairs: list):
+
+    for repair in repairs:
+        logger.log(f"Checking {repair.name}[{repair.mon_id}]")
+        if str(repair.moncli_obj.get_group('id')['id']) == "new_group89925":  # Does Not Exist Group ID
+            logger.log("DOES NOT EXIST")
+            raise exceptions.RepairDoesNotExist(repair)
+
+    return True
