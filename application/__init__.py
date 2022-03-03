@@ -9,7 +9,7 @@ from .monday import BaseItem, inventory, financial
 from .utilities import clients
 from .zendesk.ticket import EricTicket
 from .phonecheck import phonecheck, CannotFindReportThroughIMEI
-from .xero import accounting
+from .xero import accounting, xero_ex
 from .zendesk import helper as zen_help
 from .zendesk import fields
 
@@ -170,7 +170,8 @@ class CustomLogger:
         LABELS = {
             "success": "Success",
             "raised": "Raised",
-            "error": "Unexpected"
+            "error": "Unexpected",
+            "user": "User Error"
         }
 
         log_label = LABELS[log_level]

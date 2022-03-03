@@ -163,14 +163,15 @@ BOARD_MAPPING_DICT = {
             'formula7': '£/hour',  # formula
             'numbers3': 'courier_charge',  # numeric
             'text': 'po_number',  # text
-            'text3': 'store/cost_centre',  # text
+            'text3': 'store',  # text
             'text6': 'invoice_number',  # text
             'text1': '--force_company',  # text
             'text5': 'external_board_id',  # text
             'mirror1': 'ticket',  # lookup
             'status25': 'sales_status',  # color
             'mirror96': 'user_errors',  # lookup
-            "status47": "finance_errors"  # status
+            "status47": "finance_errors",  # status
+            "text4": "username"
         }
     },
     '989906488': {
@@ -341,7 +342,11 @@ BOARD_MAPPING_DICT = {
             'link': 'zendesk_org_link',  # link
             "status1": "create_invoice",
             "link7": "invoice_link",
-            "text1": "invoice_id"
+            "text1": "invoice_id",
+            "checkbox6": "req_po",
+            "checkbox_1": "req_store",
+            "checkbox_2": "req_user",
+            "text2": "global_po"
         }
     }
 }

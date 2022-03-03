@@ -7,7 +7,7 @@ import rq
 from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-    EricTicket, financial, CustomLogger
+    EricTicket, financial, CustomLogger, xero_ex
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from application.xero import exceptions as xero_exceptions
@@ -29,9 +29,15 @@ def log_catcher_decor(eric_function):
             for item in e.messages:
                 logger.log(item)
             logger.commit("raised")
-        else:
+            raise MondayApiError
+        except UserError:
+            logger.log("User Error Encountered")
+            logger.commit("user")
+            raise UserError
+        except BaseException as e:
+            logger.log(str(e))
             logger.commit("error")
-
+            raise Exception(str(e))
     return wrapper
 
 
@@ -453,12 +459,19 @@ def create_or_update_invoice(webhook, logger, test=None):
         raise Exception(f"Found too Many Corporate Accounts When Searching for {ticket.organisation['id']}")
     corporate = BaseItem(logger, corp_items[0].id)
 
+    # Check financial Item validity against corporate item
+    try:
+        results = accounting.check_financial_against_requirements(corporate, finance)
+    except xero_ex.FinancialAndCorporateItemIncompatible as e:
+        finance.add_update(e.corp_requirements)
+        finance.invoice_generation.label = "Validation Error"
+        finance.commit()
+        raise UserError
+
     # Construct Line Data from Items
-    repair_line_data = accounting.construct_repair_line_item(finance, subitems, main, ticket)
+    repair_line_data = accounting.construct_repair_line_item(finance, subitems, main, ticket, corporate)
     courier_line_data = accounting.construct_courier_line_item(main, corporate, finance)
     line_items = [item for item in [repair_line_data, courier_line_data] if item]
-
-    update = None
 
     # Calculate Courier Service Type & Level
     if corporate.payment_method.label == "Business (Xero) Invoice":
@@ -470,42 +483,47 @@ def create_or_update_invoice(webhook, logger, test=None):
                 assert inv["Status"] == "DRAFT"
                 inv["LineItems"] += line_items
                 inv = accounting.update_invoice(inv)
-                inv_label = "Complete"
-                inv_number = inv["InvoiceNumber"]
+                finance.invoice_generation.label = "Complete"
+                finance.invoice_number.value = inv["InvoiceNumber"]
             else:
-                inv_label = "Failed"
-                inv_number = "Too Many Invoices Found"
-                update = f"Found Too Many Invoices for ID: {corporate.invoice_id.value} | {corporate.name}"
+                finance.invoice_generation.label = "Get Invoice Error"
+                finance.add_update(
+                    f"Too Many Invoices Found When Searching: {corporate.invoice_id.value} | {corporate.name}")
+                finance.commit()
+                raise UserError
+
         elif corporate.payment_terms.label == "Pay Per Repair":
             # Create one-off invoice
-            inv = accounting.create_invoice(corporate, line_items)
-            inv_label = "Complete"
-            inv_number = inv["InvoiceNumber"]
+            inv = accounting.create_invoice(corporate, finance, line_items)
+            finance.invoice_generation.label = "Complete"
+            finance.invoice_number.value = inv["InvoiceNumber"]
         else:
-            inv_label = "Failed"
-            inv_number = "Corp Account Has Incorrect Payment Terms"
-            update = f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}"
+            finance.invoice_generation.label = "Failed"
+            finance.add_update(
+                f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}")
+            finance.commit()
+            raise UserError
 
     elif corporate.payment_method.label == "Card Payment (In Person)":
-        inv_label = "Failed"
-        inv_number = "Corp Account Expects Payment By Card"
-        update = f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}"
+        finance.add_update(
+            f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}")
+        finance.invoice_generation.label = "Failed"
+        finance.commit()
+        raise UserError
 
     elif corporate.payment_method.label == "Consumer (Sumup) Invoice":
-        inv_label = "Failed"
-        inv_number = "Corp Account Expects Payment Sumup Invoice"
-        update = f"Corporate Item Expects a Sumup Invoice: {corporate.payment_terms.label} | {corporate.name}"
+        finance.add_update(
+            f"Corporate Item Expects a Sumup Invoice: {corporate.payment_terms.label} | {corporate.name}")
+        finance.invoice_generation.label = "Failed"
+        finance.commit()
+        raise UserError
 
     else:
-        inv_label = "Failed"
-        inv_number = "Corp Account Has Incompatible Payment Method"
-        update = f"Corporate Item Has Unacceptable Label for 'Payment Method': {corporate.payment_terms.label} | {corporate.name}"
-
-    finance.invoice_number.value = inv_number
-    finance.invoice_generation.value = inv_label
-
-    if update:
-        finance.add_update(update)
+        finance.add_update(
+            f"Corporate Item Has Unacceptable Label for 'Payment Method': {corporate.payment_terms.label} | {corporate.name}")
+        finance.invoice_generation.label = "Failed"
+        finance.commit()
+        raise UserError
 
     finance.commit()
 
@@ -532,6 +550,12 @@ def create_monthly_invoice(webhook, logger, test=None):
 
 
 class EricLevelException(Exception):
+
+    def __init__(self):
+        pass
+
+
+class UserError(Exception):
 
     def __init__(self):
         pass

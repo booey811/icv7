@@ -187,7 +187,45 @@ def generate_line_item_dict(values_list):
     return dct
 
 
-def construct_repair_line_item(financial_item, subitems: list, main, ticket):
+def determine_invoice_reference(corporate, financial):
+    """Determines invoicing reference from corporate item and financial item"""
+
+    if corporate.req_po.value:
+        ref = f"PO {financial.po_number.value}: Apple Device Repairs"
+    else:
+        ref = "Apple Device Repairs"
+
+    return ref
+
+
+def check_financial_against_requirements(corporate, financial):
+    """checks financial information against corporate item requirements"""
+
+    pos = [corporate.req_po.value, financial.po_number.value, "pos"]
+    store = [corporate.req_store.value, financial.store.value, "store"]
+    user = [corporate.req_user.value, financial.username.value, "user"]
+
+    results = {}
+
+    for item in [pos, store, user]:
+
+        type = item[2]
+        required = item[0]
+        provided = item[1]
+
+        if required:
+            if not provided:
+                raise exceptions.FinancialAndCorporateItemIncompatible(corporate)
+            else:
+                results[type] = provided
+
+    if results:
+        return results
+    else:
+        raise Exception("check_financial_against_requirements raised unexpected error")
+
+
+def construct_repair_line_item(financial_item, subitems: list, main, ticket, corporate_item):
     """constructs the description and price of a financial board entry through amalgamation of subitems"""
 
     if not subitems:
@@ -198,10 +236,14 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
     device = f"{str(main.device.labels[0])} "
     repairs = ", ".join([item for item in main.repairs.labels if item not in unbillable])
 
+    date_list = main.repaired_date.value.split("-")
+
+    date = f"{date_list[1]} {_convert_month(date_list[2])} {date_list[0]}"
+
     description1 = device + repairs + " Repair"
     description2 = f"IMEI/SN: {main.imeisn.value}"
     description3 = f"Arranged By: {ticket.user['name']}"
-    description4 = f"Date of Repair: {main.repaired_date.value}"
+    description4 = f"Date of Repair: {date}"
 
     line_total = 0
     for subitem in subitems:
@@ -214,7 +256,12 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
 
     full_desc = "\n".join([description1, description2, description3, description4])
 
-    line_total = line_total * 0.8
+    if corporate_item.req_store.value:
+        full_desc += f"\nStore/Cost Code: {financial_item.store.value}"
+    if corporate_item.req_user.value:
+        full_desc += f"\nUsername: {financial_item.username.value}"
+
+    line_total = line_total / 1.2
 
     # Compare total against max cost (if given)
     if financial_item.max_cost.value:
@@ -225,7 +272,6 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket):
 
 
 def construct_courier_line_item(main_item, corporate_item, financial_item):
-
     # Walk-Ins have no courier fees, return False
     if main_item.service.label == "Walk-In":
         return False
@@ -251,7 +297,7 @@ def construct_courier_line_item(main_item, corporate_item, financial_item):
     return generate_line_item_dict([description, cost, 220])
 
 
-def create_invoice(corporate_item, line_items=(), monthly=False):
+def create_invoice(corporate_item, financial_item, line_items=(), monthly=False):
     url = f"https://api.xero.com/api.xro/2.0/Invoices"
     method = "POST"
 
@@ -263,19 +309,25 @@ def create_invoice(corporate_item, line_items=(), monthly=False):
     issue_month = issue_date.strftime("%m")
     issue_year = issue_date.strftime("%Y")
 
+    month_str = issue_date.strftime("%B")
+
     if monthly:
         issue_date = datetime.datetime(int(issue_year), int(issue_month), 31)
         issue_day = issue_date.strftime("%d")
         issue_month = issue_date.strftime("%m")
         issue_year = issue_date.strftime("%Y")
+        ref = f"Apple Device Repairs {month_str} {issue_year}"
+        if corporate_item.global_po.value:
+            ref += f" PO: {corporate_item.global_po.value}"
+
+    else:
+        ref = determine_invoice_reference(corporate_item, financial_item)
 
     due_date = issue_date + datetime.timedelta(days=30)
 
     due_day = due_date.strftime("%d")
     due_month = due_date.strftime("%m")
     due_year = due_date.strftime("%Y")
-
-    month_str = issue_date.strftime("%B")
 
     dct = {
         "Type": "ACCREC",
@@ -285,7 +337,7 @@ def create_invoice(corporate_item, line_items=(), monthly=False):
         "Date": f"{issue_year}-{issue_month}-{issue_day}",
         "DueDate": f"{due_year}-{due_month}-{due_day}",
         "LineAmountTypes": "Exclusive",
-        "Reference": f"Apple Device Repairs {month_str} {issue_year}",
+        "Reference": ref,
         "LineItems": []
     }
 
@@ -304,3 +356,9 @@ def create_invoice(corporate_item, line_items=(), monthly=False):
         raise Exception('xero.create_invoice returned a non-200 response')
 
     return info["Invoices"][0]
+
+
+def _convert_month(month):
+    dt = datetime.datetime(2022, int(month), 1)
+
+    return dt.strftime("%b")
