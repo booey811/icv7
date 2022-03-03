@@ -2,7 +2,8 @@ from rq import Queue
 
 from worker import conn
 import application
-from .inventory import adjust_stock_level, void_stock_change
+from .exceptions import ExternalDataImportError
+from .inventory import adjust_stock_level
 
 q_hi = Queue("high", connection=conn)
 
@@ -56,10 +57,39 @@ def mark_entry_as_complete(finance_reference):
     finance_item.commit()
 
 
-def void_financial_line(finance_subitem):
+ZARA_SHORTCODES = {
+    "ZARA": "zara.uk",
+    "MASSIMO DUTTI": "zara.massimo",
+    "PULL & BEAR": "zara.pb",
+    "BERSHKA": "zara.bershka",
+    "ZARA HOME": "zara.home",
+    "STRADIVARIUS": "zara.strad",
+    "PDAs": "zara.pda"
+}
 
-    if finance_subitem.movementboard_id.value:
-        void_stock_change(finance_subitem.logger, finance_subitem.movementboard_id.value)
 
+def import_account_specific_data(finance_item, external_item):
+    board_name = external_item._mapper.eric_name
 
-    finance_subitem.moncli_obj.delete()
+    finance_item.logger.log(f"Spinning up account specific actions for {board_name}")
+
+    if board_name == "zara_ext":
+
+        # move store and company information in from the zara board
+
+        store = external_item.store.value
+        company = external_item.company.label
+        shortcode = ZARA_SHORTCODES[company]
+
+        if not all([store, company, shortcode]):
+            raise ExternalDataImportError(external_item, ["Store Code", "Company", "Invoicing Shortcode"])
+
+        finance_item.shortcode.value = shortcode
+        finance_item.store.value = store
+        finance_item.sales_status.label = "Zara iPods"
+        finance_item.commit()
+        return True
+
+    else:
+        finance_item.log(f"No Account Specific Processes Defined for {board_name}")
+        raise Exception(f"Need to define Account Specific Processes for {board_name}")

@@ -319,6 +319,10 @@ def create_invoice(corporate_item, financial_item, line_items=(), monthly=False)
         ref = f"Apple Device Repairs {month_str} {issue_year}"
         if corporate_item.global_po.value:
             ref += f" PO: {corporate_item.global_po.value}"
+        if corporate_item.ref_start.value:
+            ref = corporate_item.ref_start.value + " " + ref
+        if corporate_item.ref_end.value:
+            ref = ref + " " + corporate_item.ref_end.value
 
     else:
         ref = determine_invoice_reference(corporate_item, financial_item)

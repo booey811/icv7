@@ -339,6 +339,9 @@ def create_repairs_profile(webhook, logger, test=None):
     else:
         finance = BaseItem(logger, webhook["pulseId"])
 
+    # void processed subitems (if present)
+    inventory.void_repairs_profile(finance)
+
     # Get Main Item
     main = BaseItem(logger, finance.main_id.value)
 
@@ -349,8 +352,16 @@ def create_repairs_profile(webhook, logger, test=None):
         main.user_errors.label = "No Colour Given"
         raise UserError
 
-    # Fetch Repairs
+    # Fetch Repairs and make sure there are some
     repairs = inventory.get_repairs(main, create_if_not=True)
+    if len(repairs) == 0:
+        finance.repairs_profile.label = "Failed"
+        finance.add_update("Cannot Create Repairs Profile - No Repairs Supplied")
+        main.user_errors.label = "No Repair Given"
+        main.add_update("Cannot Checkout this repair as no repairs have been provided")
+        main.commit()
+        finance.commit()
+        raise UserError
 
     # Check Repairs Exist
     try:
@@ -365,6 +376,17 @@ def create_repairs_profile(webhook, logger, test=None):
         finance.commit()
         finance.add_update(e.error_message)
         raise UserError
+
+    # import external board data (if needed)
+    if finance.external_board_id.value:
+        external = BaseItem(logger, finance.external_board_id.value)
+        try:
+            financial.import_account_specific_data(finance, external)
+        except mon_ex.ExternalDataImportError as e:
+            finance.repair_profile.label = "Failed"
+            finance.add_update(e.error_message)
+            finance.commit()
+            raise UserError
 
     repair_profile = "Complete"
     stock_adjust = "Do Now!"
@@ -444,21 +466,7 @@ def void_financial_profile(webhook, logger, test=None):
     else:
         finance = BaseItem(logger, webhook["pulseId"])
 
-    logger.log(f"Voiding Financial Profile: {finance.name}")
-
-    subitems = [BaseItem(finance.logger, item.id) for item in finance.moncli_obj.subitems]
-
-    for item in subitems:
-        if item.movement_id.value:
-            logger.log("Stock Movement Detected - Reversing")
-            movement = BaseItem(logger, item.movement_id.value)
-            inventory.void_stock_change(logger, movement)
-        item.moncli_obj.delete()
-
-    finance.repair_profile.label = "Voided"
-    finance.stock_adjust.label = "Voided"
-
-    finance.commit()
+    inventory.void_repairs_profile(finance)
 
 
 @log_catcher_decor
@@ -474,8 +482,12 @@ def create_or_update_invoice(webhook, logger, test=None):
     subitems = [BaseItem(finance.logger, item.id) for item in finance.moncli_obj.subitems]
     main = BaseItem(logger, finance.main_id.value)
     ticket = EricTicket(logger, main.zendesk_id.value)
+
     corp_search_item = BaseItem(logger, board_id=1973442389)  # Corporate Board ID
-    corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
+    if finance.shortcode.value:
+        corp_items = corp_search_item.shortcode.search(finance.shortcode.value)
+    else:
+        corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
     if len(corp_items) > 1:
         # Should never happen
         raise Exception(f"Found too Many Corporate Accounts When Searching for {ticket.organisation['id']}")

@@ -7,6 +7,7 @@ import application
 from .base import BaseItem
 from .config import BOARD_MAPPING_DICT
 from . import exceptions
+from . import inventory
 
 from typing import Union
 
@@ -362,7 +363,7 @@ def create_repair_item(logger, dropdown_ids: list, dropdown_names: list, device_
     blank_item.new_item(repair_name)
 
 
-def void_stock_change(logger, movementboard_reference):
+def _void_stock_change(logger, movementboard_reference):
     if isinstance(movementboard_reference, (str, int)):
         movement = BaseItem(logger, movementboard_reference)
     elif isinstance(movementboard_reference, BaseItem):
@@ -388,3 +389,27 @@ def check_repairs_are_valid(logger, repairs: list):
             raise exceptions.RepairDoesNotExist(repair)
 
     return True
+
+
+def void_repairs_profile(financial_item):
+
+    financial_item.logger.log(f"Voiding Finance Profile: {financial_item.name}")
+
+    if not financial_item.moncli_obj.subitems:
+        # nothing to void
+        financial_item.logger.log("Nothing to Void")
+        return True
+
+    subitems = [BaseItem(financial_item.logger, item.id) for item in financial_item.moncli_obj.subitems]
+
+    for item in subitems:
+        if item.movement_id.value:
+            financial_item.logger.log("Stock Movement Detected - Reversing")
+            movement = BaseItem(financial_item.logger, item.movement_id.value)
+            inventory._void_stock_change(financial_item.logger, movement)
+        item.moncli_obj.delete()
+
+    financial_item.repair_profile.label = "Voided"
+    financial_item.stock_adjust.label = "Voided"
+
+    financial_item.commit()

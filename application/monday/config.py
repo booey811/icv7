@@ -166,7 +166,7 @@ BOARD_MAPPING_DICT = {
             'text': 'po_number',  # text
             'text3': 'store',  # text
             'text6': 'invoice_number',  # text
-            'text1': '--force_company',  # text
+            'text1': 'shortcode',  # text
             'text5': 'external_board_id',  # text
             'mirror1': 'ticket',  # lookup
             'status25': 'sales_status',  # color
@@ -347,7 +347,37 @@ BOARD_MAPPING_DICT = {
             "checkbox6": "req_po",
             "checkbox_1": "req_store",
             "checkbox_2": "req_user",
-            "text2": "global_po"
+            "text2": "global_po",
+            "text3": "ref_start",
+            "text12": "ref_end"
+        }
+    },
+    '113568054': {
+        'name': 'zara_ext',
+        'columns': {
+            'text97': 'ref',  # text
+            'status1': 'repair_status',  # color
+            'text33': 'issue',  # text
+            'long_text': 'repair_notes',  # long-text
+            'date': 'returned_date',  # date
+            'text8': 'serial_number',  # text
+            'text9': 'store',  # text
+            'numbers': 'quote',  # numeric
+            'status3': 'company',  # color
+            'status4': 'invoiced?',  # color
+            'status8': 'previously_repaired?',  # color
+            'time_tracking8': 'repair_time',  # duration
+            'status80': 'push_to_main',  # color
+            'connect_boards': 'icorrect_main_board',  # board-relation
+            'status05': 'shipment_status',  # color
+            'status23': 'destination',  # color
+            'mirror': 'device',  # lookup
+            'mirror7': 'repairs',  # lookup
+            'item_id6': 'item_id',  # pulse-id
+            'date8': 'shipment_date',  # date
+            'date6': 'delivery_date',  # date
+            'mirror4': 'add_to_finance',  # lookup
+            'date0': 'last_report_date',  # date
         }
     }
 }
@@ -360,4 +390,32 @@ STANDARD_REPAIR_OPTIONS = {
 }
 STANDARD_REPAIR_COLOURS = [
     "Black", "White", "Space Grey"
+]
+ACCOUNT_SHORTCODES = [
+    "axaxl",
+    "blackstone",
+    "fourfront",
+    "gpe",
+    "gs1",
+    "zara.uk",
+    "zara.bershka",
+    "zara.massimo",
+    "zara.pb",
+    "zara.strad",
+    "zara.home",
+    "lasalle",
+    "lcp",
+    "oaktree",
+    "oktra",
+    "overbury.mp",
+    "panasonic",
+    "pandora",
+    "plum",
+    "prada",
+    "pret",
+    "scotia",
+    "test1",
+    "universal",
+    "vccp",
+    "reiss"
 ]
