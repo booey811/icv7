@@ -26,3 +26,9 @@ class ExternalDataImportError(Exception):
         message = f"{external} board item is missing data:\n\n{' | '.join([data])}"
         self.error_message = message
         return message
+
+
+class NoCorporateItemFound(Exception):
+
+    def __init__(self, company):
+        self.error_message = f"No corporate item found for: {company}"

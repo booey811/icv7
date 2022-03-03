@@ -2,7 +2,7 @@ from rq import Queue
 
 from worker import conn
 import application
-from .exceptions import ExternalDataImportError
+from .exceptions import ExternalDataImportError, NoCorporateItemFound
 from .inventory import adjust_stock_level
 
 q_hi = Queue("high", connection=conn)
