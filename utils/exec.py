@@ -1,3 +1,5 @@
+import os
+
 from rq import Queue
 
 from application import BaseItem, zen_help, inventory, HardLog, CustomLogger
@@ -87,18 +89,22 @@ def generate_repair_set(forced_repair_ids=()):
         gennie.log(f"Device Column: {gennie.device.labels[0]} | OPTIONS: {STANDARD_REPAIR_OPTIONS.keys()}")
         gennie.logger.hard_log()
 
-    # Construct Repair Item Construction Terms (Device)
-    device_id = gennie.device.ids[0]
-    device_label = gennie.device.labels[0]
+    for device in gennie.device.ids:
+        # Construct Repair Item Construction Terms (Device)
+        device_id = device
+        device_label = gennie.device.settings[str(device_id)]
 
-    # Iterate through Repair IDs to construct items
-    for repair_id in repair_ids:
-        q_stock.enqueue(
-            f=repair_item_constructor,
-            args=([device_id, repair_id], device_label, device_type, repair_id)
-        )
+        # Iterate through Repair IDs to construct items
+        for repair_id in repair_ids:
+            if os.getenv("ENV") == "devlocal":
+                repair_item_constructor([device_id, repair_id], device_label, device_type, repair_id)
+            else:
+                q_stock.enqueue(
+                    f=repair_item_constructor,
+                    args=([device_id, repair_id], device_label, device_type, repair_id)
+                )
 
-    gennie.logger.soft_log(for_records=True)
+        gennie.logger.soft_log(for_records=True)
 
 
 def repair_item_constructor(id_info: list, label_info: str, device_type_string: str, repair_id):
