@@ -486,8 +486,14 @@ def create_or_update_invoice(webhook, logger, test=None):
     corp_search_item = BaseItem(logger, board_id=1973442389)  # Corporate Board ID
     if finance.shortcode.value:
         corp_items = corp_search_item.shortcode.search(finance.shortcode.value)
-    elif ticket:
+    elif ticket and ticket.organisation:
         corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
+    elif ticket and not ticket.organisation:
+        logger.log(f"CANNOT CREATE INVOICE: Ticket[{ticket.id}] used to process invoice, but User[{ticket.user.name}] "
+                   f"is not part of an organisation")
+        finance.invoice_generation.label = "Validation Error"
+        finance.commit()
+        raise UserError
     else:
         logger.log("CANNOT CREATE INVOICE: No Ticket Associated with Financial Item, and no Shortcode Provided")
         finance.invoice_generation.label = "Validation Error"
