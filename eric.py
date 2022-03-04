@@ -489,7 +489,7 @@ def create_or_update_invoice(webhook, logger, test=None):
     elif ticket:
         corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
     else:
-        logger.log("CANNOT CREATE INVOICE: No Ticket Associated with Financial Item, and now Shortcode Provided")
+        logger.log("CANNOT CREATE INVOICE: No Ticket Associated with Financial Item, and no Shortcode Provided")
         finance.invoice_generation.label = "Validation Error"
         finance.commit()
         raise UserError

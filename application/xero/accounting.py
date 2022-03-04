@@ -268,12 +268,12 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket, cor
     if corporate_item.req_user.value:
         full_desc += f"\nUsername: {financial_item.username.value}"
 
-    line_total = line_total / 1.2
-
     # Compare total against max cost (if given)
     if financial_item.max_cost.value:
         if float(financial_item.max_cost.value) < float(line_total):
             line_total = financial_item.max_cost.value
+
+    line_total = line_total / 1.2
 
     return generate_line_item_dict([full_desc, line_total, 203])
 

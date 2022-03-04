@@ -87,7 +87,7 @@ def import_account_specific_data(finance_item, external_item):
         finance_item.shortcode.value = shortcode  # Required to route to the correct invoice
         finance_item.store.value = store  # Store code required for invoice
         finance_item.sales_status.label = "Zara iPods"  # Set sales Status for filtering via dashboard
-        finance_item.max_cost.value = 100  # Maximum cost for iPod Repairs
+        finance_item.max_cost.value = 120  # Maximum cost for iPod Repairs
         finance_item.commit()
         return True
 
