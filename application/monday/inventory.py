@@ -382,7 +382,12 @@ def _void_stock_change(logger, movementboard_reference):
 
 def check_repairs_are_valid(logger, repairs: list):
 
+    logger.log("Checking Repair Validity")
+
     for repair in repairs:
+        if isinstance(repair, str):
+            logger.log(f"Repair is string (has not been created yet): {repair}")
+            continue
         logger.log(f"Checking {repair.name}[{repair.mon_id}]")
         if str(repair.moncli_obj.get_group('id')['id']) == "new_group89925":  # Does Not Exist Group ID
             logger.log("DOES NOT EXIST")
