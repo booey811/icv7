@@ -38,10 +38,11 @@ class TagsOnPartsNotAvailableOnMovements(Exception):
 
     def __init__(self, repair_tags):
         self.error_message = f"Tags Present on Parts Board But Not inventory Movements:\n\n{str(repair_tags)}"
+        self.tags = "\n".join(repair_tags)
 
 
 class IndexOrIDConversionError(Exception):
     """raised when a status or dropdown column is changed with an invalid ID or label"""
+
     def __init__(self, column, index_or_id, eric_item):
         self.error_message = f"Could Not Convert {index_or_id} for {eric_item.moncli_board_obj.name}[{eric_item.mon_id}]: {column.title}"
-

@@ -31,18 +31,14 @@ def log_catcher_decor(eric_function):
                 logger.log(item)
             logger.summary = '\n'.join(e.messages)
             logger.commit("raised")
-            raise MondayApiError
         except UserError as e:
             logger.log("User Error Encountered")
             logger.summary = e.summary
             logger.commit("user")
-            raise UserError
         except BaseException as e:
             logger.log(str(e))
             logger.summary = str(e)
             logger.commit("error")
-            raise Exception(str(e))
-
     return wrapper
 
 
@@ -354,7 +350,8 @@ def create_repairs_profile(webhook, logger, test=None):
         main.add_update("No Colour Provided for this Device, please correct this -"
                         " Colourless devices would be incredibly difficult for people to use!")
         main.user_errors.label = "No Colour Given"
-        raise UserError
+        raise UserError("No Colour Provided for this Device, please correct this -"
+                        " Colourless devices would be incredibly difficult for people to use!")
 
     # Fetch Repairs and make sure there are some
     repairs = inventory.get_repairs(main, create_if_not=True)
@@ -365,21 +362,22 @@ def create_repairs_profile(webhook, logger, test=None):
         main.add_update("Cannot Checkout this repair as no repairs have been provided")
         main.commit()
         finance.commit()
-        raise UserError
+        raise UserError("Cannot Create Repairs Profile - No Repairs Supplied")
 
     # Check Repairs Exist
     try:
         inventory.check_repairs_are_valid(logger, repairs)
     except mon_ex.RepairDoesNotExist as e:
         main.add_update("This Repair has been submitted but is impossible - please select the correct repair"
-                        "It is likely that you have selected a Screen Manufacturer that is not compatible with your device\n\n"
+                        "It is likely that you have selected a Screen Manufacturer that is not compatible with your "
+                        "device\n\n "
                         f"{e.error_message}")
         main.user_errors.label = "Does Not Exist"
         main.commit()
         finance.repair_profile.label = "Failed"
         finance.commit()
         finance.add_update(e.error_message)
-        raise UserError
+        raise UserError(f"Impossible Repair Encounter: {e.repair.name}")
 
     # import external board data (if needed)
     if finance.external_board_id.value:
@@ -390,7 +388,8 @@ def create_repairs_profile(webhook, logger, test=None):
             finance.repair_profile.label = "Failed"
             finance.add_update(e.error_message)
             finance.commit()
-            raise UserError
+            raise UserError(f"Data missing from External Board item: "
+                            f"{external.moncli_board_obj.name}: {external.name} ({external.mon_id})")
 
     repair_profile = "Complete"
     stock_adjust = "Do Now!"
@@ -448,7 +447,7 @@ def checkout_stock_profile(webhook, logger, test=None):
 
     if finance.repair_profile.label != "Complete":
         logger.log("Repair Profile Not Complete - Cancelling")
-        raise UserError
+        raise UserError("Cannot Checkout Stock - No Repair Profile Created")
     try:
         for subitem in finance.moncli_obj.subitems:
             financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
@@ -458,7 +457,7 @@ def checkout_stock_profile(webhook, logger, test=None):
         finance.repair_profile.label = 'Failed'
         finance.add_update("Please get Gabe to check Eric's Logs & Update the Tag Transfer from Parts to Movements")
         finance.commit()
-        raise UserError
+        raise DataError(f"Tag Discrepancy Between Parts and Inventory Movements:\n{e.tags}")
 
 
 @log_catcher_decor
@@ -494,7 +493,7 @@ def create_or_update_invoice(webhook, logger, test=None):
             logger.log(f"CANNOT CREATE INVOICE: No Corporate Account Setup for {finance.name}")
             finance.invoice_generation.label = "Validation Error"
             finance.commit()
-            raise UserError
+            raise UserError(f"CANNOT CREATE INVOICE: No Corporate Account Setup for {finance.name}")
     elif ticket and ticket.organisation:
         corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
     elif ticket and not ticket.organisation:
@@ -502,24 +501,25 @@ def create_or_update_invoice(webhook, logger, test=None):
                    f"but User[{ticket.user['name']}] is not part of an organisation")
         finance.invoice_generation.label = "Validation Error"
         finance.commit()
-        raise UserError
+        raise UserError(f"CANNOT CREATE INVOICE: Ticket[{ticket.id}] used to process invoice, "
+                   f"but User[{ticket.user['name']}] is not part of an organisation")
     else:
         logger.log("CANNOT CREATE INVOICE: No Ticket Associated with Financial Item, and no Shortcode Provided")
         finance.invoice_generation.label = "Validation Error"
         finance.commit()
-        raise UserError
+        raise UserError("CANNOT CREATE INVOICE: No Ticket Associated with Financial Item, and no Shortcode Provided")
 
     if len(corp_items) > 1:
         accs = '\n'.join([f"{item.name}:{item.id}" for item in corp_items])
         logger.log(f"CANNOT CREATE INVOICE: Too Many Corporate Accounts Found\n\n{accs}")
         finance.invoice_generation.label = "Validation Error"
         finance.commit()
-        raise UserError
+        raise UserError(f"CANNOT CREATE INVOICE: Too Many Corporate Accounts Found\n\n{accs}")
     elif not corp_items:
         logger.log(f"CANNOT CREATE INVOICE: No Corporate Account Setup for {finance.name}")
         finance.invoice_generation.label = "Validation Error"
         finance.commit()
-        raise UserError
+        raise UserError(f"CANNOT CREATE INVOICE: No Corporate Account Setup for {finance.name}")
     else:
         corporate = BaseItem(logger, corp_items[0].id)
 
@@ -529,8 +529,9 @@ def create_or_update_invoice(webhook, logger, test=None):
     except xero_ex.FinancialAndCorporateItemIncompatible as e:
         finance.add_update(e.corp_requirements)
         finance.invoice_generation.label = "Validation Error"
+        finance.add_update(f"Financial Item[{finance.name}] Does not Match Requirements from Corp Item[{corporate.name}]")
         finance.commit()
-        raise UserError
+        raise UserError(f"Financial Item[{finance.name}] Does not Match Requirements from Corp Item[{corporate.name}]")
 
     # Construct Line Data from Items
     repair_line_data = accounting.construct_repair_line_item(finance, subitems, main, ticket, corporate)
@@ -554,7 +555,7 @@ def create_or_update_invoice(webhook, logger, test=None):
                 finance.add_update(
                     f"Too Many Invoices Found When Searching: {corporate.invoice_id.value} | {corporate.name}")
                 finance.commit()
-                raise UserError
+                raise DataError(f"Too Many Invoices Found When Searching: {corporate.invoice_id.value} | {corporate.name}")
 
         elif corporate.payment_terms.label == "Pay Per Repair":
             # Create one-off invoice
@@ -566,28 +567,28 @@ def create_or_update_invoice(webhook, logger, test=None):
             finance.add_update(
                 f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}")
             finance.commit()
-            raise UserError
+            raise UserError(f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}")
 
     elif corporate.payment_method.label == "Card Payment (In Person)":
         finance.add_update(
             f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}")
         finance.invoice_generation.label = "Failed"
         finance.commit()
-        raise UserError
+        raise UserError(f"Corporate Item Has Unacceptable Label for 'Payment Terms': {corporate.payment_terms.label} | {corporate.name}")
 
     elif corporate.payment_method.label == "Consumer (Sumup) Invoice":
         finance.add_update(
             f"Corporate Item Expects a Sumup Invoice: {corporate.payment_terms.label} | {corporate.name}")
         finance.invoice_generation.label = "Failed"
         finance.commit()
-        raise UserError
+        raise UserError(f"Corporate Item Expects a Sumup Invoice: {corporate.payment_terms.label} | {corporate.name}")
 
     else:
         finance.add_update(
             f"Corporate Item Has Unacceptable Label for 'Payment Method': {corporate.payment_terms.label} | {corporate.name}")
         finance.invoice_generation.label = "Failed"
         finance.commit()
-        raise UserError
+        raise UserError(f"Corporate Item Has Unacceptable Label for 'Payment Method': {corporate.payment_terms.label} | {corporate.name}")
 
     finance.commit()
 
@@ -614,7 +615,7 @@ def create_monthly_invoice(webhook, logger, test=None):
 
 @log_catcher_decor
 def test(webhook, logger, test=None):
-    print("Test Function")
+    raise UserError("Test Summary")
 
 
 class EricLevelException(Exception):
@@ -625,5 +626,13 @@ class EricLevelException(Exception):
 
 class UserError(Exception):
 
-    def __init__(self):
-        self.summary = "Not Supplied"
+    def __init__(self, summary="User Error: Not Supplied"):
+        self.summary = summary
+
+
+class DataError(Exception):
+
+    def __init__(self, summary="Data Error: Not supplied"):
+        self.summary = summary
+
+
