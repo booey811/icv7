@@ -22,6 +22,7 @@ def log_catcher_decor(eric_function):
         logger = CustomLogger()
         # Attempt to execute the Eric function
         try:
+            logger.func = str(eric_function.__name__)
             eric_function(webhook, logger, test)
             logger.commit("success")
         except MondayApiError as e:
@@ -607,6 +608,10 @@ def create_monthly_invoice(webhook, logger, test=None):
     ]
 
     corporate.commit()
+
+@log_catcher_decor
+def test(webhook, logger, test=None):
+    print("Test Function")
 
 
 class EricLevelException(Exception):

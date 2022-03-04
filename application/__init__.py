@@ -72,13 +72,13 @@ class CustomLogger:
     """Object for managing logging as Flask logging is a nightmare
     Dumps information to a monday item with log file"""
 
-    def __init__(self, func_name="test"):
+    def __init__(self):
         if os.environ['ENV'] in ['production', 'test']:
             self.debug = False
         else:
             self.debug = True
 
-        self.func = func_name
+        self.func = 'Not Supplied'
 
         self._log_file_path = None
         self._log_name = self._generate_log_file_name()
@@ -182,6 +182,10 @@ class CustomLogger:
             "text7": str(self.func),
             "text2": str(os.getenv("ENV"))
         }
+
+        if log_level == "success":
+            col_vals["status7"] = {"label": "Not Needed"}
+
         log_item = self._log_board.add_item(
             item_name=self._log_name,
             column_values=col_vals
