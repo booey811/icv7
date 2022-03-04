@@ -388,9 +388,19 @@ STANDARD_REPAIR_OPTIONS = {
     "iPad": [133, 30, 69, 54, 99],
     "MacBook": [133, 71, 54, 119, 32, 38]
 }
-STANDARD_REPAIR_COLOURS = [
-    "Black", "White", "Space Grey"
-]
+REPAIR_COLOURS = {
+    'STANDARD_REPAIR_COLOURS': [
+        "Black",
+        "White",
+        "Space Grey"
+    ],
+    'MacBook': [
+        "Silver",
+        "Space Grey",
+        "Gold",
+        "Rose Gold"
+    ]
+}
 ACCOUNT_SHORTCODES = [
     "axaxl",
     "blackstone",

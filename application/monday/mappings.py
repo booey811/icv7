@@ -348,9 +348,7 @@ class DropdownColumn(BaseColumnValue):
                 key = item
                 val = self.settings[str(key)]
             except KeyError:
-                raise ValueError(
-                    f'DropDownColumn ({self.title}) value setter supplied with a label or index that does not '
-                    f'show in settings ("{item}")')
+                raise exceptions.IndexOrIDConversionError(self, item, self._eric)
 
             # Work out whether an id or a label has been provided & add relevant id to results list
             try:
@@ -368,7 +366,10 @@ class DropdownColumn(BaseColumnValue):
         # Check inputs
         to_remove = self._check_input_and_convert_to_list(to_remove)
         # Convert labels to ids if necessary
-        ids_to_remove = [int(item) for item in self._id_and_label_conversion(to_remove)]
+        try:
+            ids_to_remove = [int(item) for item in self._id_and_label_conversion(to_remove)]
+        except exceptions.IndexOrIDConversionError as e:
+            raise e
         # State new ids
         new_ids = list(set(self._ids) - set(ids_to_remove))
         # Adjust value
@@ -379,7 +380,10 @@ class DropdownColumn(BaseColumnValue):
         # Check inputs
         to_add = self._check_input_and_convert_to_list(to_add)
         # Convert labels to ids if necessary
-        ids_to_add = self._id_and_label_conversion(to_add)
+        try:
+            ids_to_add = self._id_and_label_conversion(to_add)
+        except exceptions.IndexOrIDConversionError as e:
+            raise e
         # State new ids
         new_ids = list(set(self._ids + ids_to_add))
         # Adjust value
@@ -390,7 +394,10 @@ class DropdownColumn(BaseColumnValue):
         # Check inputs
         to_replace = self._check_input_and_convert_to_list(to_replace)
         # Convert labels to ids if necessary
-        replacement_ids = self._id_and_label_conversion(to_replace)
+        try:
+            replacement_ids = self._id_and_label_conversion(to_replace)
+        except exceptions.IndexOrIDConversionError as e:
+            raise e
         # State new ids
         new_ids = replacement_ids
         # Adjust value
@@ -845,3 +852,8 @@ COLUMN_TYPE_MAPPINGS = {
     complex.ItemLinkValue: ConnectBoardsValue,
     'board-relation': ConnectBoardsValue
 }
+
+
+class IndexOrIDConversionError(Exception):
+    def __init__(self, column, index_or_id, eric_item):
+        self.error_message = f"Could Not Convert {index_or_id} for {eric_item.moncli_board_obj.name}[{eric_item.mon_id}]: {column.title}"

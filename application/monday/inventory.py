@@ -7,7 +7,6 @@ import application
 from .base import BaseItem
 from .config import BOARD_MAPPING_DICT
 from . import exceptions
-from . import inventory
 
 from typing import Union
 
@@ -108,18 +107,23 @@ def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quanti
 
     logger.log(f'Part: {part.name} | ID: {part.mon_id}')
     logger.log(f'Current: {current_level} | New: {new_level} | Diff: {quantity}')
+    try:
+        new_movement_item = _create_movement_record(
+            eric_source_item=source_object,
+            part_item=part,
+            starting_stock_level=current_level,
+            ending_stock_level=new_level
+        )
+    except exceptions.TagsOnPartsNotAvailableOnMovements as e:
+        raise e
 
     _check_and_adjust_for_low_stock(part)
 
-    new_movement_item = _create_movement_record(
-        eric_source_item=source_object,
-        part_item=part,
-        starting_stock_level=current_level,
-        ending_stock_level=new_level
-    )
-
     # Commit Changes
     part.commit()
+
+
+
 
     logger.log('Stock Level Adjusted')
     return new_movement_item
@@ -189,7 +193,10 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
     movement.source_url.value = [url, text]
     movement.parts_id.value = part_item.mon_id
     movement.parts_url.value = [part_url, part_text]
-    movement.tags.replace(part_item.tags.labels)
+    try:
+        movement.tags.replace(part_item.tags.labels)
+    except exceptions.IndexOrIDConversionError:
+        raise exceptions.TagsOnPartsNotAvailableOnMovements(part_item.tags.labels)
 
     new_item = movement.new_item(part_item.name)
 
@@ -381,7 +388,6 @@ def _void_stock_change(logger, movementboard_reference):
 
 
 def check_repairs_are_valid(logger, repairs: list):
-
     logger.log("Checking Repair Validity")
 
     for repair in repairs:
@@ -397,7 +403,6 @@ def check_repairs_are_valid(logger, repairs: list):
 
 
 def void_repairs_profile(financial_item):
-
     financial_item.logger.log(f"Voiding Finance Profile: {financial_item.name}")
 
     if not financial_item.moncli_obj.subitems:
@@ -411,7 +416,7 @@ def void_repairs_profile(financial_item):
         if item.movement_id.value:
             financial_item.logger.log("Stock Movement Detected - Reversing")
             movement = BaseItem(financial_item.logger, item.movement_id.value)
-            inventory._void_stock_change(financial_item.logger, movement)
+            _void_stock_change(financial_item.logger, movement)
         item.moncli_obj.delete()
 
     financial_item.repair_profile.label = "Voided"

@@ -224,5 +224,18 @@ def refurb_phones_initial_pc_report(test_id=None):
     return ''
 
 
+@app.route("/api/generate_products", methods=["POST"])
+def generate_products_from_product_generator():
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    utils_exec.generate_repair_set()
+
+    return ""
+
+
 if __name__ == '__main__':
     app.run()

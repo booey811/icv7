@@ -3,8 +3,9 @@ import os
 from rq import Queue
 
 from application import BaseItem, zen_help, inventory, HardLog, CustomLogger
-from application.monday.config import STANDARD_REPAIR_OPTIONS, STANDARD_REPAIR_COLOURS
+from application.monday.config import STANDARD_REPAIR_OPTIONS, REPAIR_COLOURS
 from worker import conn
+from eric import log_catcher_decor
 
 q_stock = Queue("stock", connection=conn)
 
@@ -104,38 +105,66 @@ def generate_repair_set(forced_repair_ids=()):
                     args=([device_id, repair_id], device_label, device_type, repair_id)
                 )
 
-        gennie.logger.soft_log(for_records=True)
+        gennie.logger.commit("success")
 
 
+# noinspection PyTypeChecker
 def repair_item_constructor(id_info: list, label_info: str, device_type_string: str, repair_id):
     """sub function that actually creates the repair item, as this job must be queued to avoid timeout"""
 
+    def determine_available_colours(device_string):
+        """returns the correct colour set from monday.config"""
+        try:
+            colours = REPAIR_COLOURS[device_string]
+        except KeyError:
+            colours = REPAIR_COLOURS["STANDARD_REPAIR_COLOURS"]
+
+        return colours
+
     coloured = False
     gennie_item = BaseItem(CustomLogger(), 1093049167)  # Product Creator ID (Main Board)
+    repair_searcher_item = BaseItem(gennie_item.logger, board_id=984924063)  # Repairs Board ID
     repair_label = gennie_item.repairs.settings[str(repair_id)]
+
+    repair_colours = determine_available_colours(device_string=device_type_string)
 
     # Check if part is coloured
     if repair_label in inventory.COLOURED_PARTS:
-        for colour in STANDARD_REPAIR_COLOURS:
+        for colour in repair_colours:
             colour = colour
             colour_id = gennie_item.device_colour.settings[colour]
             try:
-                new_repair = inventory.create_repair_item(
-                    gennie_item.logger,
-                    dropdown_ids=[id_info[0], id_info[1], colour_id],
-                    dropdown_names=[label_info, repair_label, colour],
-                    device_type=device_type_string
-                )
+                if not check_if_repair_exists(repair_searcher_item, "-".join([str(id_info[0]), str(id_info[1]), str(colour_id)])):
+                    new_repair = inventory.create_repair_item(
+                        gennie_item.logger,
+                        dropdown_ids=[id_info[0], id_info[1], colour_id],
+                        dropdown_names=[label_info, repair_label, colour],
+                        device_type=device_type_string
+                    )
+                else:
+                    gennie_item.logger.log("Repair Already Exists - Not Creating")
             except HardLog:
                 pass
     else:
         try:
-            new_repair = inventory.create_repair_item(
-                gennie_item.logger,
-                dropdown_ids=[id_info[0], id_info[1]],
-                dropdown_names=[label_info, repair_label],
-                device_type=device_type_string
-            )
+            if not check_if_repair_exists(repair_searcher_item, "-".join([str(id_info[0]), str(id_info[1])])):
+                new_repair = inventory.create_repair_item(
+                    gennie_item.logger,
+                    dropdown_ids=[id_info[0], id_info[1]],
+                    dropdown_names=[label_info, repair_label],
+                    device_type=device_type_string
+                )
         except HardLog:
             pass
 
+
+def check_if_repair_exists(repair_searcher, combined_id):
+    """checks to see if the supplied combined ID can be found on the repairs board, and therefore doesn't need to
+    be created. Returns False if the repair can be found
+
+    Returns:
+        bool: False if repair exists, True if repair does not exist"""
+    search_results = repair_searcher.combined_id.search(combined_id)
+    if search_results:
+        return True
+    return False

@@ -443,20 +443,12 @@ def checkout_stock_profile(webhook, logger, test=None):
     logger.log(f"Checking Out Stock: {finance.name}")
 
     if finance.repair_profile.label != "Complete":
-        logger.log("Cannot Checkout Stock Items - Repair Profile is Incomplete")
-        logger.hard_log()
+        logger.log("Repair Profile Not Complete - Cancelling")
+        raise UserError
 
-    if os.environ["ENV"] == 'devlocal':
-        for subitem in finance.moncli_obj.subitems:
-            financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
-        financial.mark_entry_as_complete(finance)
-
-    else:
-        queued_jobs = []
-        for subitem in finance.moncli_obj.subitems:
-            job = q_hi.enqueue(financial.checkout_stock_for_line_item, args=(subitem.id, finance.main_id.value))
-            queued_jobs.append(job)
-        q_hi.enqueue(financial.mark_entry_as_complete, finance.mon_id, depends_on=queued_jobs)
+    for subitem in finance.moncli_obj.subitems:
+        financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
+    financial.mark_entry_as_complete(finance)
 
 
 @log_catcher_decor
