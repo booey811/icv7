@@ -29,14 +29,17 @@ def log_catcher_decor(eric_function):
             logger.log("============================ MONDAY SUBMISSION ERROR ==============================")
             for item in e.messages:
                 logger.log(item)
+            logger.summary = '\n'.join(e.messages)
             logger.commit("raised")
             raise MondayApiError
-        except UserError:
+        except UserError as e:
             logger.log("User Error Encountered")
+            logger.summary = e.summary
             logger.commit("user")
             raise UserError
         except BaseException as e:
             logger.log(str(e))
+            logger.summary = str(e)
             logger.commit("error")
             raise Exception(str(e))
 
@@ -623,4 +626,4 @@ class EricLevelException(Exception):
 class UserError(Exception):
 
     def __init__(self):
-        pass
+        self.summary = "Not Supplied"

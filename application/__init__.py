@@ -79,6 +79,7 @@ class CustomLogger:
             self.debug = True
 
         self.func = 'Not Supplied'
+        self.summary = "Not Supplied"
 
         self._log_file_path = None
         self._log_name = self._generate_log_file_name()
@@ -180,7 +181,8 @@ class CustomLogger:
         col_vals = {
             'new_log_type': {'label': log_label},
             "text7": str(self.func),
-            "text2": str(os.getenv("ENV"))
+            "text2": str(os.getenv("ENV")),
+            "long_text": str(self.summary)
         }
 
         if log_level == "success":
