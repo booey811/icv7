@@ -495,8 +495,12 @@ def create_or_update_invoice(webhook, logger, test=None):
         raise UserError
 
     if len(corp_items) > 1:
-        # Should never happen
-        raise Exception(f"Found too Many Corporate Accounts When Searching for {ticket.organisation['id']}")
+        accs = '\n'.join([f"{item.name}:{item.id}" for item in corp_items])
+        logger.log(f"CANNOT CREATE INVOICE: Too Many Corporate Accounts Found\n\n{accs}")
+        finance.invoice_generation.label = "Validation Error"
+        finance.commit()
+        raise UserError
+
     corporate = BaseItem(logger, corp_items[0].id)
 
     # Check financial Item validity against corporate item
