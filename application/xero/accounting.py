@@ -236,13 +236,20 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket, cor
     device = f"{str(main.device.labels[0])} "
     repairs = ", ".join([item for item in main.repairs.labels if item not in unbillable])
 
-    date_list = main.repaired_date.value.split("-")
+    if main.repaired_date.value:
+        date_list = main.repaired_date.value.split("-")
+    else:
+        date_list = financial_item.date_of_finance.value.split("-")
 
     date = f"{date_list[2]} {_convert_month(date_list[1])} {date_list[0]}"
 
     description1 = device + repairs + " Repair"
     description2 = f"IMEI/SN: {main.imeisn.value}"
-    description3 = f"Arranged By: {ticket.user['name']}"
+    try:
+        description3 = f"Arranged By: {ticket.user['name']}"
+    except AttributeError:
+        corp_primary_sub = corporate_item.moncli_obj.subitems[0]
+        description3 = f"Arranged By: {corp_primary_sub.name}"
     description4 = f"Date of Repair: {date}"
 
     line_total = 0

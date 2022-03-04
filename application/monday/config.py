@@ -335,7 +335,7 @@ BOARD_MAPPING_DICT = {
             'subitems': 'subitems',  # subtasks
             'status2': 'account_status',  # color
             'text9': 'zendesk_org_id',  # text
-            'text0': 'short_code',  # text
+            'text0': 'shortcode',  # text
             'text': 'xero_contact_id',  # text
             'status8': 'courier_service_level',  # color
             'status0': 'payment_method',  # color
