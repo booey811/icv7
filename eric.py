@@ -445,10 +445,16 @@ def checkout_stock_profile(webhook, logger, test=None):
     if finance.repair_profile.label != "Complete":
         logger.log("Repair Profile Not Complete - Cancelling")
         raise UserError
-
-    for subitem in finance.moncli_obj.subitems:
-        financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
-    financial.mark_entry_as_complete(finance)
+    try:
+        for subitem in finance.moncli_obj.subitems:
+            financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
+        financial.mark_entry_as_complete(finance)
+    except mon_ex.TagsOnPartsNotAvailableOnMovements as e:
+        logger.log(e.error_message)
+        finance.repair_profile.label = 'Failed'
+        finance.add_update("Please get Gabe to check Eric's Logs & Update the Tag Transfer from Parts to Movements")
+        finance.commit()
+        raise UserError
 
 
 @log_catcher_decor
