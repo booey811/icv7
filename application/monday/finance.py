@@ -84,9 +84,10 @@ def import_account_specific_data(finance_item, external_item):
         if not all([store, company, shortcode]):
             raise ExternalDataImportError(external_item, ["Store Code", "Company", "Invoicing Shortcode"])
 
-        finance_item.shortcode.value = shortcode
-        finance_item.store.value = store
-        finance_item.sales_status.label = "Zara iPods"
+        finance_item.shortcode.value = shortcode  # Required to route to the correct invoice
+        finance_item.store.value = store  # Store code required for invoice
+        finance_item.sales_status.label = "Zara iPods"  # Set sales Status for filtering via dashboard
+        finance_item.max_cost.value = 100  # Maximum cost for iPod Repairs
         finance_item.commit()
         return True
 

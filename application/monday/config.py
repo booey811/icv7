@@ -386,7 +386,7 @@ STANDARD_REPAIR_OPTIONS = {
     "iPhone": [133, 74, 71, 54, 70, 7, 65, 73, 99, 76, 66, 88, 75, 83, 84],
     "Apple Watch": [133, 69, 138],
     "iPad": [133, 30, 69, 54, 99],
-    "MacBook": [133, 71, 54, 119, 32, 38]
+    "MacBook": [133, 71, 54, 119, 32, 38, 33, 117]
 }
 REPAIR_COLOURS = {
     'STANDARD_REPAIR_COLOURS': [
