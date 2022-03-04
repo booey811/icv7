@@ -511,8 +511,13 @@ def create_or_update_invoice(webhook, logger, test=None):
         finance.invoice_generation.label = "Validation Error"
         finance.commit()
         raise UserError
-
-    corporate = BaseItem(logger, corp_items[0].id)
+    elif not corp_items:
+        logger.log(f"CANNOT CREATE INVOICE: No Corporate Account Setup for {finance.name}")
+        finance.invoice_generation.label = "Validation Error"
+        finance.commit()
+        raise UserError
+    else:
+        corporate = BaseItem(logger, corp_items[0].id)
 
     # Check financial Item validity against corporate item
     try:
