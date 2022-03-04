@@ -232,7 +232,9 @@ def generate_products_from_product_generator():
     except ChallengeReceived as e:
         return e.token
 
-    utils_exec.generate_repair_set()
+    q_hi.enqueue(
+        f=utils_exec.generate_repair_set
+    )
 
     return ""
 
