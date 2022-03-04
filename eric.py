@@ -486,6 +486,11 @@ def create_or_update_invoice(webhook, logger, test=None):
     corp_search_item = BaseItem(logger, board_id=1973442389)  # Corporate Board ID
     if finance.shortcode.value:
         corp_items = corp_search_item.shortcode.search(finance.shortcode.value)
+        if not corp_items:
+            logger.log(f"CANNOT CREATE INVOICE: No Corporate Account Setup for {finance.name}")
+            finance.invoice_generation.label = "Validation Error"
+            finance.commit()
+            raise UserError
     elif ticket and ticket.organisation:
         corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
     elif ticket and not ticket.organisation:
