@@ -479,13 +479,21 @@ def create_or_update_invoice(webhook, logger, test=None):
     # Assemble Items
     subitems = [BaseItem(finance.logger, item.id) for item in finance.moncli_obj.subitems]
     main = BaseItem(logger, finance.main_id.value)
-    ticket = EricTicket(logger, main.zendesk_id.value)
+    ticket = None
+    if main.zendesk_id.value:
+        ticket = EricTicket(logger, main.zendesk_id.value)
 
     corp_search_item = BaseItem(logger, board_id=1973442389)  # Corporate Board ID
     if finance.shortcode.value:
         corp_items = corp_search_item.shortcode.search(finance.shortcode.value)
-    else:
+    elif ticket:
         corp_items = corp_search_item.zendesk_org_id.search(ticket.organisation['id'])
+    else:
+        logger.log("CANNOT CREATE INVOICE: No Ticket Associated with Financial Item, and now Shortcode Provided")
+        finance.invoice_generation.label = "Validation Error"
+        finance.commit()
+        raise UserError
+
     if len(corp_items) > 1:
         # Should never happen
         raise Exception(f"Found too Many Corporate Accounts When Searching for {ticket.organisation['id']}")
