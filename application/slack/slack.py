@@ -19,7 +19,7 @@ TEST_CHANNEL = "C036M43NBR6"
 def _test_auth():
 	url = "auth.test"
 	method = 'POST'
-	info = _send_request(method, url)
+	info = _send_request(url, method)
 	return info
 
 
@@ -135,6 +135,8 @@ class ElementBuilder:
 
 
 class OptionsBuilder:
+	"""object to construct options for nesting within elements. should contain methods to produce the options array
+	for all elements"""
 	def __init__(self):
 		pass
 

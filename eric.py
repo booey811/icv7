@@ -660,5 +660,3 @@ def messenger_config():
     res.construct_message({'one': 1, 'two': 2})
     res.post()
     return res
-
-raise Exception("DEVELOP FROM HERE")
