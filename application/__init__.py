@@ -12,6 +12,7 @@ from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting, xero_ex
 from .zendesk import helper as zen_help
 from .zendesk import fields
+from .slack import slack, blocks
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 

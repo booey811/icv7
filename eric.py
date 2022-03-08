@@ -7,10 +7,9 @@ import rq
 from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-    EricTicket, financial, CustomLogger, xero_ex, mon_ex
+    EricTicket, financial, CustomLogger, slack, blocks, xero_ex, mon_ex
 from utils.tools import refurbs
 from application.monday import config as mon_config
-from application.xero import exceptions as xero_exceptions
 from worker import conn
 
 q_hi = rq.Queue("high", connection=conn)
@@ -634,5 +633,4 @@ class DataError(Exception):
 
     def __init__(self, summary="Data Error: Not supplied"):
         self.summary = summary
-
 

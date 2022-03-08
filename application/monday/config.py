@@ -56,7 +56,8 @@ BOARD_MAPPING_DICT = {
             "text8": "passcode",
             "text6": "zendesk_id",
             "collection_date": "repaired_date",
-            "status_183": "user_errors"
+            "status_183": "user_errors",
+            'date6': 'booking_date'
         },
         "zendesk": [
             'status4',  # Status
