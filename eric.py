@@ -7,7 +7,7 @@ import rq
 from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-    EricTicket, financial, CustomLogger, slack, blocks, xero_ex, mon_ex
+    EricTicket, financial, CustomLogger, slack, blocks, components, xero_ex, mon_ex
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from worker import conn
@@ -654,3 +654,11 @@ class DataError(Exception):
     def __init__(self, summary="Data Error: Not supplied"):
         self.summary = summary
 
+
+def messenger_config():
+    res = slack.MessageBuilder()
+    res.construct_message({'one': 1, 'two': 2})
+    res.post()
+    return res
+
+raise Exception("DEVELOP FROM HERE")
