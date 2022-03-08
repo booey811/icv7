@@ -612,9 +612,29 @@ def create_monthly_invoice(webhook, logger, test=None):
 
     corporate.commit()
 
+
 @log_catcher_decor
-def test(webhook, logger, test=None):
-    raise UserError("Test Summary")
+def check_and_notify_for_stock(webhook, logger, test=None):
+    if test:
+        main = BaseItem(logger, test)
+    else:
+        main = BaseItem(logger, webhook["pulseId"])
+
+    repairs = inventory.get_repairs(main)
+
+    for repair in repairs:
+        # Check stock level
+        # Check whether item can be refurbed
+        # Commission Refurb or Notify CS to Delay Client
+        if int(repair.stock_level.value) < 1:  # Checking against 1 (not 0) to be safe
+
+            if repair.refurb_poss.value == 'On Refurb':  # Part can be refurbed - notify Refurb Dept.
+                pass
+            else:  # Part cannot be refurbed - Notify CS
+                pass
+
+        else:  # Part in Stock - Proceed with Booking
+            pass
 
 
 class EricLevelException(Exception):

@@ -224,6 +224,18 @@ def refurb_phones_initial_pc_report(test_id=None):
     return ''
 
 
+# Slack Callback URL
+@app.route("/slack/cb811slack/cb811", methods=["POST", "GET"])
+def slack_callbacks(test_id=None):
+    webhook = flask.request.get_data()
+    try:
+        data = verify_monday(webhook)['event']
+    except ChallengeReceived as e:
+        return e.token
+
+    return ''
+
+
 @app.route("/api/generate_products", methods=["POST"])
 def generate_products_from_product_generator():
 

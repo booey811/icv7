@@ -5,7 +5,7 @@ def multi_select_refurb_options():
     """returns a formatted Slack message block that quotes data regarding the repair in question and the stock available,
     with the response queuing actions within Eric"""
 
-    return [
+    return {'blocks': [
         {
             "type": "input",
             "element": {
@@ -58,6 +58,7 @@ def multi_select_refurb_options():
             }
         }
     ]
+    }
 
 
 def multi_select_refurb_message(main_item, list_of_parts):
@@ -93,3 +94,48 @@ def multi_select_refurb_message(main_item, list_of_parts):
     response_blocks.insert(0, header)
 
     return response_blocks
+
+
+def resp_test():
+    dct = {
+        "blocks": [{
+            "type": "actions",
+            "elements": [{
+                "type": "static_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select an item",
+                    "emoji": True
+                },
+                "options": [{
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Option1",
+                        "emoji": True
+                    },
+                    "value": "value-0"
+                },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Option2",
+                            "emoji": True
+                        },
+                        "value": "value-1"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Option3",
+                            "emoji": True
+                        },
+                        "value": "value-2"
+                    }
+                ],
+                "action_id": "actionId-3"
+            }
+            ]
+        }
+        ]
+    }
+    return dct

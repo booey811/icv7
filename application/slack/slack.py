@@ -57,13 +57,13 @@ def list_conversations():
     return info
 
 
-def post_message(list_of_blocks, channel=TEST_CHANNEL):
+def post_message(list_of_blocks_as_dict, channel=TEST_CHANNEL):
     url = 'chat.postMessage'
     method = 'POST'
 
     body = {
         'channel': channel,
-        'blocks': list_of_blocks,
+        'blocks': list_of_blocks_as_dict['blocks'],
         'unfurl_media': False
     }
 

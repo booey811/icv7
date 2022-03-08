@@ -86,7 +86,8 @@ BOARD_MAPPING_DICT = {
             "quantity": "stock_level",
             "sale_price": "sale_price",
             "status6": "device_type",
-            "partboard_id": "parts_id"
+            "partboard_id": "parts_id",
+            "mirror0": "refurb_poss"
         }
     },
     '985177480': {
