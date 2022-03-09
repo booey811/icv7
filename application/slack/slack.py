@@ -4,7 +4,7 @@ import os
 from pprint import pprint as p
 
 from .components import SINGLE_SELECT_OPTION, SINGLE_SELECT_BLOCK_WITH_RESPONSE
-from . import exceptions
+from . import exceptions, config
 
 BASE_URL = "https://slack.com/api/"
 
@@ -42,26 +42,41 @@ class MessageBuilder:
 	def __init__(self):
 		self._body = {}
 		self._reset()
-		self.blocks = BlockBuilder()
 
-	def post(self, channel=TEST_CHANNEL):
+	def post(self):
 		method = 'POST'
-		self._body['channel'] = channel
 		data = json.dumps(self._body)
 		info = _send_request('chat.postMessage', method, data)
-		print(f'=================== STATUS {info.status_code} ======================')
+		self._reset()
 		if info.status_code == 200:
 			return json.loads(info.text)
 		else:
-			p(json.loads(info.text))
+			raise exceptions.CouldNotPostMessage(info)
 
-	def construct_message(self, key_value_dict):
-		block = self.blocks.construct_actions_block(static_select=key_value_dict)
+	def attach_static_select_block(self, static_select_dictionary):
+		block = blocks.construct_actions_block(static_select_dictionary)
+		self._attach_block(block)
+
+	def attach_header_block(self, header_text):
+		block = blocks.construct_header_block(header_text)
+		self._attach_block(block)
+
+	def attach_markdown_block(self, markdown_text):
+		block = blocks.construct_markdown_block(markdown_text)
+		self._attach_block(block)
+
+	def set_channel(self, channel):
+		if channel not in config.CHANNELS:
+			raise exceptions.CannotGetChannel(channel, config.CHANNELS)
+		else:
+			self._body['channel'] = config.CHANNELS[channel]
+
+	def _attach_block(self, block):
 		self._body['blocks'].append(block)
 
 	def _reset(self):
 		dct = {
-			'channel': '',
+			'channel': config.CHANNELS['devtest'],
 			'blocks': []
 		}
 		self._body = dct
@@ -72,15 +87,15 @@ class BlockBuilder:
 		self.elementor = ElementBuilder()
 
 	def construct_actions_block(self, static_select: dict = None):
-
 		BL_TYPES = [
 			'actions'
 		]
-
 		block = self._basic_block_structure('actions')
-
 		if static_select:
-			element = self.elementor.construct_element('static_select', static_select)
+			element = elements.construct_element('static_select')
+			for key in static_select:
+				option = options.construct_single_select_option(key, static_select[key])
+				element['options'].append(option)
 		else:
 			raise exceptions.InvalidTypeSet(self, 'NOT DEVELOPED', BL_TYPES)
 
@@ -89,9 +104,21 @@ class BlockBuilder:
 		return block
 
 	@staticmethod
-	def _basic_block_structure(bl_type):
+	def construct_header_block(header_text):
+		dct = options.construct_header_option(header_text)
+		dct['type'] = 'header'
+		return dct
+
+	@staticmethod
+	def construct_markdown_block(markdown_text):
+		dct = options.construct_markdown_option(markdown_text)
+		dct['type'] = 'section'
+		return dct
+
+	@staticmethod
+	def _basic_block_structure(block_type):
 		dct = {
-			'type': bl_type,
+			'type': block_type,
 			'elements': [],
 			'block_id': 'BLOCKID-GABE'
 		}
@@ -100,32 +127,27 @@ class BlockBuilder:
 
 class ElementBuilder:
 	def __init__(self):
-		self._options = OptionsBuilder()
+		pass
 
-	def construct_element(self, el_type, text_value_dictionary):
-
+	def construct_element(self, el_type):
 		EL_TYPES = (
 			'static_select',
 		)
-
 		if el_type not in EL_TYPES:
 			raise exceptions.InvalidTypeSet(self, el_type, EL_TYPES)
-
-		element = self._basic_element_structure(el_type)
-
-		for key in text_value_dictionary:
-			option = self._options.construct_single_select_option(key, text_value_dictionary[key])
-			element['options'].append(option)
-
+		elif el_type == 'static_select':
+			element = self._static_select_element(el_type)
+		else:
+			raise exceptions.InvalidTypeSet(self, el_type, EL_TYPES)
 		return element
 
 	@staticmethod
-	def _basic_element_structure(el_type):
+	def _static_select_element(el_type):
 		dct = {
 			'type': el_type,
 			'placeholder': {
 				'type': 'plain_text',
-				'text': 'Default Placeholder Text',
+				'text': 'Please Choose A Response',
 				'emoji': True
 			},
 			'options': [],
@@ -137,6 +159,7 @@ class ElementBuilder:
 class OptionsBuilder:
 	"""object to construct options for nesting within elements. should contain methods to produce the options array
 	for all elements"""
+
 	def __init__(self):
 		pass
 
@@ -150,20 +173,48 @@ class OptionsBuilder:
 		Returns:
 		dict: the formatted single select option dictionary
 		"""
-		option = self._single_select_option()
-		option["text"]["text"] = label
-		option["value"] = str(value)
-
+		option = self._single_select(str(label), str(value))
 		return option
 
+	def construct_markdown_option(self, markdown_text):
+		return self._markdown(markdown_text)
+
+	def construct_header_option(self, header_text):
+		return self._header(header_text)
+
 	@staticmethod
-	def _single_select_option():
+	def _single_select(label, value):
 		dct = {
 			"text": {
 				"type": "plain_text",
-				"text": "",
+				"text": label,
 				"emoji": True
 			},
-			"value": ""
+			"value": value
 		}
 		return dct
+
+	@staticmethod
+	def _markdown(markdown_text):
+		dct = {
+			"text": {
+				"type": "mrkdwn",
+				"text": markdown_text
+			}
+		}
+		return dct
+
+	@staticmethod
+	def _header(header_text):
+		return {
+			'text': {
+				"type": "plain_text",
+				"text": header_text,
+				"emoji": True
+			}
+		}
+
+
+blocks = BlockBuilder()
+elements = ElementBuilder()
+options = OptionsBuilder()

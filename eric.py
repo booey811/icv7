@@ -7,7 +7,7 @@ import rq
 from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-    EricTicket, financial, CustomLogger, slack, blocks, components, xero_ex, mon_ex
+    EricTicket, financial, CustomLogger, slack, helper as s_help, xero_ex, mon_ex
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from worker import conn
@@ -28,16 +28,24 @@ def log_catcher_decor(eric_function):
             logger.log("============================ MONDAY SUBMISSION ERROR ==============================")
             for item in e.messages:
                 logger.log(item)
-            logger.summary = '\n'.join(e.messages)
+            logger.summary = 'Monday Spazzed Out During Submission'
             logger.commit("raised")
+            raise e
         except UserError as e:
             logger.log("User Error Encountered")
             logger.summary = e.summary
             logger.commit("user")
+            raise e
+        except AwaitingResponse as e:
+            logger.log("Awaiting Response From User")
+            logger.summary = e.summary
+            logger.commit('waiting')
+            raise e
         except BaseException as e:
             logger.log(str(e))
             logger.summary = str(e)
             logger.commit("error")
+            raise e
     return wrapper
 
 
@@ -615,26 +623,73 @@ def create_monthly_invoice(webhook, logger, test=None):
 
 @log_catcher_decor
 def check_and_notify_for_stock(webhook, logger, test=None):
+
     if test:
         main = BaseItem(logger, test)
     else:
         main = BaseItem(logger, webhook["pulseId"])
 
-    repairs = inventory.get_repairs(main)
+    repairs = inventory.get_repairs(main, generic=True)
+    messenger = slack.MessageBuilder()
 
     for repair in repairs:
         # Check stock level
         # Check whether item can be refurbed
         # Commission Refurb or Notify CS to Delay Client
-        if int(repair.stock_level.value) < 1:  # Checking against 1 (not 0) to be safe
+        stock_level = repair.stock_level.value
+        if not stock_level:
+            stock_level = 0
+        else:
+            stock_level = int(float(stock_level))
 
+        if stock_level < 1:  # Checking against 1 (not 0) to be safe
+            ticket = EricTicket(logger, main.zendesk_id.value)
+            notification_markdown = s_help.get_refurb_request_markdown(main, repairs)
+            messenger.attach_header_block("Refurbishment Request")
+            messenger.attach_markdown_block(notification_markdown)
             if repair.refurb_poss.value == 'On Refurb':  # Part can be refurbed - notify Refurb Dept.
-                pass
+                messenger.attach_static_select_block({
+                    'Will Be Ready for Deadline': 'success',
+                    'Do Not Have the Parts': 'failure-1',
+                    'Do Not Have Time': 'failure-2',
+                    'Cannot For Another Reason': 'other'
+                })
+                messenger.set_channel('refurb-request')
+                messenger.post()
+                ticket.add_comment(
+                    public=False,
+                    comment_body='We do not have the required stock for this repair, '
+                                 'but have requested that one is created by the refurb department.\nPlease wait for '
+                                 'their response.'
+                )
+                raise AwaitingResponse('Refurb Requested - Waiting For Refurb Department to Confirm Viability')
+
             else:  # Part cannot be refurbed - Notify CS
-                pass
+                messenger.set_channel('general')
+                messenger.attach_header_block("Required Actions (Client Services):")
+                messenger.attach_markdown_block("Please ascertain whether we can have the required parts delivered "
+                                                "to us and when the delivery would take place, so that you may"
+                                                "pass this information onto the client.\n"
+                                                f"Their <https://icorrect.zendesk.com/agent/"
+                                                f"tickets/{ticket.id}|Ticket({ticket.id})> "
+                                                f"status has been set to Open")
+                messenger.post()
+                ticket.zenpy_ticket.status = 'open'
+                ticket.add_comment(
+                    public=False,
+                    comment_body="Please ascertain whether we can have the required parts delivered "
+                                 "to us and when the delivery would take place, so that you may "
+                                 "pass this information onto the client"
+                )
+                ticket.commit()
 
         else:  # Part in Stock - Proceed with Booking
             pass
+
+
+@log_catcher_decor
+def process_slack_refurb_response(webhook, logger, test=None):
+    pass
 
 
 class EricLevelException(Exception):
@@ -655,8 +710,8 @@ class DataError(Exception):
         self.summary = summary
 
 
-def messenger_config():
-    res = slack.MessageBuilder()
-    res.construct_message({'one': 1, 'two': 2})
-    res.post()
-    return res
+class AwaitingResponse(Exception):
+
+    def __init__(self, summary="Awaiting User Response"):
+        self.summary = summary
+

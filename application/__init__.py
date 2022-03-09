@@ -12,7 +12,7 @@ from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting, xero_ex
 from .zendesk import helper as zen_help
 from .zendesk import fields
-from .slack import slack, blocks, components
+from .slack import slack, helper
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 
@@ -173,17 +173,17 @@ class CustomLogger:
             "success": "Success",
             "raised": "Raised",
             "error": "Unexpected",
-            "user": "User Error"
+            "user": "User Error",
+            'waiting': "Waiting for User"
         }
 
         log_label = LABELS[log_level]
 
-        self._create_log()
         col_vals = {
             'new_log_type': {'label': log_label},
             "text7": str(self.func),
             "text2": str(os.getenv("ENV")),
-            "long_text": str(self.summary)
+            "long_text": str(self.summary)[:15]
         }
 
         if log_level == "success":
@@ -195,6 +195,7 @@ class CustomLogger:
         )
 
         if log_level != 'success':
+            self._create_log()
             file_column = log_item.get_column_value(id='file')
             log_item.add_file(file_column, self._log_file_path)
 

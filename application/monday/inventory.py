@@ -25,13 +25,13 @@ COLOURED_PARTS = [
 ]
 
 
-def construct_search_terms_for_parts(mainboard_item: BaseItem):
+def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False):
     mainboard_item.log(f"Generating Search Terms for {mainboard_item.name}: {mainboard_item.mon_id}")
 
     terms = []
 
     # If no repair is supplied, retrieve the following
-    if not mainboard_item.repairs.ids:
+    if not mainboard_item.repairs.ids or generic:
         mainboard_item.log("No Repairs Supplied - Fetching Screens, Battery & Rear Cam")
         terms.append(f"{mainboard_item.device.ids[0]}-{69}-{10}")  # Device screen black uni
         terms.append(f"{mainboard_item.device.ids[0]}-{84}-{10}")  # Device screen black tosh
@@ -64,7 +64,7 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem):
 
             terms.append(search_term)
 
-        return terms
+    return terms
 
 
 def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quantity, source_object: BaseItem,
@@ -283,7 +283,7 @@ def get_stock_info(mainboard_item: BaseItem):
     return result
 
 
-def get_repairs(mainboard_item: BaseItem, create_if_not=False):
+def get_repairs(mainboard_item: BaseItem, create_if_not=False, generic=False):
     """"""
 
     mainboard_item.log(f"Getting Repairs for {mainboard_item.name}: {mainboard_item.mon_id}")
@@ -295,7 +295,12 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
     eric_repairs = []
 
     # Get search terms from device and repairs (and colour) columns
-    for item in construct_search_terms_for_parts(mainboard_item):
+    if generic:
+        search_terms = construct_search_terms_for_parts(mainboard_item, generic)
+    else:
+        search_terms = construct_search_terms_for_parts(mainboard_item)
+
+    for item in search_terms:
         # Search using search item's relevant column search method
         found_ids = [item["id"] for item in repairs_search_item.combined_id.search(item)]
 
@@ -305,7 +310,7 @@ def get_repairs(mainboard_item: BaseItem, create_if_not=False):
             if create_if_not:
                 eric_repairs.append(item)
             else:
-                eric_repairs.append(False)
+                continue
 
         mainboard_item.log(f"Found IDS: {found_ids}")
         diff = list(set(found_ids) - set(repair_ids))
@@ -423,3 +428,4 @@ def void_repairs_profile(financial_item):
     financial_item.stock_adjust.label = "Voided"
 
     financial_item.commit()
+
