@@ -227,12 +227,24 @@ def refurb_phones_initial_pc_report(test_id=None):
 # Slack Callback URL
 @app.route("/slack/cb811slack/cb811", methods=["POST", "GET"])
 def slack_callbacks(test_id=None):
-    webhook = flask.request.get_data()
-    try:
-        data = verify_monday(webhook)['event']
-    except ChallengeReceived as e:
-        return e.token
+    from pprint import pprint as p
+    from urllib.parse import parse_qs
 
+    webhook_dec = flask.request.get_data().decode('utf-8')
+
+    webhook_human = parse_qs(webhook_dec)['payload']
+
+    webhook_dct = json.loads(webhook_human[0])
+
+    p(webhook_dct)
+
+
+    info = webhook_dct['events']['body']['payload']
+
+
+    p(info)
+
+    p(json.loads(info))
     return ''
 
 

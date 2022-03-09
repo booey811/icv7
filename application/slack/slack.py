@@ -39,9 +39,11 @@ def _send_request(url_end, method, data=''):
 
 class MessageBuilder:
 
-	def __init__(self):
+	def __init__(self   ):
 		self._body = {}
 		self._reset()
+
+		raise Exception("NEED TO get block and element IDs down to their appropriate objects")
 
 	def post(self):
 		method = 'POST'
@@ -53,7 +55,7 @@ class MessageBuilder:
 		else:
 			raise exceptions.CouldNotPostMessage(info)
 
-	def attach_static_select_block(self, static_select_dictionary):
+	def attach_static_select_block(self, static_select_dictionary, block_id):
 		block = blocks.construct_actions_block(static_select_dictionary)
 		self._attach_block(block)
 
@@ -86,13 +88,13 @@ class BlockBuilder:
 	def __init__(self):
 		self.elementor = ElementBuilder()
 
-	def construct_actions_block(self, static_select: dict = None):
+	def construct_actions_block(self, static_select: dict = None, block_id='testdefault'):
 		BL_TYPES = [
 			'actions'
 		]
-		block = self._basic_block_structure('actions')
+		block = self._basic_block_structure('actions', block_id)
 		if static_select:
-			element = elements.construct_element('static_select')
+			element = elements.construct_element('static_select', block_id)
 			for key in static_select:
 				option = options.construct_single_select_option(key, static_select[key])
 				element['options'].append(option)
@@ -116,11 +118,11 @@ class BlockBuilder:
 		return dct
 
 	@staticmethod
-	def _basic_block_structure(block_type):
+	def _basic_block_structure(block_type, block_id):
 		dct = {
 			'type': block_type,
 			'elements': [],
-			'block_id': 'BLOCKID-GABE'
+			'block_id': block_id
 		}
 		return dct
 
@@ -129,20 +131,20 @@ class ElementBuilder:
 	def __init__(self):
 		pass
 
-	def construct_element(self, el_type):
+	def construct_element(self, el_type, block_id):
 		EL_TYPES = (
 			'static_select',
 		)
 		if el_type not in EL_TYPES:
 			raise exceptions.InvalidTypeSet(self, el_type, EL_TYPES)
 		elif el_type == 'static_select':
-			element = self._static_select_element(el_type)
+			element = self._static_select_element(el_type, block_id)
 		else:
 			raise exceptions.InvalidTypeSet(self, el_type, EL_TYPES)
 		return element
 
 	@staticmethod
-	def _static_select_element(el_type):
+	def _static_select_element(el_type, element_id):
 		dct = {
 			'type': el_type,
 			'placeholder': {
@@ -151,7 +153,7 @@ class ElementBuilder:
 				'emoji': True
 			},
 			'options': [],
-			'action_id': 'ELEMENTID-GABE'
+			'action_id': element_id
 		}
 		return dct
 

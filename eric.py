@@ -653,7 +653,9 @@ def check_and_notify_for_stock(webhook, logger, test=None):
                     'Do Not Have the Parts': 'failure-1',
                     'Do Not Have Time': 'failure-2',
                     'Cannot For Another Reason': 'other'
-                })
+                },
+                    'refurb_request'
+                )
                 messenger.set_channel('refurb-request')
                 messenger.post()
                 ticket.add_comment(
