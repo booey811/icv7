@@ -631,10 +631,13 @@ def create_monthly_invoice(webhook, logger, test=None):
 
 def begin_slack_repair_process(body, client):
 	# Get active user IDs
-	if os.environ["ENV"] == 'devlocal':  # local development, use Safan as test user
-		username = 'safan'
-	else:
-		username = slack_config.USER_IDS[body['user_id']]
+	# if os.environ["ENV"] == 'devlocal':  # local development, use Safan as test user
+	# 	username = 'safan'
+	# else:
+	# 	username = slack_config.USER_IDS[body['user_id']]
+
+	# DURING DEVELOPMENT WE WILL USE SAFAN AS THE SAMPLE USER
+	username = 'safan'
 
 	# Show loading screen
 	info = client.views_open(
