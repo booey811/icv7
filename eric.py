@@ -666,12 +666,9 @@ def begin_slack_repair_process(body, client):
 
 
 def begin_specific_slack_repair(body, client):
-	if os.environ["ENV"] == 'devlocal':  # local testing, supply item ID
-		main_item = BaseItem(CustomLogger(), 1776719823)  # ITem ID from the Admin/Dev Group
-	else:
-		metadata = json.loads(body['private_metadata'])
-		p(metadata)
-		main_item = main_item = BaseItem(CustomLogger, metadata['main_id'])
+
+	metadata = json.loads(body['view']['private_metadata'])
+	main_item = BaseItem(CustomLogger(), metadata['main_id'])
 
 	view = views.specific_repair_view(main_item)
 
@@ -686,9 +683,8 @@ def test_route(body, client, say):
 	if os.environ["ENV"] == 'devlocal':  # local testing, supply item ID
 		main_item = BaseItem(CustomLogger(), 1776719823)
 	else:
-		metadata = json.loads(body['private_metadata'])
-		p(metadata)
-		main_item = main_item = BaseItem(CustomLogger, metadata['main_id'])
+		metadata = json.loads(body['view']['private_metadata'])
+		main_item = BaseItem(CustomLogger, metadata['main_id'])
 
 	view = views.specific_repair_view(main_item)
 
