@@ -26,29 +26,36 @@ def create_slack_app():
 def _add_routing(app):
 	if os.environ["SLACK"] == "ON":
 
+		# =========== Commands
+
 		@app.command("/test")
 		def run_test_action(ack, body, logger, client, say):
 			ack()
-
 			eric.test_route(body, client, say)
 
 		@app.command("/devrepair")
 		def begin_slack_repair_process(ack, body, logger, client):
 			logger.info("Repair process request received")
 			ack()
-
 			eric.begin_slack_repair_process(body, client)
-
 			return True
+
+		# =========== Action Block Submissions
 
 		@app.action("begin-repair-button-confirm")
 		def begin_specific_slack_repair(ack, body, logger, client):
 			logger.info("Response to Repair Beginning Received")
 			ack()
-
 			eric.begin_specific_slack_repair(body, client)
-
 			return True
+
+		# =========== View Submissions
+
+		@app.view("repair_submission")
+		def repair_info_submission(ack, body, logger, client):
+			logger.info("Response to Repair Info Submission")
+			ack()
+			eric.repair_info_submission(body, client)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

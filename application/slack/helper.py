@@ -1,4 +1,7 @@
 from datetime import datetime, timedelta
+import json
+
+from application import BaseItem
 
 
 def get_refurb_request_markdown(main_item, repairs):
@@ -28,6 +31,24 @@ def get_refurb_request_markdown(main_item, repairs):
 	b_date, d_date = format_dates(main_item.booking_date.value)
 
 	return f"*Low Stock Notification*\nWe have received a repair for " \
-		f"<https://icorrect.monday.com/boards/349212843/pulses/{main_item.mon_id}|{main_item.name}> that we do " \
-		f"not have the stock for.\n\n*Refurbishment Deadline*:\n{d_date}\n*Booking Date/Time*:\n{b_date}\n\n" \
-		f"*Required Parts*:\n{parts_formatted}"
+	       f"<https://icorrect.monday.com/boards/349212843/pulses/{main_item.mon_id}|{main_item.name}> that we do " \
+	       f"not have the stock for.\n\n*Refurbishment Deadline*:\n{d_date}\n*Booking Date/Time*:\n{b_date}\n\n" \
+	       f"*Required Parts*:\n{parts_formatted}"
+
+
+def encode_metadata(main_item: BaseItem = '', repairs: list = (), parts: list = (), financial: list = ()):
+	def _convert_lists(lst):
+
+		if lst:
+			", ".join([item.mon_id for item in lst])
+		else:
+			return ''
+
+	dct = {
+		'main': main_item.mon_id,
+		'repairs': _convert_lists(repairs),
+		'parts': _convert_lists(parts),
+		'financial': _convert_lists(financial)
+	}
+
+	return json.dumps(dct)

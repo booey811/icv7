@@ -9,7 +9,7 @@ import rq
 from moncli.api_v2.exceptions import MondayApiError
 
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config
+	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from worker import conn
@@ -658,6 +658,8 @@ def begin_slack_repair_process(body, client):
 
 	resp = info.data
 
+	print(f'============== VIEW ID: {resp["view"]["id"]}')
+
 	client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
@@ -666,11 +668,10 @@ def begin_slack_repair_process(body, client):
 
 
 def begin_specific_slack_repair(body, client):
-
 	metadata = json.loads(body['view']['private_metadata'])
-	main_item = BaseItem(CustomLogger(), metadata['main_id'])
+	main_item = BaseItem(CustomLogger(), metadata['main'])
 
-	view = views.loading(f"Getting Repair Data: {metadata['main_id']}")
+	view = views.loading(f"Getting Repair Data: {metadata['main']}")
 
 	resp = client.views_update(
 		view_id=body["view"]["id"],
@@ -680,27 +681,41 @@ def begin_specific_slack_repair(body, client):
 
 	view = views.specific_repair_view(main_item)
 
-	client.views_update(
+	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
 		view=view
 	)
 
 
-def test_route(body, client, say):
-	if os.environ["ENV"] == 'devlocal':  # local testing, supply item ID
-		main_item = BaseItem(CustomLogger(), 1776719823)
-	else:
-		metadata = json.loads(body['view']['private_metadata'])
-		main_item = BaseItem(CustomLogger, metadata['main_id'])
+def repair_info_submission(body, client):
 
-	view = views.specific_repair_view(main_item)
-
-	client.views_update(
-		external_id="pre_repair_info",
-		hash=body["view"]["hash"],
-		view=view
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.loading(f"Preparing Repairs Submission")
 	)
+
+	metadata = json.loads(body['view']['private_metadata'])
+	main_item = BaseItem(CustomLogger(), metadata['main'])
+
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
+		view=views.repair_submission(main_item)
+	)
+
+
+
+
+def test_route(body, client, say):
+	raise Exception("NO TESTS HERE")
+
+
+# if os.environ["ENV"] == 'devlocal':  # local testing, supply item ID
+# 	main_item = BaseItem(CustomLogger(), 1776719823)
+# else:
+# 	metadata = json.loads(body['view']['private_metadata'])
+# 	main_item = BaseItem(CustomLogger, metadata['main_id'])
 
 
 #

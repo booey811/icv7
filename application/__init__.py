@@ -6,14 +6,14 @@ import flask
 
 
 from . import config
-from .monday import BaseItem, inventory, financial, mon_ex
+from .monday import BaseItem, inventory, financial, mon_ex, mon_config
 from .utilities import clients
 from .zendesk.ticket import EricTicket
 from .phonecheck import phonecheck, CannotFindReportThroughIMEI
 from .xero import accounting, xero_ex
 from .zendesk import helper as zen_help
 from .zendesk import fields
-from .slack import views, config as slack_config
+from .slack import views, config as slack_config, helper as s_help
 
 log_board = clients.monday.system.get_boards(ids=[1760764088])[0]
 
