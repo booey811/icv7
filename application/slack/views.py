@@ -4,15 +4,24 @@ import json
 
 def _convert_monday_time_to_string(monday_date_column):
 	if monday_date_column.date:
-		date_s = monday_date_column.date.split("-")
-		time_s = monday_date_column.time
+		try:
+			date = datetime.datetime.strptime(monday_date_column.value, '%Y-%m-%d %H:%M')
+		except ValueError:
+			try:
+				date = datetime.datetime.strptime(monday_date_column.value, '%Y-%m-%d')
+			except ValueError:
+				return "Not Provided (This REALLY Shouldn't Happen (col has date but does match strptime options))"
+		return date.strftime('%a %-d %b %H:%M')
 
-		date = datetime.datetime(year=date_s[0], month=date_s[1], day=date_s[2]).strftime("%a %d %b %Y")
-		if time_s:
-			date = date + ": " + time_s
-		return date
 	else:
 		return "Not Provided (This Shouldn't Happen)"
+
+
+def _get_repairs_string(main_item):
+	if main_item.repairs.labels:
+		return ", ".join(main_item.repairs.labels)
+	else:
+		return 'No Repairs Requested, please diagnose the device'
 
 
 def loading(footnotes=''):
@@ -101,7 +110,7 @@ def pre_repair_info(main_item):
 				"elements": [
 					{
 						"type": "plain_text",
-						"text": f"Requested Repairs: {repairs_string}",
+						"text": f"Requested Repairs: {_get_repairs_string(main_item)}",
 						"emoji": True
 					}
 				]
@@ -206,7 +215,7 @@ def specific_repair_view(main_item):
 				"elements": [
 					{
 						"type": "plain_text",
-						"text": f"{repairs_string}",
+						"text": f"{_get_repairs_string(main_item)}",
 						"emoji": True
 					}
 				]
