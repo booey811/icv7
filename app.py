@@ -15,6 +15,7 @@ from worker import conn
 from application import create_app, verify_monday, ChallengeReceived
 import eric
 from utils import exec as utils_exec
+from slack_factory import create_slack_app
 
 # Setup
 logging.basicConfig(level=logging.DEBUG)
@@ -26,42 +27,10 @@ q_hi = Queue("high", connection=conn)
 
 # ===================================== SLACK APP =====================================
 # Slack App in Socket Mode
-slacker = App(token=os.environ["SLACK_BOT_TOKEN"])
-
-
-# TESTING ROUTEs
-@slacker.command("/test")
-def run_test_action(ack, body, logger, client, say):
-
-	ack()
-
-	eric.test_route(body, client, say)
-
-
-# Functionalities
-@slacker.command("/devrepair")
-def begin_slack_repair_process(ack, body, logger, client):
-	logger.info("Repair process request received")
-	ack()
-
-	eric.begin_slack_repair_process(body, client)
-
-	return True
-
-
-@slacker.action("begin-repair-button-confirm")
-def begin_specific_slack_repair(ack, body, logger, client):
-	logger.info("Response to Repair Beginning Received")
-	ack()
-
-	eric.begin_specific_slack_repair(body, client)
-
-	return True
-
-
-# Connect to Flask App through Handler
-handler = SocketModeHandler(slacker, os.environ["SLACK_APP_TOKEN"])
-handler.connect()
+slacker = create_slack_app()
+# # Connect to Flask App through Handler
+# handler = SocketModeHandler(slacker, os.environ["SLACK_APP_TOKEN"])
+# handler.connect()
 
 # ===================================== ERIC APP =====================================
 

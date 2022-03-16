@@ -4,6 +4,7 @@ from datetime import datetime
 
 import flask
 
+
 from . import config
 from .monday import BaseItem, inventory, financial, mon_ex
 from .utilities import clients
@@ -33,6 +34,8 @@ def verify_monday(webhook):
         raise ChallengeReceived(authtoken)
     else:
         return data
+
+
 
 
 def create_app():
