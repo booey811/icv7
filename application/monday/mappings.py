@@ -489,6 +489,14 @@ class DateColumn(BaseColumnValue):
         # Stage change
         self._stage_change()
 
+    @property
+    def date(self):
+        return self._date
+
+    @property
+    def time(self):
+        return self._time
+
     def _stage_change(self):
         self._eric.staged_changes[self.id] = {'date': self._date}
 

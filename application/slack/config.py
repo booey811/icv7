@@ -4,6 +4,15 @@ CHANNELS = {
 	'refurb-request': 'C0366HVGJMT'
 }
 
+USER_IDS = {
+	'U024YN88KR9': 'meesha',
+	'U025NA4UB96': 'mike',
+	'U0254LU0CRJ': 'ricky',
+	'U02KY1GTC10': 'safan',
+	'U034UTKPG3S': 'seb',
+	'U024H79546T': 'gabe'
+}
+
 _ACTIONS = {
 	'refurb_request': ''
 }
