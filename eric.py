@@ -670,11 +670,19 @@ def begin_specific_slack_repair(body, client):
 	metadata = json.loads(body['view']['private_metadata'])
 	main_item = BaseItem(CustomLogger(), metadata['main_id'])
 
+	view = views.loading(f"Getting Repair Data: {metadata['main_id']}")
+
+	resp = client.views_update(
+		view_id=body["view"]["id"],
+		hash=body["view"]["hash"],
+		view=view
+	)
+
 	view = views.specific_repair_view(main_item)
 
 	client.views_update(
-		view_id=body["view"]["id"],
-		hash=body["view"]["hash"],
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
 		view=view
 	)
 

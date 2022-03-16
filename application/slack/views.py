@@ -227,6 +227,58 @@ def specific_repair_view(main_item):
 					"text": "Repair Notes",
 					"emoji": True
 				}
+			},
+			{
+				"type": "input",
+				'optional': False,
+				"element": {
+					"type": "static_select",
+					"placeholder": {
+						"type": "plain_text",
+						"text": "What's happening with the repair?",
+						"emoji": True
+					},
+					"options": [
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "Repair Completed! Next!",
+								"emoji": True
+							},
+							"value": "value-0"
+						},
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "Cannot Complete - Need More Information",
+								"emoji": True
+							},
+							"value": "value-1"
+						},
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "Urgent Repair Request Received (Pause current repair)",
+								"emoji": True
+							},
+							"value": "value-2"
+						},
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "I've Got a Different Issue",
+								"emoji": True
+							},
+							"value": "value-2"
+						}
+					],
+					"action_id": "static_select-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Repair Result",
+					"emoji": True
+				}
 			}
 		]
 	}
