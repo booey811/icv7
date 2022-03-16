@@ -673,9 +673,8 @@ def begin_specific_slack_repair(body, client):
 
 	view = views.loading(f"Getting Repair Data: {metadata['main']}")
 
-	resp = client.views_update(
-		view_id=body["view"]["id"],
-		hash=body["view"]["hash"],
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
 		view=view
 	)
 
@@ -689,8 +688,7 @@ def begin_specific_slack_repair(body, client):
 
 
 def repair_info_submission(body, client):
-
-	resp = client.views_open(
+	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading(f"Preparing Repairs Submission")
 	)
@@ -702,6 +700,36 @@ def repair_info_submission(body, client):
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
 		view=views.repair_submission(main_item)
+	)
+
+def handle_urgent_repair(body, client):
+
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.loading("We haven't developed this yet....... Nothing is loading")
+	)
+
+def handle_other_repair_issue(body, client):
+
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.loading("We haven't developed this yet....... Nothing is loading")
+	)
+
+
+def tech_unable_to_complete_repair(body, client):
+
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.loading("We haven't developed this yet....... Nothing is loading")
+	)
+
+
+def process_waste_entry(body, client):
+
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.loading("We haven't developed this yet....... Nothing is loading")
 	)
 
 

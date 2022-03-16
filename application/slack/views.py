@@ -104,10 +104,20 @@ def pre_repair_info(main_item):
 
 	basic = {
 		"type": "modal",
-		"callback_id": "repair_info_flow",
+		"callback_id": "pre_repair_info",
 		"title": {
 			"type": "plain_text",
 			"text": f"Repair: {item_id}",
+			"emoji": True
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Begin Repair",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
 			"emoji": True
 		},
 		"private_metadata": helper.encode_metadata(main_item),
@@ -160,24 +170,6 @@ def pre_repair_info(main_item):
 					}
 				]
 			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": "Click here to begin the repair   -->"
-				},
-				"accessory": {
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Begin",
-						"emoji": True
-					},
-					"style": "primary",
-					"value": item_id,
-					"action_id": "begin-repair-button-confirm"
-				}
-			}
 		]
 	}
 
@@ -255,7 +247,7 @@ def specific_repair_view(main_item):
 				"element": {
 					"type": "plain_text_input",
 					"multiline": True,
-					"action_id": "plain_text_input-action"
+					"action_id": "repair_notes"
 				},
 				"label": {
 					"type": "plain_text",
@@ -265,19 +257,24 @@ def specific_repair_view(main_item):
 			},
 			{
 				"type": "input",
-				'optional': False,
+				"dispatch_action": True,
+				"label": {
+					"type": "plain_text",
+					"text": "Are you moving on from this repair?",
+					"emoji": True
+				},
 				"element": {
 					"type": "static_select",
 					"placeholder": {
 						"type": "plain_text",
-						"text": "What's happening with the repair?",
+						"text": "Let us know what happened",
 						"emoji": True
 					},
 					"options": [
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "Repair Completed! Next!",
+								"text": "Repair Completed",
 								"emoji": True
 							},
 							"value": "complete"
@@ -285,15 +282,15 @@ def specific_repair_view(main_item):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "Cannot Complete - Need More Information",
+								"text": "I am unable to complete the repair right now",
 								"emoji": True
 							},
-							"value": "info"
+							"value": "failed"
 						},
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "Urgent Repair Request Received (Pause current repair)",
+								"text": "A more urgent repair has come in",
 								"emoji": True
 							},
 							"value": "urgent"
@@ -301,20 +298,15 @@ def specific_repair_view(main_item):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I've Got a Different Issue",
+								"text": "I've got a different issue",
 								"emoji": True
 							},
-							"value": "help"
+							"value": "other"
 						}
 					],
-					"action_id": "static_select_action"
-				},
-				"label": {
-					"type": "plain_text",
-					"text": "Repair Result",
-					"emoji": True
+					"action_id": "repair_complete"
 				}
-			}
+			},
 		]
 	}
 	return basic
@@ -373,7 +365,7 @@ def repair_submission(main_item):
 		},
 		"close": {
 			"type": "plain_text",
-			"text": "Cancel",
+			"text": "Go Back",
 			"emoji": True
 		},
 		"blocks": [
@@ -419,16 +411,18 @@ def repair_submission(main_item):
 				}
 			},
 			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": "Did you damage any parts during the repair?"
+				"type": "input",
+				"dispatch_action": True,
+				"label": {
+					"type": "plain_text",
+					"text": "Did you damage any parts during the repair?",
+					"emoji": True
 				},
-				"accessory": {
+				"element": {
 					"type": "static_select",
 					"placeholder": {
 						"type": "plain_text",
-						"text": "You don't have to hide it...",
+						"text": "Don't lie...",
 						"emoji": True
 					},
 					"options": [
@@ -438,7 +432,7 @@ def repair_submission(main_item):
 								"text": "Nope, a perfect repair 😏",
 								"emoji": True
 							},
-							"value": "waste"
+							"value": "no"
 						},
 						{
 							"text": {
@@ -446,7 +440,7 @@ def repair_submission(main_item):
 								"text": "...I had a little accident 😳",
 								"emoji": True
 							},
-							"value": "no-waste"
+							"value": "yes"
 						}
 					],
 					"action_id": "waste_opt_in"
