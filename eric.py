@@ -692,6 +692,7 @@ def begin_parts_search(body, client):
 
 	"""
 	print("========================= SEARCHING PARTS DATA (FIRST TIME) =========================")
+	p(body)
 
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
@@ -708,8 +709,15 @@ def begin_parts_search(body, client):
 def display_repairs_search_results(body, client):
 	print("========================= DISPLAYING PARTS SEARCH RESULTS =========================")
 
-	resp = client.views_push(
-		trigger_id=body['trigger_id'],
+	resp = client.views_update(
+		view_id=body['view']['id'],
+		hash=body['view']['hash'],
+		view=views.loading(f"Isn't Gabe like, the coolest guy ever?")
+	)
+
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
 		view=views.parts_search_results(body)
 	)
 
@@ -717,10 +725,15 @@ def display_repairs_search_results(body, client):
 def continue_parts_search(body, client):
 	print("========================= SEARCHING PARTS DARA (SECONDARY TIME) =========================")
 
+	resp = client.views_update(
+		view_id=body["view"]["id"],
+		hash=body["view"]["hash"],
+		view=views.loading(f"Isn't Gabe like, the coolest guy ever?")
+	)
 
-
-	client.views_open(
-		trigger_id=body['trigger_id'],
+	client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
 		view=views.continue_parts_search(resp_body=body)
 	)
 

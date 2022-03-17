@@ -330,7 +330,6 @@ def repair_phase_view(main_item, body):
 
 
 def initial_parts_search_box(body):
-
 	metadata = helper.get_metadata(body)
 
 	search = {
@@ -363,88 +362,8 @@ def initial_parts_search_box(body):
 	return search
 
 
-def new_parts_selection(main_item, resp_body):
-
-	def generate_selected_parts_line(part_name):
-		parts_used_line = {
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": part_name
-			},
-			"accessory": {
-				"type": "button",
-				"text": {
-					"type": "plain_text",
-					"text": "Remove Part",
-					"emoji": True
-				},
-				"value": f"{data.MAIN_REPAIRS[part_name]}",
-				"action_id": "remove_part"
-			}
-		}
-		return parts_used_line
-
-	def generate_search_block():
-		search = {
-			"dispatch_action": True,
-			"type": "input",
-			"element": {
-				"type": "plain_text_input",
-				"action_id": "repair_search"
-			},
-			"label": {
-				"type": "plain_text",
-				"text": "Add Parts to Repair:",
-				"emoji": True
-			}
-		}
-		return search
-
-	custom_metadata = helper.get_metadata(resp_body)
-	selected_repairs = custom_metadata['extra']['selected_repairs']
-
-	basic = {
-		"type": "modal",
-		"title": {
-			"type": "plain_text",
-			"text": "Add Parts to Your Repair",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Go Back",
-			"emoji": True
-		},
-		"blocks": [
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "Parts Used:",
-					"emoji": True
-				}
-			}
-		]
-	}
-
-	for repair_id in selected_repairs:
-		selected_line = generate_selected_parts_line(data.MAIN_REPAIRS[repair_id])
-		basic['blocks'].append(selected_line)
-		custom_metadata['extra']['selected_repairs'].append(repair_id)
-
-	basic['blocks'].append(generate_search_block())
-
-	basic['private_metadata'] = json.dumps(custom_metadata)
-
-	return basic
-
 def parts_search_results(resp_body):
-
 	def generate_results_block(repair_name):
-
-		print(f"================================ GENERATING RESULTS BLOCK FOR {repair_name}")
-
 
 		dct = {
 			"type": "section",
@@ -465,26 +384,17 @@ def parts_search_results(resp_body):
 		}
 		return dct
 
-
-
-
-
-
 	selected_repair = resp_body['actions'][0]['value']
-
-	print("view GENERATION view GENERATIONview GENERATIONview GENERATIONview GENERATIONview GENERATIONview GENERATIONview GENERATION")
-
-	print(selected_repair)
 
 	metadata = helper.get_metadata(resp_body)
 
+	available_repairs = config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']] + config.PART_SELECTION_OPTIONS['General']
+
 	results = []
-	for item in config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']]:
+	for item in available_repairs:
 		if selected_repair.upper() in item.upper():
 			results.append(item)
 
-	print("RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS RESULTS ")
-	p(results)
 
 	if not results:
 		basic = {
@@ -538,7 +448,6 @@ def parts_search_results(resp_body):
 
 
 def continue_parts_search(resp_body):
-
 	def generate_selected_parts_line(part_name):
 		parts_used_line = {
 			"type": "section",
@@ -562,6 +471,7 @@ def continue_parts_search(resp_body):
 	def generate_search_block():
 		search = {
 			"dispatch_action": True,
+			"optional": True,
 			"type": "input",
 			"element": {
 				"type": "plain_text_input",
@@ -616,149 +526,10 @@ def continue_parts_search(resp_body):
 	if selected_repair_blocks:
 		basic['blocks'] += selected_repair_blocks
 
+	# noinspection PyTypeChecker
 	basic['blocks'].append(generate_search_block())
 
-	return basic
-
-
-
-def parts_selection(main_item):
-	def _generate_parts_options_list():
-		if 'iPhone' in main_item.device.labels[0]:
-			raw_options = config.PART_SELECTION_OPTIONS['iPhone']
-		elif 'iPad' in main_item.device.labels[0]:
-			raw_options = config.PART_SELECTION_OPTIONS['iPad']
-		elif 'Watch' in main_item.device.labels[0]:
-			raw_options = config.PART_SELECTION_OPTIONS['Apple Watch']
-		else:
-			raw_options = config.PART_SELECTION_OPTIONS['MacBook']
-
-		options = []
-		for repair in raw_options:
-			title = str(repair)
-			value = f"dual_id:{main_item.device.ids[0]}-{data.MAIN_REPAIRS[str(repair)]}"
-			options.append(build.checkbox_option(title, value=value))
-
-		return options
-
-	def _generate_faults_list():
-		if 'iPhone' in main_item.device.labels[0]:
-			id_s = mon_config.STANDARD_REPAIR_OPTIONS['iPhone']
-		elif 'iPad' in main_item.device.labels[0]:
-			id_s = mon_config.STANDARD_REPAIR_OPTIONS['iPad']
-		elif 'Watch' in main_item.device.labels[0]:
-			id_s = mon_config.STANDARD_REPAIR_OPTIONS['Apple Watch']
-		else:
-			id_s = mon_config.STANDARD_REPAIR_OPTIONS['MacBook']
-
-		options = []
-		for repair in main_item.repairs.labels:
-			options.append(build.text_field_option(repair))
-
-		if options:
-			return options
-		else:
-			return [build.text_field_option("No Repairs Requested By Client")]
-
-	basic = {
-		"type": "modal",
-		"callback_id": "parts_selection",
-		"title": {
-			"type": "plain_text",
-			"text": "Repair Details",
-			"emoji": True
-		},
-		"submit": {
-			"type": "plain_text",
-			"text": "Submit",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Go Back",
-			"emoji": True
-		},
-		"blocks": [
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "You're All Done!",
-					"emoji": True
-				}
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "mrkdwn",
-						"text": "*Congrats* :partying_face: on completing the repair, just a few things:"
-					}
-				]
-			},
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "The client reported these faults:",
-					"emoji": True
-				}
-			},
-			{
-				"type": "section",
-				"fields": _generate_faults_list()
-			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": "Please select the parts you used to resolve these faults:"
-				},
-				"accessory": {
-					"type": "checkboxes",
-					"options": _generate_parts_options_list(),
-					"action_id": "checkboxes-action"
-				}
-			},
-			{
-				"type": "input",
-				"dispatch_action": True,
-				"optional": False,
-				"label": {
-					"type": "plain_text",
-					"text": "Did you damage any parts during the repair?",
-					"emoji": True
-				},
-				"element": {
-					"type": "static_select",
-					"placeholder": {
-						"type": "plain_text",
-						"text": "Don't lie...",
-						"emoji": True
-					},
-					"options": [
-						{
-							"text": {
-								"type": "plain_text",
-								"text": "Nope, a perfect repair 😏",
-								"emoji": True
-							},
-							"value": "no"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": "...I had a little accident 😳",
-								"emoji": True
-							},
-							"value": "yes"
-						}
-					],
-					"action_id": "waste_opt_in"
-				}
-			}
-		]
-	}
+	basic["private_metadata"] = json.dumps(metadata)
 
 	return basic
 
