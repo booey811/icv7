@@ -19,7 +19,8 @@ PART_SELECTION_OPTIONS = {
 		'Software',
 		'Hydrogel Protector',
 		'Reshaping',
-		'Logic Board'
+		'Logic Board',
+		'No Parts Used',
 	],
 	"iPhone": [
 		'Front Screen',  # will need to check for LCD/OLED variant and Manufacturer requirements

@@ -395,14 +395,14 @@ def parts_search_results(resp_body):
 		if selected_repair.upper() in item.upper():
 			results.append(item)
 
-
 	if not results:
+		print("============================ NO RESULTS FOUND =======================================================")
 		basic = {
 			"type": "modal",
 			"private_metadata": json.dumps(metadata),
 			"title": {
 				"type": "plain_text",
-				"text": "We couldn't find any repairs with that search term, try again:",
+				"text": "No results found!",
 				"emoji": True
 			},
 			"close": {
@@ -412,11 +412,10 @@ def parts_search_results(resp_body):
 			},
 			"blocks": [
 				{
-					"type": "header",
-					"text": {
-						"type": "plain_text",
-						"text": "Parts Used:",
-						"emoji": True
+					'type': 'section',
+					'text': {
+						"type": "mrkdwn",
+						"text": "Click 'Go Back' to try again"
 					}
 				}
 			]
