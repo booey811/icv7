@@ -14,17 +14,55 @@ USER_IDS = {
 }
 
 PART_SELECTION_OPTIONS = {
+	"General": [
+		'Liquid Damage Treatment',
+		'Software',
+		'Hydrogel Protector',
+		'Reshaping',
+		'Logic Board'
+	],
 	"iPhone": [
-		'Front Screen',
+		'Front Screen',  # will need to check for LCD/OLED variant and Manufacturer requirements
+		'After Market Screen',
 		'Battery',
 		'Charging Port',
 		'Rear Camera',
+		'Front Camera',
 		'Rear Lens',
 		'Rear Housing',
-		'Microphone'
-		'Software',
-		'Logic Board',
-		'More Repairs ->'
+		'Microphone',
+		'Bluetooth Module',
+		'Face ID',
+		'Proximity Sensor',
+		'Earpiece',
+		'Home Button',
+		'Power Button',
+		'Volume Button',
+		'Mute Button',
+		'Loudspeaker'
+	],
+	"iPad": [
+		'Touch Screen',
+		'LCD',
+		'Battery',
+		'Power Button',
+		'Charging Port'
+	],
+	"MacBook": [
+		'Front Screen',
+		'Battery',
+		'Face ID',
+		'Home Button',
+		'USB Port',
+		'Charging Port',
+		'Keyboard',  # Requires variant: UK/US
+		'Touchbar',
+		'Trackpad'
+	],
+	"Apple Watch": [
+		'Front Screen',
+		'Battery',
+		'Crown',
 	]
 }
 
