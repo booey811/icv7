@@ -24,6 +24,48 @@ def create_slack_app():
 	return app
 
 
+def get_load_screen(footnotes=''):
+	"""returns the view for the modal screen showing that the application has received a request and is processing it
+	adds in a footnote to the loading screen for more specific information"""
+	view = {
+		"type": "modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Beginning Repairs",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "Please wait... Eric is thinking big thoughts",
+					"emoji": True
+				}
+			}
+		]
+	}
+
+	if footnotes:
+		context = {
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": footnotes
+				}
+			]
+		}
+		view['blocks'].append(context)
+
+	return view
+
+
 def _add_routing(app):
 	if os.environ["SLACK"] == "ON":
 
@@ -75,7 +117,6 @@ def _add_routing(app):
 
 			eric.slack_user_search(body, client)
 
-
 		@app.action("end_repair_phase")
 		def end_repair_phase(ack, body, logger, client):
 			logger.info("Response to Repair Phase Complete")
@@ -91,7 +132,7 @@ def _add_routing(app):
 					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
 
 			if selected == 'repaired':
-				eric.capture_repair_info(body, client)
+				eric.begin_parts_search(body, client)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client)
 			elif selected == 'parts':
@@ -102,6 +143,28 @@ def _add_routing(app):
 				eric.handle_other_repair_issue(body, client)
 			else:
 				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
+
+		@app.action('repair_search')
+		def search_and_show_repairs(ack, body, logger, client):
+
+			logger.info("Searching for repairs (first time)")
+			ack()
+
+			eric.display_repairs_search_results(body, client)
+
+		@app.action("select_part")
+		def add_part_to_repair(ack, body, logger, client):
+			logger.info("Adding Part to Repair")
+			ack()
+
+			eric.continue_parts_search(body, client)
+
+		@app.action("add_part_to_repair")
+		def add_parts_to_repair(ack, body, logger, client):
+			logger.info("Parts Search Received")
+			ack()
+
+			eric.add_repair_next_iteration(body, client)
 
 		@app.action('waste_opt_in')
 		def register_waste_entry(ack, body, logger, client):

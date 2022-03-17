@@ -8,6 +8,7 @@ import rq
 
 from moncli.api_v2.exceptions import MondayApiError
 
+import data
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
 	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help
 from utils.tools import refurbs
@@ -637,6 +638,7 @@ def begin_slack_repair_process(body, client):
 	# 	username = slack_config.USER_IDS[body['user_id']]
 
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
+	print("========================= BEGINNING REPAIR PROCESS =========================")
 	username = 'dev'
 
 	# Show loading screen
@@ -654,40 +656,33 @@ def begin_slack_repair_process(body, client):
 			ids=[main_group_id]
 		)[0].items[0])
 
-	view = views.pre_repair_info(next_repair)
-
 	resp = info.data
-
-	print(f'============== VIEW ID: {resp["view"]["id"]}')
 
 	client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=view
+		view=views.pre_repair_info(next_repair, body)
 	)
 
 
 def begin_specific_slack_repair(body, client):
-	metadata = json.loads(body['view']['private_metadata'])
+	print("========================= SPECIFIC REPAIR INFO PHASE =========================")
+	metadata = s_help.get_metadata(body)
 	main_item = BaseItem(CustomLogger(), metadata['main'])
-
-	view = views.loading(f"Getting Repair Data: {metadata['main']}")
 
 	resp = client.views_open(
 		trigger_id=body['trigger_id'],
-		view=view
+		view=views.loading(f"Getting Repair Data: {metadata['main']}")
 	)
-
-	view = views.repair_phase_view(main_item)
 
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=view
+		view=views.repair_phase_view(main_item, body)
 	)
 
 
-def capture_repair_info(body, client):
+def begin_parts_search(body, client):
 	"""
 	presents the clients requested repairs and confirms the parts used in repair
 	leads to screen manufacturer selection if required
@@ -696,19 +691,37 @@ def capture_repair_info(body, client):
 		requested repair)
 
 	"""
+	print("========================= SEARCHING PARTS DATA (FIRST TIME) =========================")
 
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading(f"Isn't Gabe like, the coolest guy ever?")
 	)
 
-	metadata = json.loads(body['view']['private_metadata'])
-	main_item = BaseItem(CustomLogger(), metadata['main'])
-
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=views.parts_selection(main_item)
+		view=views.initial_parts_search_box(body)
+	)
+
+
+def display_repairs_search_results(body, client):
+	print("========================= DISPLAYING PARTS SEARCH RESULTS =========================")
+
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.parts_search_results(body)
+	)
+
+
+def continue_parts_search(body, client):
+	print("========================= SEARCHING PARTS DARA (SECONDARY TIME) =========================")
+
+
+
+	client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.continue_parts_search(resp_body=body)
 	)
 
 
@@ -739,9 +752,8 @@ def process_waste_entry(body, client):
 		view=views.loading("We haven't developed this yet....... Nothing is loading")
 	)
 
+
 def begin_slack_user_search(body, client):
-
-
 	resp = client.views_open(
 		trigger_id=body['trigger_id'],
 		view=views.user_search_request()
@@ -755,6 +767,7 @@ def slack_user_search(body, client):
 		trigger_id=body['trigger_id'],
 		view=views.user_search_results(results)
 	)
+
 
 def test_route(body, client, say):
 	"""loads loading screen for user and returns slack response for manipulation in console"""

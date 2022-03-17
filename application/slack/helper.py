@@ -1,7 +1,23 @@
 from datetime import datetime, timedelta
 import json
+from pprint import pprint as p
 
 from application import BaseItem
+
+
+def add_device_type_metadata(main_item, custom_metadata):
+	if not main_item.device.labels:
+		raise Exception(f"No Device Assigned on Monday Item: {main_item.mon_id}")
+
+	else:
+		if 'iPhone' in main_item.device.labels[0]:
+			custom_metadata['extra']['device_type'] = "iPhone"
+		elif 'iPad' in main_item.device.labels[0]:
+			custom_metadata['extra']['device_type'] = "iPad"
+		elif 'Watch' in main_item.device.labels[0]:
+			custom_metadata['extra']['device_type'] = "Apple Watch"
+		else:
+			custom_metadata['extra']['device_type'] = "MacBook"
 
 
 def get_refurb_request_markdown(main_item, repairs):
@@ -36,19 +52,36 @@ def get_refurb_request_markdown(main_item, repairs):
 	       f"*Required Parts*:\n{parts_formatted}"
 
 
-def encode_metadata(main_item: BaseItem = '', repairs: list = (), parts: list = (), financial: list = ()):
-	def _convert_lists(lst):
-
-		if lst:
-			", ".join([item.mon_id for item in lst])
-		else:
-			return ''
+def _init_metadata():
 
 	dct = {
-		'main': main_item.mon_id,
-		'repairs': _convert_lists(repairs),
-		'parts': _convert_lists(parts),
-		'financial': _convert_lists(financial)
+		"main": "",
+		"repairs": [],
+		"parts": [],
+		"financial": [],
+		"extra": {
+			"selected_repairs": []
+		}
 	}
 
-	return json.dumps(dct)
+	return dct
+
+
+def get_metadata(resp_body):
+
+	print("GETTING META GETTING META GETTING META GETTING META GETTING META GETTING META GETTING META ")
+	p("FROM")
+	p(resp_body)
+
+	try:
+		meta = resp_body['view']['private_metadata']
+		print("GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META ")
+		p(meta)
+		return json.loads(resp_body['view']['private_metadata'])
+
+	except KeyError as e:
+		print(f"Meta data does not contain 'view' object: {resp_body}")
+		print("Creating New Metadata")
+		return _init_metadata()
+
+
