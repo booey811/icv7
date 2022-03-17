@@ -449,7 +449,8 @@ _MAINBOARD_GROUP_IDS = {
 	'mike': 'new_group38737',
 	'ricky': 'new_group80898',
 	'seb': 'new_group6580',  # client services group
-	'gabe': 'new_group6580'  # client services group
+	'gabe': 'new_group6580',  # client services group
+	'dev': 'new_group49546'  # Dev/Admin Group
 }
 
 

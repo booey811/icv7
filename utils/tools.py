@@ -1,3 +1,5 @@
+from pprint import pprint as p
+
 from application import BaseItem, EricTicket, clients, phonecheck, CustomLogger
 from application.monday import mappings
 
@@ -281,5 +283,14 @@ def generate_column_id_list(board_id):
 
     print(result)
 
+def settings_list(board_id, column):
+
+    item = BaseItem(CustomLogger(), board_id=board_id)
+
+    settings = getattr(item, column).settings
+
+    p(settings)
+
+    return True
 
 refurbs = RefurbishedDevicesHelper()

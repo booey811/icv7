@@ -636,8 +636,8 @@ def begin_slack_repair_process(body, client):
 	# else:
 	# 	username = slack_config.USER_IDS[body['user_id']]
 
-	# DURING DEVELOPMENT WE WILL USE SAFAN AS THE SAMPLE USER
-	username = 'safan'
+	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
+	username = 'dev'
 
 	# Show loading screen
 	info = client.views_open(
@@ -678,7 +678,7 @@ def begin_specific_slack_repair(body, client):
 		view=view
 	)
 
-	view = views.specific_repair_view(main_item)
+	view = views.repair_phase_view(main_item)
 
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
@@ -687,10 +687,19 @@ def begin_specific_slack_repair(body, client):
 	)
 
 
-def repair_info_submission(body, client):
+def capture_repair_info(body, client):
+	"""
+	presents the clients requested repairs and confirms the parts used in repair
+	leads to screen manufacturer selection if required
+	presents option to submit wastage
+	should eventually trigger a check that the parts usage makes sense (e.g. used a battery during battery
+		requested repair)
+
+	"""
+
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
-		view=views.loading(f"Preparing Repairs Submission")
+		view=views.loading(f"Isn't Gabe like, the coolest guy ever?")
 	)
 
 	metadata = json.loads(body['view']['private_metadata'])
@@ -699,26 +708,25 @@ def repair_info_submission(body, client):
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=views.repair_submission(main_item)
+		view=views.parts_selection(main_item)
 	)
+
 
 def handle_urgent_repair(body, client):
-
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading("We haven't developed this yet....... Nothing is loading")
 	)
+
 
 def handle_other_repair_issue(body, client):
-
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading("We haven't developed this yet....... Nothing is loading")
 	)
 
 
-def tech_unable_to_complete_repair(body, client):
-
+def cannot_complete_repair_no_parts(body, client):
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading("We haven't developed this yet....... Nothing is loading")
@@ -726,99 +734,74 @@ def tech_unable_to_complete_repair(body, client):
 
 
 def process_waste_entry(body, client):
-
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading("We haven't developed this yet....... Nothing is loading")
 	)
 
+def begin_slack_user_search(body, client):
 
 
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.user_search_request()
+	)
+
+
+def slack_user_search(body, client):
+	search_term = body['actions'][0]['value']
+	results = clients.zendesk.search(search_term, type='user')
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.user_search_results(results)
+	)
 
 def test_route(body, client, say):
-	raise Exception("NO TESTS HERE")
+	"""loads loading screen for user and returns slack response for manipulation in console"""
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view={
+			"title": {
+				"type": "plain_text",
+				"text": "Repair Details",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"type": "modal",
+			"callback_id": "parts_submit",
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": [
+				{
+					"dispatch_action": True,
+					"type": "input",
+					"element": {
+						"type": "plain_text_input",
+						"dispatch_action_config": {
+							"trigger_actions_on": [
+								"on_character_entered"
+							]
+						},
+						"action_id": "user_search"
+					},
+					"label": {
+						"type": "plain_text",
+						"text": "Label",
+						"emoji": True
+					}
+				}
+			]
+		}
+	)
+	return resp
 
-
-# if os.environ["ENV"] == 'devlocal':  # local testing, supply item ID
-# 	main_item = BaseItem(CustomLogger(), 1776719823)
-# else:
-# 	metadata = json.loads(body['view']['private_metadata'])
-# 	main_item = BaseItem(CustomLogger, metadata['main_id'])
-
-
-#
-# @log_catcher_decor
-# def check_and_notify_for_stock(webhook, logger, test=None):
-#
-#     if test:
-#         main = BaseItem(logger, test)
-#     else:
-#         main = BaseItem(logger, webhook["pulseId"])
-#
-#     repairs = inventory.get_repairs(main, generic=True)
-#     messenger = slack.MessageBuilder()
-#
-#     for repair in repairs:
-#         # Check stock level
-#         # Check whether item can be refurbed
-#         # Commission Refurb or Notify CS to Delay Client
-#         stock_level = repair.stock_level.value
-#         if not stock_level:
-#             stock_level = 0
-#         else:
-#             stock_level = int(float(stock_level))
-#
-#         if stock_level < 1:  # Checking against 1 (not 0) to be safe
-#             ticket = EricTicket(logger, main.zendesk_id.value)
-#             notification_markdown = s_help.get_refurb_request_markdown(main, repairs)
-#             messenger.attach_header_block("Refurbishment Request")
-#             messenger.attach_markdown_block(notification_markdown)
-#             if repair.refurb_poss.value == 'On Refurb':  # Part can be refurbed - notify Refurb Dept.
-#                 messenger.attach_static_select_block({
-#                     'Will Be Ready for Deadline': 'success',
-#                     'Do Not Have the Parts': 'failure-1',
-#                     'Do Not Have Time': 'failure-2',
-#                     'Cannot For Another Reason': 'other'
-#                 },
-#                     'refurb_request'
-#                 )
-#                 messenger.set_channel('refurb-request')
-#                 messenger.post()
-#                 ticket.add_comment(
-#                     public=False,
-#                     comment_body='We do not have the required stock for this repair, '
-#                                  'but have requested that one is created by the refurb department.\nPlease wait for '
-#                                  'their response.'
-#                 )
-#                 raise AwaitingResponse('Refurb Requested - Waiting For Refurb Department to Confirm Viability')
-#
-#             else:  # Part cannot be refurbed - Notify CS
-#                 messenger.set_channel('general')
-#                 messenger.attach_header_block("Required Actions (Client Services):")
-#                 messenger.attach_markdown_block("Please ascertain whether we can have the required parts delivered "
-#                                                 "to us and when the delivery would take place, so that you may"
-#                                                 "pass this information onto the client.\n"
-#                                                 f"Their <https://icorrect.zendesk.com/agent/"
-#                                                 f"tickets/{ticket.id}|Ticket({ticket.id})> "
-#                                                 f"status has been set to Open")
-#                 messenger.post()
-#                 ticket.zenpy_ticket.status = 'open'
-#                 ticket.add_comment(
-#                     public=False,
-#                     comment_body="Please ascertain whether we can have the required parts delivered "
-#                                  "to us and when the delivery would take place, so that you may "
-#                                  "pass this information onto the client"
-#                 )
-#                 ticket.commit()
-#
-#         else:  # Part in Stock - Proceed with Booking
-#             pass
-#
-#
-# @log_catcher_decor
-# def process_slack_refurb_response(webhook, logger, test=None):
-#     pass
-#
 
 class EricLevelException(Exception):
 

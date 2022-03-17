@@ -26,11 +26,8 @@ q_def = Queue("default", connection=conn)
 q_hi = Queue("high", connection=conn)
 
 # ===================================== SLACK APP =====================================
-# Slack App in Socket Mode
+# Slack App in Socket Mode, or not if SLACK is OFF
 slacker = create_slack_app()
-# # Connect to Flask App through Handler
-# handler = SocketModeHandler(slacker, os.environ["SLACK_APP_TOKEN"])
-# handler.connect()
 
 # ===================================== ERIC APP =====================================
 

@@ -13,8 +13,19 @@ USER_IDS = {
 	'U024H79546T': 'gabe'
 }
 
-_ACTIONS = {
-	'refurb_request': ''
+PART_SELECTION_OPTIONS = {
+	"iPhone": [
+		'Front Screen',
+		'Battery',
+		'Charging Port',
+		'Rear Camera',
+		'Rear Lens',
+		'Rear Housing',
+		'Microphone'
+		'Software',
+		'Logic Board',
+		'More Repairs ->'
+	]
 }
 
 
@@ -43,5 +54,4 @@ class TwoWayDict(dict):
 			self[item] = dictionary[item]
 
 
-ACTIONS = TwoWayDict(_ACTIONS)
 

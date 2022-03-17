@@ -176,7 +176,7 @@ def pre_repair_info(main_item):
 	return basic
 
 
-def specific_repair_view(main_item):
+def repair_phase_view(main_item):
 	item_id = main_item.mon_id
 	device = main_item.device.labels[0]
 	repair_type = main_item.repair_type.label
@@ -185,7 +185,7 @@ def specific_repair_view(main_item):
 
 	basic = {
 		"type": "modal",
-		"callback_id": "repair_submission",
+		"callback_id": "repair_phase",
 		"private_metadata": helper.encode_metadata(main_item),
 		"title": {
 			"type": "plain_text",
@@ -274,23 +274,31 @@ def specific_repair_view(main_item):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "Repair Completed",
+								"text": "The device has been repaired!",
 								"emoji": True
 							},
-							"value": "complete"
+							"value": "repaired"
 						},
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I am unable to complete the repair right now",
+								"text": "I need more information",
 								"emoji": True
 							},
-							"value": "failed"
+							"value": "client"
 						},
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "A more urgent repair has come in",
+								"text": "I don't have the parts to complete the repair",
+								"emoji": True
+							},
+							"value": "parts"
+						},
+						{
+							"text": {
+								"type": "plain_text",
+								"text": "A more urgent repair has been given to me",
 								"emoji": True
 							},
 							"value": "urgent"
@@ -298,13 +306,13 @@ def specific_repair_view(main_item):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I've got a different issue",
+								"text": "I need help",
 								"emoji": True
 							},
 							"value": "other"
 						}
 					],
-					"action_id": "repair_complete"
+					"action_id": "end_repair_phase"
 				}
 			},
 		]
@@ -312,7 +320,7 @@ def specific_repair_view(main_item):
 	return basic
 
 
-def repair_submission(main_item):
+def parts_selection(main_item):
 	def _generate_parts_options_list():
 		if 'iPhone' in main_item.device.labels[0]:
 			id_s = mon_config.STANDARD_REPAIR_OPTIONS['iPhone']
@@ -352,7 +360,7 @@ def repair_submission(main_item):
 
 	basic = {
 		"type": "modal",
-		"callback_id": "parts_submit",
+		"callback_id": "parts_selection",
 		"title": {
 			"type": "plain_text",
 			"text": "Repair Details",
@@ -413,6 +421,7 @@ def repair_submission(main_item):
 			{
 				"type": "input",
 				"dispatch_action": True,
+				"optional": False,
 				"label": {
 					"type": "plain_text",
 					"text": "Did you damage any parts during the repair?",
@@ -447,6 +456,147 @@ def repair_submission(main_item):
 				}
 			}
 		]
+	}
+
+	return basic
+
+
+def user_search_request():
+	basic = {
+		"title": {
+			"type": "plain_text",
+			"text": "User Search",
+			"emoji": True
+		},
+		"type": "modal",
+		"callback_id": "user_search_request",
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"dispatch_action": True,
+				"type": "input",
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "user_search"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "User Search",
+					"emoji": True
+				}
+			}
+		]
+	}
+	return basic
+
+
+def user_search_results(zenpy_search_object):
+	def _generate_results_blocks():
+		def _get_name(username, zendesk_id):
+
+			def _get_username():
+				if not username:
+					return "looks like we're missing this data"
+				else:
+					return username
+
+			def _get_id():
+				if not zendesk_id:
+					return "looks like we're missing this data"
+				else:
+					return str(zendesk_id)
+
+			dct = {
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": _get_username()
+				},
+				"accessory": {
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Select User",
+						"emoji": True
+					},
+					"value": _get_id(),
+					"action_id": "user_select"
+				}
+			}
+			return dct
+
+		def _get_email(email):
+
+			def _email():
+				if not email:
+					return "looks like we're missing this data"
+				else:
+					return email
+
+
+			dct = {
+				"type": "context",
+				"elements": [
+					{
+						"type": "mrkdwn",
+						"text": f"*Email*: {_email()}"
+					}
+				]
+			}
+			return dct
+
+		def _get_phone(phone):
+
+			def _phone():
+				if not phone:
+					return "looks like we're missing this data"
+				else:
+					return phone
+
+			dct = {
+				"type": "context",
+				"elements": [
+					{
+						"type": "mrkdwn",
+						"text": f"*Phone*: {_phone()}"
+					}
+				]
+			}
+			return dct
+
+		blocks = []
+
+		for user in zenpy_search_object:
+			blocks.append(_get_name(user.name, user.id))
+			blocks.append(_get_email(user.email))
+			blocks.append(_get_phone(user.phone))
+
+		from pprint import pprint as p
+
+		p(len(blocks))
+
+		p(blocks)
+
+		return blocks
+
+	basic = {
+		"title": {
+			"type": "plain_text",
+			"text": "User Search",
+			"emoji": True
+		},
+		"type": "modal",
+		"callback_id": "user_search_results",
+		"close": {
+			"type": "plain_text",
+			"text": "Search Again",
+			"emoji": True
+		},
+		"blocks": _generate_results_blocks()
 	}
 
 	return basic
@@ -502,5 +652,6 @@ class OptionBuilder:
 		}
 
 		return dct
+
 
 build = OptionBuilder()
