@@ -574,6 +574,7 @@ def user_search_results(zenpy_search_object):
 			blocks.append(_get_name(user.name, user.id))
 			blocks.append(_get_email(user.email))
 			blocks.append(_get_phone(user.phone))
+			blocks.append({"type": "divider"})
 
 		from pprint import pprint as p
 
