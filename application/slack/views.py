@@ -7,7 +7,7 @@ from . import helper, config
 from application import mon_config
 
 
-def _get_divider_block():
+def add_divider_block():
 	return {"type": "divider"}
 
 
@@ -99,10 +99,14 @@ def loading(footnotes=''):
 	return view
 
 
-def stock_check_flow_maker(body):
+def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_levels=False, repair_not_found=False):
+	if get_level is None:
+		get_level = []
+
 	def get_base_modal_view():
 		return {
 			"type": "modal",
+			"private_metadata": json.dumps(metadata),
 			"title": {
 				"type": "plain_text",
 				"text": "Stock Checker",
@@ -183,23 +187,26 @@ def stock_check_flow_maker(body):
 
 		def get_device_options():
 
+			selection = metadata["extra"]['device_type']
+
 			options = []
 
 			for item in data.MAIN_DEVICE:
-				if chosen in item:
+				if selection in item:
 					options.append({
 						"text": {
 							"type": "plain_text",
-							"text": chosen,
+							"text": item,
 							"emoji": True
 						},
-						"value": chosen
+						"value": item
 					})
 			return options
 
 		blocks.append({
 			"type": "input",
 			"dispatch_action": True,
+			"block_id": "stock_device",
 			"element": {
 				"type": "static_select",
 				"placeholder": {
@@ -217,23 +224,150 @@ def stock_check_flow_maker(body):
 			}
 		})
 
-	view = get_base_modal_view()
+		return blocks
+
+	def add_repair_options(blocks):
+
+		def get_repair_options():
+			options = []
+
+			for repair in config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']]:
+				options.append({
+					"text": {
+						"type": "plain_text",
+						"text": repair,
+						"emoji": True
+					},
+					"value": repair
+				})
+			return options
+
+		blocks.append({
+			"type": "input",
+			"dispatch_action": True,
+			"block_id": "stock_repair",
+			"element": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select a repair",
+					"emoji": True
+				},
+				"options": get_repair_options(),
+				"action_id": "select_stock_repair"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Repair",
+				"emoji": True
+			}
+		})
+
+		return blocks
+
+	def add_stock_level_block(blocks, repair_info: list):
+
+		try:
+			stock_level = int(float(repair_info[1]))
+		except ValueError:
+			stock_level = 0
+
+		if stock_level < 1:
+			text = f"{repair_info[0]}: {stock_level} | :no_entry_sign: NO STOCK"
+		else:
+			text = f"{repair_info[0]}: {stock_level} | :tada: STOCK AVAILABLE"
+
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": text
+			}
+		})
+		return blocks
+
+	def add_micro_loader(blocks):
+
+		text = "Fetching Stock Level Info - This Can Take A While"
+
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": text
+			}
+		})
+		return blocks
+
+	def add_no_results_block(blocks):
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": f":cry: I couldn't find the stock level for this repair"
+			}
+		})
+		return blocks
+
+	metadata = helper.get_metadata(body)
 
 	# check if this was initiated by a command, meaning its the entry point
-	try:
-		phase = body['actions'][0]['action_id']
-		chosen = body['actions'][0]['value']
-	except KeyError:
-		# intial route
+	if initial:
+		view = get_base_modal_view()
+		p("Stock checker init view ======================================= ")
 		add_device_type_options(view['blocks'])
 		return view
 
-	# check the body for the action id to work out point in flow
-	if phase == 'stock_device_type':
+	elif get_level:
+		chosen = body['actions'][0]['selected_option']['value']
+		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
+		add_repair_options(view['blocks'])
+		add_divider_block()
+		add_stock_level_block(view['blocks'], get_level)
+
+	elif fetching_stock_levels:
+		view = get_base_modal_view()
+		add_device_type_options(view['blocks'])
+		add_device_options(view['blocks'])
+		add_repair_options(view['blocks'])
+		add_divider_block()
+		add_micro_loader(view['blocks'])
+
+	elif repair_not_found:
+		view = get_base_modal_view()
+		add_device_type_options(view['blocks'])
+		add_device_options(view['blocks'])
+		add_repair_options(view['blocks'])
+		add_divider_block()
+		p("NO REPAIR FOUND META")
+		p(metadata)
+		add_no_results_block(view['blocks'])
+
 	else:
-		raise Exception(f"unencountered choice in stokc chekcer {phase}")
+		phase = body['actions'][0]['action_id']
+		chosen = body['actions'][0]['selected_option']['value']
+		# check the body for the action id to work out point in flow
+		if phase == 'stock_device_type':
+			metadata['extra']['device_type'] = chosen.strip()
+			view = get_base_modal_view()
+			add_device_type_options(view['blocks'])
+			add_device_options(view['blocks'])
+		elif phase == "select_stock_device":
+			metadata['extra']['device'] = chosen.strip()
+			view = get_base_modal_view()
+			add_device_type_options(view['blocks'])
+			add_device_options(view['blocks'])
+			add_repair_options(view['blocks'])
+		elif phase == 'select_stock_repair':
+			metadata['extra']['repair'] = chosen.strip()
+			view = get_base_modal_view()
+			add_device_type_options(view['blocks'])
+			add_device_options(view['blocks'])
+			add_repair_options(view['blocks'])
+		else:
+			raise Exception(f"encountered weird choice for phase in stock checker: {phase}")
 
 	return view
 

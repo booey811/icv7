@@ -665,10 +665,6 @@ def search_todays_repairs(body, client):
 			hash=resp["view"]["hash"],
 			view=views.bookings_search_input(body, invalid_search=True)
 		)
-	# create search results blocks and view, include monday id in metadata
-	# make monday item according to user input
-	# format info to repair info view, with accept booking button
-	# view submission trigger into 'accept repair' flow
 
 
 def show_todays_repairs_group(body, client, dev=False):
@@ -695,31 +691,100 @@ def show_todays_repairs_group(body, client, dev=False):
 		hash=resp["view"]["hash"],
 		view=views.todays_repairs(bookings)
 	)
-	# move into
 
-def check_stock(body, client, initial=False):
 
-	# send loading view
-	resp = client.views_open(
-		trigger_id=body['trigger_id'],
-		view=views.loading("Beginning Stock Check")
-	)
+def check_stock(body, client, initial=False, get_level=False):
+	def get_stock_level(metadata, repair_selection):
+
+		def get_search_term_from_metadata(meta):
+			device_label = meta['extra']['device']
+			repair_label = repair_selection
+			device_id = data.MAIN_DEVICE[device_label]
+			repair_id = data.MAIN_REPAIRS[repair_label]
+			term = f"{device_id}-{repair_id}"
+			meta['extra']['dual_id'] = term
+			return term
+
+		term = get_search_term_from_metadata(metadata)
+		board = clients.monday.system.get_boards(ids=[984924063])[0]
+		col_val = board.get_column_value('dual_only_id')
+		col_val.value = str(term)
+		try:
+			item = board.get_items_by_column_values(
+				column_value=col_val,
+				limit=1
+			)[0]
+		except IndexError as e:
+			# no repairs found
+			raise IndexError(f"Cannot Find Item on Repairs Board with Dual Only ID: {term}")
+
+		val = item.get_column_value("quantity")
+		stock_level = val.text
+		p("============================== REPAIR INFO")
+		p([repair_selection, stock_level])
+		return [repair_selection, stock_level]
 
 	if initial:
-		resp = client.views_update(
-			view_id=resp["view"]["id"],
-			view=views.stock_check_flow_maker(body)
-		)
-	else:
-		resp = client.views_update(
-			external_id="stock_checker",
-			view=views.stock_check_flow_maker(body)
+		# send loading view
+		resp = client.views_open(
+			trigger_id=body['trigger_id'],
+			view=views.loading("Beginning Stock Check")
 		)
 
+		view_id = resp["view"]["id"]
+		hash_val = resp['view']['hash']
+
+	elif get_level:
+		p("GETTING LEVEL =====================")
+		view_id = body['view']['id']
+		hash_val = body['view']['hash']
+
+		resp = client.views_update(
+			view_id=body['view']['id'],
+			hash=body['view']['hash'],
+			view=views.stock_check_flow_maker(body, fetching_stock_levels=True)
+		)
+
+		meta_info = s_help.get_metadata(body)
+		chosen_repair = body['actions'][0]['selected_option']['value']
+		try:
+			repair_info = get_stock_level(metadata=meta_info, repair_selection=chosen_repair)
+		except IndexError as e:
+			resp = client.views_update(
+				view_id=resp['view']['id'],
+				hash=resp['view']['hash'],
+				view=views.stock_check_flow_maker(body, repair_not_found=True)
+			)
+			return e
+
+		get_level = repair_info
+		view_id = resp['view']['id']
+		hash_val = resp['view']['hash']
+
+	else:
+		view_id = body['view']['id']
+		hash_val = body['view']['hash']
+
+	resp = client.views_update(
+		view_id=view_id,
+		hash=hash_val,
+		view=views.stock_check_flow_maker(body, initial=initial, get_level=get_level)
+	)
+
+
+# if initial:
+# 	resp = client.views_update(
+# 		view_id=resp["view"]["id"],
+# 		view=views.stock_check_flow_maker(body)
+# 	)
+# else:
+# 	resp = client.views_update(
+# 		external_id="stock_checker",
+# 		view=views.stock_check_flow_maker(body)
+# 	)
 
 
 def show_walk_in_info(body, client):
-
 	# send loading view
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],

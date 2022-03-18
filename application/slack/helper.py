@@ -69,19 +69,14 @@ def _init_metadata():
 
 def get_metadata(resp_body):
 
-	print("GETTING META GETTING META GETTING META GETTING META GETTING META GETTING META GETTING META ")
-	p("FROM")
-	p(resp_body)
-
 	try:
 		meta = resp_body['view']['private_metadata']
-		print("GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META GOT META ")
-		p(meta)
-		return json.loads(resp_body['view']['private_metadata'])
+		try:
+			return json.loads(resp_body['view']['private_metadata'])
+		except json.JSONDecodeError:
+			return _init_metadata()
 
 	except KeyError as e:
-		print(f"Meta data does not contain 'view' object: {resp_body}")
-		print("Creating New Metadata")
 		return _init_metadata()
 
 

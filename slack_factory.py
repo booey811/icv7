@@ -131,20 +131,31 @@ def _add_routing(app):
 
 		@app.command("/stock")
 		def check_stock_levels(ack, body, logger, client):
-			logger.info("Showing todays repairs")
+			logger.info("Beginning Stock Check Flow")
 			ack()
 			eric.check_stock(body, client, initial=True)
-
 
 		# =========== Action Block Submissions
 
 		# Stock Checking Routes
 
 		@app.action("stock_device_type")
-		def check_stock(ack, body, logger, client):
-			logger.info("Checking stock")
+		def check_stock_device_type_entry(ack, body, logger, client):
+			logger.info("Checking stock after device selection")
 			ack()
 			eric.check_stock(body, client)
+
+		@app.action("select_stock_device")
+		def check_stock_device_entry(ack, body, logger, client):
+			logger.info("Checking stock after repair selection")
+			ack()
+			eric.check_stock(body, client)
+
+		@app.action("select_stock_repair")
+		def check_stock_repair_entry(ack, body, logger, client):
+			logger.info("Checking stock after repair selection")
+			ack()
+			eric.check_stock(body, client, get_level=True)
 
 		@app.action("user_search")
 		def user_search(ack, body, logger, client):
