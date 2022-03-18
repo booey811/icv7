@@ -116,6 +116,12 @@ def _add_routing(app):
 
 			eric.show_todays_repairs_group(body, client)
 
+		@app.command("/devbookings")
+		def show_dev_group_repairs(ack, body, logger, client):
+			logger.info("Showing todays repairs")
+			ack()
+			eric.show_todays_repairs_group(body, client, dev=True)
+
 		# =========== Action Block Submissions
 		@app.action("user_search")
 		def user_search(ack, body, logger, client):

@@ -671,19 +671,24 @@ def search_todays_repairs(body, client):
 	# view submission trigger into 'accept repair' flow
 
 
-def show_todays_repairs_group(body, client):
+def show_todays_repairs_group(body, client, dev=False):
 	# triggers on /bookings command
 	# send loading view
 	resp = client.views_open(
 		trigger_id=body['trigger_id'],
 		view=views.loading("Getting available bookings")
 	)
-	# get todays repair group from main board, query for name and id
+	# get todays or devs repair group from main board, query for name and id
+	if dev:
+		group_id = 'new_group49546'
+	else:
+		group_id = 'new_group70029'
+
 	bookings = clients.monday.system.get_boards(
 		'id',
 		'groups.items.[id, name]',
 		ids=[349212843],
-		groups={'ids': ['new_group70029']})[0].groups[0].items
+		groups={'ids': [group_id]})[0].groups[0].items
 	# present name alongside 'select repair' button
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
