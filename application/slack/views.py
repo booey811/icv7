@@ -7,8 +7,9 @@ from . import helper, config
 from application import mon_config
 
 
-def add_divider_block():
-	return {"type": "divider"}
+def add_divider_block(blocks):
+	blocks.append({"type": "divider"})
+	return blocks
 
 
 def _convert_monday_time_to_string(monday_date_column):
@@ -1022,37 +1023,108 @@ def continue_parts_search(resp_body):
 	return basic
 
 
-def user_search_request():
-	basic = {
-		"title": {
-			"type": "plain_text",
-			"text": "User Search",
-			"emoji": True
-		},
-		"type": "modal",
-		"callback_id": "user_search_request",
-		"close": {
-			"type": "plain_text",
-			"text": "Cancel",
-			"emoji": True
-		},
-		"blocks": [
-			{
-				"dispatch_action": True,
-				"type": "input",
-				"element": {
-					"type": "plain_text_input",
-					"action_id": "user_search"
-				},
-				"label": {
-					"type": "plain_text",
-					"text": "User Search",
-					"emoji": True
-				}
+def user_search_request(body, zenpy_results=None, initial=False):
+	if not zenpy_results:
+		zenpy_results = []
+
+	def add_base_modal():
+		return {
+			"type": "modal",
+			"private_metadata": json.dumps(metadata),
+			"title": {
+				"type": "plain_text",
+				"text": "Stock Checker",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+	def add_search_input(blocks):
+		blocks.append({
+			"dispatch_action": True,
+			"type": "input",
+			"block_id": "text_input_user_search",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "user_search"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "User Search",
+				"emoji": True
 			}
-		]
-	}
-	return basic
+		})
+		return blocks
+
+	def add_results_block(blocks, zenpy_search_object):
+
+		add_divider_block(blocks)
+
+		def add_name_and_button(username, zendesk_id, blocks):
+			blocks.append({
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": str(username),
+				},
+				"accessory": {
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Select User",
+						"emoji": True
+					},
+					"value": str(zendesk_id),
+					"action_id": "user_select"
+				}
+			})
+			return blocks
+
+		def add_context_lines(email, phone, blocks):
+
+			if not email:
+				email = "looks like we're missing this data"
+
+			if not phone:
+				phone = "looks like we're missing this data"
+
+			blocks.append({
+				"type": "context",
+				"elements": [
+					{
+						"type": "mrkdwn",
+						"text": f"*Email*: {str(email)}"
+					},
+					{
+						"type": "mrkdwn",
+						"text": f"*Phone*: {str(phone)}"
+					}
+				]
+			})
+
+			return blocks
+
+		for user in zenpy_search_object:
+			add_name_and_button(user.name, user.id, blocks)
+			add_context_lines(user.email, user.phone, blocks)
+			add_divider_block(blocks)
+
+		return blocks
+
+	metadata = helper.get_metadata(body)
+
+	view = add_base_modal()
+
+	add_search_input(view['blocks'])
+	if not initial:
+		add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
+
+	return view
 
 
 def user_search_results(zenpy_search_object):

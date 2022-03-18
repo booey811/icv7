@@ -114,7 +114,7 @@ def _add_routing(app):
 
 			logger.info("User Search Begin request received")
 			ack()
-			eric.begin_slack_user_search(body, client)
+			eric.slack_user_search(body, client, initial=True)
 
 		@app.command("/bookings")
 		def show_todays_repairs(ack, body, logger, client):

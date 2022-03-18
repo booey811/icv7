@@ -943,13 +943,41 @@ def begin_slack_user_search(body, client):
 	)
 
 
-def slack_user_search(body, client):
-	search_term = body['actions'][0]['value']
-	results = clients.zendesk.search(search_term, type='user')
-	resp = client.views_push(
-		trigger_id=body['trigger_id'],
-		view=views.user_search_results(results)
-	)
+def slack_user_search(body, client, initial=False, stack_view=False):
+	if initial:
+		p('============= initial')
+		# Show loading screen
+		if stack_view:
+			body = client.views_push(
+				trigger_id=body['trigger_id'],
+				view=views.loading(f"Setting Up User Search")
+			)
+		else:
+			body = client.views_open(
+				trigger_id=body['trigger_id'],
+				view=views.loading(f"Setting Up User Search")
+			)
+
+		client.views_update(
+			view_id=body["view"]["id"],
+			hash=body["view"]["hash"],
+			view=views.user_search_request(body, initial=initial)
+		)
+	else:
+
+		resp = client.views_push(
+			trigger_id=body['trigger_id'],
+			view=views.loading(f"Searching Database")
+		)
+
+		search_term = body['actions'][0]['value']
+		results = clients.zendesk.search(search_term, type='user')
+
+		resp = client.views_update(
+			view_id=resp["view"]["id"],
+			hash=resp["view"]["hash"],
+			view=views.user_search_request(body, results)
+		)
 
 
 def test_route(body, client, say):
