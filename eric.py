@@ -630,6 +630,69 @@ def create_monthly_invoice(webhook, logger, test=None):
 	corporate.commit()
 
 
+def search_todays_repairs(body, client):
+	# not in use
+	print("========================= SEARCHING FOR BOOKINGS =========================")
+	# triggered by SOMETHING command
+	# send loading view
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.loading("Getting available bookings")
+	)
+	# get todays repair group from main board, query for name and id
+	bookings = clients.monday.system.get_boards(
+		'id',
+		'groups.items.[id, name]',
+		ids=[349212843],
+		groups={'ids': ['new_group70029']})[0].groups[0].items
+	# get user search input
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
+		view=views.bookings_search_input(body)
+	)
+	# search through names for user input
+	query = resp['actions'][0]['value']
+	result = None
+	for item in bookings:
+		if str(query) in item.name or str(query) in item.id:
+			result = item
+
+	# If no results, return search screen
+	if not result:
+		resp = client.views_update(
+			view_id=resp["view"]["id"],
+			hash=resp["view"]["hash"],
+			view=views.bookings_search_input(body, invalid_search=True)
+		)
+	# create search results blocks and view, include monday id in metadata
+	# make monday item according to user input
+	# format info to repair info view, with accept booking button
+	# view submission trigger into 'accept repair' flow
+
+
+def show_todays_repairs_group(body, client):
+	# triggers on /bookings command
+	# send loading view
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.loading("Getting available bookings")
+	)
+	# get todays repair group from main board, query for name and id
+	bookings = clients.monday.system.get_boards(
+		'id',
+		'groups.items.[id, name]',
+		ids=[349212843],
+		groups={'ids': ['new_group70029']})[0].groups[0].items
+	# present name alongside 'select repair' button
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
+		view=views.todays_repairs(bookings)
+	)
+	# move into
+
+
 def begin_slack_repair_process(body, client):
 	# Get active user IDs
 	# if os.environ["ENV"] == 'devlocal':  # local development, use Safan as test user

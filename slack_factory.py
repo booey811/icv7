@@ -109,6 +109,13 @@ def _add_routing(app):
 			ack()
 			eric.begin_slack_user_search(body, client)
 
+		@app.command("/bookings")
+		def show_todays_repairs(ack, body, logger, client):
+			logger.info("Showing todays repairs")
+			ack()
+
+			eric.show_todays_repairs_group(body, client)
+
 		# =========== Action Block Submissions
 		@app.action("user_search")
 		def user_search(ack, body, logger, client):

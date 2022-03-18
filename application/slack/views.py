@@ -95,6 +95,120 @@ def loading(footnotes=''):
 	return view
 
 
+def bookings_search_input(body, invalid_search=False):
+	metadata = helper.get_metadata(body)
+
+	search = {
+		'type': "modal",
+		"private_metadata": json.dumps(metadata),
+		"title": {
+			"type": "plain_text",
+			"text": "Bookings Search",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		'blocks': [{
+			"dispatch_action": True,
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "bookings_search"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Enter booking name (or Monday ID :nerd_face:):",
+				"emoji": True
+			}
+		}]
+	}
+
+	if invalid_search:
+		to_add = [{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": ":confused: Sorry, I couldn't find anyone by that name",
+				"emoji": True
+			}
+		},
+			{
+				"type": "context",
+				"elements": [
+					{
+						"type": "plain_text",
+						"text": "Check Today's Repairs to see why :nerd_face:",
+						"emoji": True
+					}
+				]
+			}]
+
+		search['blocks'] = to_add + search['blocks']
+
+	return search
+
+
+def bookings_search_results(body):
+	search_block_id = body['actions'][0]['block_id']
+
+	basic = {}
+
+
+def todays_repairs(bookings):
+
+	def generate_results_blocks(monday_bookings):
+		def generate_results_block(client_name, main_id):
+			dct = {
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": client_name
+				},
+				"accessory": {
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Accept",
+						"emoji": True
+					},
+					"value": main_id,
+					"action_id": "select_booking"
+				}
+			}
+			return dct
+
+		blocks = [{"type": "divider"}]
+		for item in monday_bookings:
+			blocks.append(generate_results_block(item.name, str(item.id)))
+			blocks.append({"type": "divider"})
+
+		return blocks
+
+	view = {
+		"type": "modal",
+		"title": {
+			"type": "plain_text",
+			"text": "My App",
+			"emoji": True
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Submit",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": generate_results_blocks(bookings)
+	}
+	return view
+
+
 def pre_repair_info(main_item, resp_body):
 	item_id = main_item.mon_id
 	client_name = main_item.name
@@ -388,7 +502,8 @@ def parts_search_results(resp_body):
 
 	metadata = helper.get_metadata(resp_body)
 
-	available_repairs = config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']] + config.PART_SELECTION_OPTIONS['General']
+	available_repairs = config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']] + config.PART_SELECTION_OPTIONS[
+		'General']
 
 	results = []
 	for item in available_repairs:
