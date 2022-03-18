@@ -119,10 +119,17 @@ def _add_routing(app):
 		# =========== Action Block Submissions
 		@app.action("user_search")
 		def user_search(ack, body, logger, client):
-			logger.info("Searching for user after user search response")
+			logger.info("Showing Todays Repairs")
 			ack()
 
 			eric.slack_user_search(body, client)
+
+		@app.action("select_booking")
+		def begin_walk_in_receipt(ack, body, logger, client):
+			logger.info('Beginning walk in acceptance process')
+			ack()
+
+			eric.show_walk_in_info(body, client)
 
 		@app.action("end_repair_phase")
 		def end_repair_phase(ack, body, logger, client):

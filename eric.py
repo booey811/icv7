@@ -692,6 +692,24 @@ def show_todays_repairs_group(body, client):
 	)
 	# move into
 
+def show_walk_in_info(body, client):
+
+	# send loading view
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.loading("Getting available bookings")
+	)
+
+	main_id = body['actions'][0]['value']
+	item = BaseItem(CustomLogger(), main_id)
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
+		view=views.walk_in_info(item)
+	)
+
+
+
 
 def begin_slack_repair_process(body, client):
 	# Get active user IDs

@@ -7,6 +7,10 @@ from . import helper, config
 from application import mon_config
 
 
+def _get_divider_block():
+	return {"type": "divider"}
+
+
 def _convert_monday_time_to_string(monday_date_column):
 	if monday_date_column.date:
 		try:
@@ -158,7 +162,6 @@ def bookings_search_results(body):
 
 
 def todays_repairs(bookings):
-
 	def generate_results_blocks(monday_bookings):
 		def generate_results_block(client_name, main_id):
 			dct = {
@@ -191,12 +194,7 @@ def todays_repairs(bookings):
 		"type": "modal",
 		"title": {
 			"type": "plain_text",
-			"text": "My App",
-			"emoji": True
-		},
-		"submit": {
-			"type": "plain_text",
-			"text": "Submit",
+			"text": "Todays Repairs",
 			"emoji": True
 		},
 		"close": {
@@ -205,6 +203,95 @@ def todays_repairs(bookings):
 			"emoji": True
 		},
 		"blocks": generate_results_blocks(bookings)
+	}
+	return view
+
+
+def walk_in_info(main_item):
+
+	def add_main_header(blocks):
+		blocks.append({
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": f"{main_item.name} | {main_item.device.labels[0]} | {main_item.repair_type.label}",
+				"emoji": True
+			}
+		})
+		return blocks
+
+	def add_repairs_header(blocks):
+
+		blocks.append({
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "Requested Repairs",
+					"emoji": True
+				}
+			})
+
+	def add_repairs_texts(blocks):
+
+		def generate_fields():
+
+			fields = []
+
+			for repair in main_item.repairs.labels:
+				fields.append({
+					"type": "plain_text",
+					"text": str(repair),
+					"emoji": True
+				})
+
+			return fields
+
+		blocks.append({
+			"type": "section",
+			"fields": generate_fields()
+		})
+		return blocks
+
+	def add_repair_notes_input(blocks):
+		blocks.append({
+				"type": "input",
+				"element": {
+					"type": "plain_text_input",
+					"multiline": True,
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Intro Notes (If Any)",
+					"emoji": True
+				}
+			})
+		return blocks
+
+	view_blocks = []
+	add_main_header(view_blocks)
+	add_repairs_header(view_blocks)
+	add_repairs_texts(view_blocks)
+	add_repair_notes_input(view_blocks)
+
+	view = {
+		"type": "modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Booking Info",
+			"emoji": True
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Begin Checks",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": view_blocks
 	}
 	return view
 
