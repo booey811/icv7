@@ -214,7 +214,7 @@ def walk_in_info(main_item):
 			"type": "header",
 			"text": {
 				"type": "plain_text",
-				"text": f"{main_item.name} | {main_item.device.labels[0]} | {main_item.repair_type.label}",
+				"text": f"{main_item.name} | {device_label} | {repair_type}",
 				"emoji": True
 			}
 		})
@@ -244,12 +244,20 @@ def walk_in_info(main_item):
 					"emoji": True
 				})
 
-			return fields
+			if fields:
+				return fields
+			else:
+				return [{
+					"type": "plain_text",
+					"text": "No Repairs Requested",
+					"emoji": True
+				}]
 
 		blocks.append({
 			"type": "section",
 			"fields": generate_fields()
 		})
+
 		return blocks
 
 	def add_repair_notes_input(blocks):
@@ -267,6 +275,16 @@ def walk_in_info(main_item):
 				}
 			})
 		return blocks
+
+	if main_item.device.labels:
+		device_label = main_item.device.labels[0]
+	else:
+		device_label = "Unconfirmed Device"
+
+	if main_item.repair_type.value:
+		repair_type = main_item.repair_type.label
+	else:
+		repair_type = "Unconfirmed Repair Type"
 
 	view_blocks = []
 	add_main_header(view_blocks)
