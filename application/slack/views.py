@@ -99,6 +99,145 @@ def loading(footnotes=''):
 	return view
 
 
+def stock_check_flow_maker(body):
+	def get_base_modal_view():
+		return {
+			"type": "modal",
+			"title": {
+				"type": "plain_text",
+				"text": "Stock Checker",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+	def add_device_type_options(blocks):
+		blocks.append({
+			"type": "input",
+			"block_id": "stock_device_type",
+			"dispatch_action": True,
+			"element": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select a type",
+					"emoji": True
+				},
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "iPhone",
+							"emoji": True
+						},
+						"value": "iPhone"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "iPad",
+							"emoji": True
+						},
+						"value": "iPad"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "MacBook",
+							"emoji": True
+						},
+						"value": "MacBook"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Apple Watch",
+							"emoji": True
+						},
+						"value": "Apple Watch"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Other",
+							"emoji": True
+						},
+						"value": "Other"
+					}
+				],
+				"action_id": "stock_device_type"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Device Type",
+				"emoji": True
+			}
+		})
+
+	def add_device_options(blocks):
+
+		def get_device_options():
+
+			options = []
+
+			for item in data.MAIN_DEVICE:
+				if chosen in item:
+					options.append({
+						"text": {
+							"type": "plain_text",
+							"text": chosen,
+							"emoji": True
+						},
+						"value": chosen
+					})
+			return options
+
+		blocks.append({
+			"type": "input",
+			"dispatch_action": True,
+			"element": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select a device",
+					"emoji": True
+				},
+				"options": get_device_options(),
+				"action_id": "select_stock_device"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Device",
+				"emoji": True
+			}
+		})
+
+	view = get_base_modal_view()
+
+	# check if this was initiated by a command, meaning its the entry point
+	try:
+		phase = body['actions'][0]['action_id']
+		chosen = body['actions'][0]['value']
+	except KeyError:
+		# intial route
+		add_device_type_options(view['blocks'])
+		return view
+
+	# check the body for the action id to work out point in flow
+	if phase == 'stock_device_type':
+		add_device_type_options(view['blocks'])
+		add_device_options(view['blocks'])
+	else:
+		raise Exception(f"unencountered choice in stokc chekcer {phase}")
+
+	return view
+
+
 def bookings_search_input(body, invalid_search=False):
 	metadata = helper.get_metadata(body)
 
@@ -208,7 +347,6 @@ def todays_repairs(bookings):
 
 
 def walk_in_info(main_item):
-
 	def add_main_header(blocks):
 		blocks.append({
 			"type": "header",
@@ -221,20 +359,17 @@ def walk_in_info(main_item):
 		return blocks
 
 	def add_repairs_header(blocks):
-
 		blocks.append({
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "Requested Repairs",
-					"emoji": True
-				}
-			})
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Requested Repairs",
+				"emoji": True
+			}
+		})
 
 	def add_repairs_texts(blocks):
-
 		def generate_fields():
-
 			fields = []
 
 			for repair in main_item.repairs.labels:
@@ -254,18 +389,18 @@ def walk_in_info(main_item):
 
 	def add_repair_notes_input(blocks):
 		blocks.append({
-				"type": "input",
-				"element": {
-					"type": "plain_text_input",
-					"multiline": True,
-					"action_id": "plain_text_input-action"
-				},
-				"label": {
-					"type": "plain_text",
-					"text": "Intro Notes (If Any)",
-					"emoji": True
-				}
-			})
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"multiline": True,
+				"action_id": "plain_text_input-action"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Intro Notes (If Any)",
+				"emoji": True
+			}
+		})
 		return blocks
 
 	view_blocks = []

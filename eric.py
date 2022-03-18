@@ -697,6 +697,27 @@ def show_todays_repairs_group(body, client, dev=False):
 	)
 	# move into
 
+def check_stock(body, client, initial=False):
+
+	# send loading view
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.loading("Beginning Stock Check")
+	)
+
+	if initial:
+		resp = client.views_update(
+			view_id=resp["view"]["id"],
+			view=views.stock_check_flow_maker(body)
+		)
+	else:
+		resp = client.views_update(
+			external_id="stock_checker",
+			view=views.stock_check_flow_maker(body)
+		)
+
+
+
 def show_walk_in_info(body, client):
 
 	# send loading view
@@ -712,8 +733,6 @@ def show_walk_in_info(body, client):
 		hash=resp["view"]["hash"],
 		view=views.walk_in_info(item)
 	)
-
-
 
 
 def begin_slack_repair_process(body, client):

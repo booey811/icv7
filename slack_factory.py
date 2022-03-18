@@ -118,11 +118,27 @@ def _add_routing(app):
 
 		@app.command("/devbookings")
 		def show_dev_group_repairs(ack, body, logger, client):
-			logger.info("Showing todays repairs")
+			logger.info("Showing dev repairs")
 			ack()
 			eric.show_todays_repairs_group(body, client, dev=True)
 
+		@app.command("/stock")
+		def check_stock_levels(ack, body, logger, client):
+			logger.info("Showing todays repairs")
+			ack()
+			eric.check_stock(body, client, initial=True)
+
+
 		# =========== Action Block Submissions
+
+		# Stock Checking Routes
+
+		@app.action("stock_device_type")
+		def check_stock(ack, body, logger, client):
+			logger.info("Checking stock")
+			ack()
+			eric.check_stock(body, client)
+
 		@app.action("user_search")
 		def user_search(ack, body, logger, client):
 			logger.info("Showing Todays Repairs")
