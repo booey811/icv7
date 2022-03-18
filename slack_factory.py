@@ -13,10 +13,17 @@ def create_slack_app():
 		app = flask.Flask('fake_slack')
 		_add_routing(app)
 	elif os.environ['SLACK'] == "ON":
-		token = os.environ["SLACK_BOT_TOKEN"]
-		app = App(token=token)
+		if os.environ["ENV"] == 'devlocal':
+			print("CONNECTING TO SLACK/DEV")
+			bot_token = os.environ["SLACK_DEV_BOT_TOKEN"]
+			app_token = os.environ["SLACK_DEV_APP_TOKEN"]
+		else:
+			bot_token = os.environ["SLACK_BOT_TOKEN"]
+			app_token = os.environ["SLACK_APP_TOKEN"]
+
+		app = App(token=bot_token)
 		_add_routing(app)
-		handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+		handler = SocketModeHandler(app, app_token)
 		handler.connect()
 	else:
 		raise Exception("Slack App initialised with incorrect SLACK env var")
@@ -194,13 +201,6 @@ def _add_routing(app):
 			ack()
 
 			eric.continue_parts_search(body, client)
-
-		@app.action("add_part_to_repair")
-		def add_parts_to_repair(ack, body, logger, client):
-			logger.info("Parts Search Received")
-			ack()
-
-			eric.add_repair_next_iteration(body, client)
 
 		@app.action('waste_opt_in')
 		def register_waste_entry(ack, body, logger, client):
