@@ -12,6 +12,27 @@ def add_divider_block(blocks):
 	return blocks
 
 
+def add_book_new_repair_button(blocks):
+	blocks.append({
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": "Want to add a new repair? Click here  :point_right:"
+		},
+		"accessory": {
+			"type": "button",
+			"text": {
+				"type": "plain_text",
+				"text": ":iphone: New Repair",
+				"emoji": True
+			},
+			"value": "no_value_needed",
+			"action_id": "new_repair"
+		}
+	})
+	return blocks
+
+
 def _convert_monday_time_to_string(monday_date_column):
 	if monday_date_column.date:
 		try:
@@ -374,6 +395,26 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 
 def bookings_search_input(body, invalid_search=False):
+
+	def add_book_new_repair_button(blocks):
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Want to add a new repair? Click here  :point_right:"
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": ":iphone: New Repair",
+					"emoji": True
+				},
+				"value": "no_value_needed",
+				"action_id": "new_repair"
+			}
+		})
+
 	metadata = helper.get_metadata(body)
 
 	search = {
@@ -425,6 +466,8 @@ def bookings_search_input(body, invalid_search=False):
 			}]
 
 		search['blocks'] = to_add + search['blocks']
+
+	add_book_new_repair_button(search['blocks'])
 
 	return search
 
@@ -478,6 +521,12 @@ def todays_repairs(bookings):
 		},
 		"blocks": generate_results_blocks(bookings)
 	}
+
+	add_divider_block(view['blocks'])
+	add_divider_block(view['blocks'])
+
+	add_book_new_repair_button(view["blocks"])
+
 	return view
 
 
