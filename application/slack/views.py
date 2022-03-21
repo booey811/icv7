@@ -395,7 +395,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 
 def bookings_search_input(body, invalid_search=False):
-
 	def add_book_new_repair_button(blocks):
 		blocks.append({
 			"type": "section",
@@ -470,12 +469,6 @@ def bookings_search_input(body, invalid_search=False):
 	add_book_new_repair_button(search['blocks'])
 
 	return search
-
-
-def bookings_search_results(body):
-	search_block_id = body['actions'][0]['block_id']
-
-	basic = {}
 
 
 def todays_repairs(bookings):
@@ -1165,6 +1158,27 @@ def user_search_request(body, zenpy_results=None, initial=False):
 
 		return blocks
 
+	def add_new_user_button(blocks):
+
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Can't find the person you're looking for?  :point_right:"
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": ":new:   New User",
+					"emoji": True
+				},
+				"value": "no_value_needed",
+				"action_id": "button_new_user"
+			}
+		})
+		return blocks
+
 	metadata = helper.get_metadata(body)
 
 	view = add_base_modal()
@@ -1173,115 +1187,99 @@ def user_search_request(body, zenpy_results=None, initial=False):
 	if not initial:
 		add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
 
+	add_divider_block(view['blocks'])
+	add_divider_block(view['blocks'])
+
+	add_new_user_button(view['blocks'])
+
 	return view
 
 
-def user_search_results(zenpy_search_object):
-	def _generate_results_blocks():
-		def _get_name(username, zendesk_id):
+def new_user_form():
+	def get_base_modal():
+		return {
+			"type": "modal",
+			"callback_id": "new_user_input",
+			"title": {
+				"type": "plain_text",
+				"text": "Add New User",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Add User",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []}
 
-			def _get_username():
-				if not username:
-					return "looks like we're missing this data"
-				else:
-					return username
-
-			def _get_id():
-				if not zendesk_id:
-					return "looks like we're missing this data"
-				else:
-					return str(zendesk_id)
-
-			dct = {
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": _get_username()
+	def add_input_blocks(blocks):
+		blocks += [
+			{
+				"type": "input",
+				"block_id": "new_user_name",
+				"optional": False,
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
 				},
-				"accessory": {
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Select User",
-						"emoji": True
-					},
-					"value": _get_id(),
-					"action_id": "user_select"
+				"label": {
+					"type": "plain_text",
+					"text": "First Name",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+				"block_id": "new_user_surname",
+				"optional": False,
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Surname",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+				"block_id": "new_user_email",
+				"optional": False,
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Email Address",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+				"block_id": "new_user_phone",
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Phone Number",
+					"emoji": True
 				}
 			}
-			return dct
+		]
 
-		def _get_email(email):
+	view = get_base_modal()
+	add_input_blocks(view['blocks'])
 
-			def _email():
-				if not email:
-					return "looks like we're missing this data"
-				else:
-					return email
-
-			dct = {
-				"type": "context",
-				"elements": [
-					{
-						"type": "mrkdwn",
-						"text": f"*Email*: {_email()}"
-					}
-				]
-			}
-			return dct
-
-		def _get_phone(phone):
-
-			def _phone():
-				if not phone:
-					return "looks like we're missing this data"
-				else:
-					return phone
-
-			dct = {
-				"type": "context",
-				"elements": [
-					{
-						"type": "mrkdwn",
-						"text": f"*Phone*: {_phone()}"
-					}
-				]
-			}
-			return dct
-
-		blocks = []
-
-		for user in zenpy_search_object:
-			blocks.append(_get_name(user.name, user.id))
-			blocks.append(_get_email(user.email))
-			blocks.append(_get_phone(user.phone))
-			blocks.append({"type": "divider"})
-
-		from pprint import pprint as p
-
-		p(len(blocks))
-
-		p(blocks)
-
-		return blocks
-
-	basic = {
-		"title": {
-			"type": "plain_text",
-			"text": "User Search",
-			"emoji": True
-		},
-		"type": "modal",
-		"callback_id": "user_search_results",
-		"close": {
-			"type": "plain_text",
-			"text": "Search Again",
-			"emoji": True
-		},
-		"blocks": _generate_results_blocks()
-	}
-
-	return basic
+	return view
 
 
 class OptionBuilder:

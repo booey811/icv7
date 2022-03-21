@@ -118,6 +118,7 @@ def _add_routing(app):
 
 		@app.command("/bookings")
 		def show_todays_repairs(ack, body, logger, client):
+			import time
 			logger.info("Showing todays repairs")
 			ack()
 
@@ -157,12 +158,26 @@ def _add_routing(app):
 			ack()
 			eric.check_stock(body, client, get_level=True)
 
+		@app.action("new_walkin_repair")
+		def create_new_walkin_repair(ack, body, logger, client):
+			logger.info("Request received to book in new repair")
+			ack()
+
+			eric.new_walkin_repair(body, client)
+
 		@app.action("user_search")
 		def user_search(ack, body, logger, client):
 			logger.info("Showing Todays Repairs")
 			ack()
 
 			eric.slack_user_search(body, client)
+
+		@app.action("button_new_user")
+		def get_new_user_input(ack, body, logger, client):
+			logger.info("New User Request Received - Providing Inputs")
+			ack()
+
+			eric.show_new_user_form(body, client)
 
 		@app.action("select_booking")
 		def begin_walk_in_receipt(ack, body, logger, client):
@@ -252,7 +267,12 @@ def _add_routing(app):
 			eric.begin_specific_slack_repair(body, client)
 			return True
 
+		@app.view("new_user_input")
+		def add_new_user(ack, body, logger, client):
+			logger.info("New User Inputs Received, Adding User")
+			ack()
 
+			eric.check_and_create_new_user(body, client)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

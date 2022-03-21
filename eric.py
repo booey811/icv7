@@ -693,6 +693,39 @@ def show_todays_repairs_group(body, client, dev=False):
 	)
 
 
+def new_walkin_repair(body, client):
+	pass
+
+
+def show_new_user_form(body, client):
+	resp = client.views_push(
+		trigger_id=body['trigger_id'],
+		view=views.loading("Generating New User Form")
+	)
+
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
+		view=views.new_user_form()
+	)
+
+
+def check_and_create_new_user(body, client):
+	resp = client.views_open(
+		trigger_id=body['trigger_id'],
+		view=views.loading("Attempting to create user")
+	)
+
+	email = body['view']['state']['values']['new_user_email']['plain_text_input-action']['value']
+	phone = body['view']['state']['values']['new_user_phone']['plain_text_input-action']['value']
+	name = body['view']['state']['values']['new_user_name']['plain_text_input-action']['value']
+	surname = body['view']['state']['values']['new_user_surname']['plain_text_input-action']['value']
+
+	print(email, phone, name, surname)
+
+	raise Exception("BOOKMARK!!!! Got data from form, just need to check against Zendesk and react accordingly")
+
+
 def check_stock(body, client, initial=False, get_level=False):
 	def get_stock_level(metadata, repair_selection):
 
@@ -933,13 +966,6 @@ def process_waste_entry(body, client):
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
 		view=views.loading("We haven't developed this yet....... Nothing is loading")
-	)
-
-
-def begin_slack_user_search(body, client):
-	resp = client.views_open(
-		trigger_id=body['trigger_id'],
-		view=views.user_search_request()
 	)
 
 
