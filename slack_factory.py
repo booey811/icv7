@@ -1,4 +1,6 @@
 import os
+import time
+
 import eric
 from pprint import pprint as p
 
@@ -31,32 +33,17 @@ def create_slack_app():
 	return app
 
 
-def get_load_screen(footnotes=''):
+def loader(footnotes=''):
 	"""returns the view for the modal screen showing that the application has received a request and is processing it
 	adds in a footnote to the loading screen for more specific information"""
-	view = {
-		"type": "modal",
-		"title": {
-			"type": "plain_text",
-			"text": "Beginning Repairs",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Cancel",
-			"emoji": True
-		},
-		"blocks": [
-			{
+	blocks = [{
 				"type": "header",
 				"text": {
 					"type": "plain_text",
 					"text": "Please wait... Eric is thinking big thoughts",
 					"emoji": True
 				}
-			}
-		]
-	}
+			}]
 
 	if footnotes:
 		context = {
@@ -68,9 +55,9 @@ def get_load_screen(footnotes=''):
 				}
 			]
 		}
-		view['blocks'].append(context)
+		blocks.append(context)
 
-	return view
+	return blocks
 
 
 def _add_routing(app):
@@ -80,8 +67,14 @@ def _add_routing(app):
 
 		@app.command("/test")
 		def run_test_action(ack, body, logger, client, say):
-			ack()
-			eric.test_route(body, client, say)
+			ack(
+				text="TEST LOAD SCREEN",
+				blocks=loader("TESTER")
+			)
+
+			time.sleep(2)
+
+			eric.test_route(body, client)
 
 		@app.command("/devrepair")
 		def begin_slack_repair_process(ack, body, logger, client):
@@ -114,11 +107,10 @@ def _add_routing(app):
 
 			logger.info("User Search Begin request received")
 			ack()
-			eric.slack_user_search(body, client, initial=True)
+			eric.slack_user_search_init(body, client)
 
 		@app.command("/bookings")
 		def show_todays_repairs(ack, body, logger, client):
-			import time
 			logger.info("Showing todays repairs")
 			ack()
 
@@ -134,9 +126,10 @@ def _add_routing(app):
 		def check_stock_levels(ack, body, logger, client):
 			logger.info("Beginning Stock Check Flow")
 			ack()
-			eric.check_stock(body, client, initial=True)
+			eric.check_stock(body, client)
 
 		# =========== Action Block Submissions
+		# Working Theory: Should be responded to with 'Push'
 
 		# Stock Checking Routes
 
@@ -158,6 +151,8 @@ def _add_routing(app):
 			ack()
 			eric.check_stock(body, client, get_level=True)
 
+		# Other Action Routes
+
 		@app.action("new_walkin_repair")
 		def create_new_walkin_repair(ack, body, logger, client):
 			logger.info("Request received to book in new repair")
@@ -166,11 +161,11 @@ def _add_routing(app):
 			eric.new_walkin_repair(body, client)
 
 		@app.action("user_search")
-		def user_search(ack, body, logger, client):
-			logger.info("Showing Todays Repairs")
-			ack()
+		def user_search_results(ack, body, logger, client):
+			logger.info("Searching Zendesk for User Input")
+			ack({"response_action": "clear"})
 
-			eric.slack_user_search(body, client)
+			eric.slack_user_search_results(body, client)
 
 		@app.action("button_new_user")
 		def get_new_user_input(ack, body, logger, client):
@@ -270,9 +265,8 @@ def _add_routing(app):
 		@app.view("new_user_input")
 		def add_new_user(ack, body, logger, client):
 			logger.info("New User Inputs Received, Adding User")
-			ack()
 
-			eric.check_and_create_new_user(body, client)
+			eric.check_and_create_new_user(body, client, ack)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

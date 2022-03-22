@@ -12,6 +12,18 @@ def add_divider_block(blocks):
 	return blocks
 
 
+def add_header_block(blocks, text):
+	blocks.append({
+		"type": "header",
+		"text": {
+			"type": "plain_text",
+			"text": text,
+			"emoji": True
+		}
+	})
+	return blocks
+
+
 def add_book_new_repair_button(blocks):
 	blocks.append({
 		"type": "section",
@@ -1065,7 +1077,7 @@ def continue_parts_search(resp_body):
 	return basic
 
 
-def user_search_request(body, zenpy_results=None, initial=False):
+def user_search_request(body, zenpy_results=None, research=False):
 	if not zenpy_results:
 		zenpy_results = []
 
@@ -1073,6 +1085,7 @@ def user_search_request(body, zenpy_results=None, initial=False):
 		return {
 			"type": "modal",
 			"private_metadata": json.dumps(metadata),
+			"external_id": "user_search",
 			"title": {
 				"type": "plain_text",
 				"text": "Stock Checker",
@@ -1103,7 +1116,7 @@ def user_search_request(body, zenpy_results=None, initial=False):
 		})
 		return blocks
 
-	def add_results_block(blocks, zenpy_search_object):
+	def add_results_blocks(blocks, zenpy_search_object):
 
 		add_divider_block(blocks)
 
@@ -1158,6 +1171,9 @@ def user_search_request(body, zenpy_results=None, initial=False):
 
 		return blocks
 
+	def add_failed_user_addition(blocks):
+		add_header_block(blocks, f"Sorry, we found {len(zenpy_results)} users with that email:")
+
 	def add_new_user_button(blocks):
 
 		blocks.append({
@@ -1179,18 +1195,63 @@ def user_search_request(body, zenpy_results=None, initial=False):
 		})
 		return blocks
 
+	def add_failed_search_block(blocks):
+
+		blocks += [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "We found too many results there",
+					"emoji": True
+				}
+			},
+			{
+				"type": "context",
+				"elements": [
+					{
+						"type": "plain_text",
+						"text": "Please try to be a little more specific (email addresses work brilliantly!)",
+						"emoji": True
+					}
+				]
+			}
+		]
+		return blocks
+
 	metadata = helper.get_metadata(body)
 
 	view = add_base_modal()
-
 	add_search_input(view['blocks'])
-	if not initial:
-		add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
 
-	add_divider_block(view['blocks'])
+	if zenpy_results:
+		if len(zenpy_results) > 50:
+			add_failed_search_block(view['blocks'])
+		else:
+			add_results_blocks(view['blocks'], zenpy_search_object=zenpy_results)
+			add_divider_block(view['blocks'])
+
 	add_divider_block(view['blocks'])
 
 	add_new_user_button(view['blocks'])
+
+	# metadata = helper.get_metadata(body)
+	# if not metadata["views"]["user_search"]:
+	# 	try:
+	# 		metadata["views"]["user_search"] = body["view"]["id"]
+	# 	except KeyError:
+	# 		print("Cannot Gt View ID from Response Body")
+	#
+	# view = add_base_modal()
+	# add_search_input(view['blocks'])
+	#
+	# if initial:
+	# 	pass
+	# else:
+	# 	if failed_addition:
+	# 		add_failed_user_addition(view['blocks'])
+	# 	add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
+	# 	add_divider_block(view['blocks'])
 
 	return view
 

@@ -59,6 +59,9 @@ def _init_metadata():
 		"repairs": [],
 		"parts": [],
 		"financial": [],
+		"views": {
+			"user_search": ""
+		},
 		"extra": {
 			"selected_repairs": []
 		}

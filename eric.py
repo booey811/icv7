@@ -697,6 +697,35 @@ def new_walkin_repair(body, client):
 	pass
 
 
+def slack_user_search_init(body, client):
+	resp = client.views_open(
+		trigger_id=body["trigger_id"],
+		view=views.user_search_request(body)
+	)
+
+
+def slack_user_search_results(body, client):
+	resp = client.views_update(
+		# trigger_id=body['trigger_id'],
+		external_id="user_search",
+		view=views.loading(f"Searching Database")
+	)
+
+	search_term = body['actions'][0]['value']
+	results = clients.zendesk.search(search_term, type='user')
+
+	if 100 >= len(results) > 0:
+		resp = client.views_update(
+			view_id=resp['view']['id'],
+			hash=resp["view"]["hash"],
+			view=views.user_search_request(body, zenpy_results=results)
+		)
+
+	else:
+		# create user flow
+		print("CREATE USER FLOW")
+
+
 def show_new_user_form(body, client):
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
@@ -704,13 +733,13 @@ def show_new_user_form(body, client):
 	)
 
 	resp = client.views_update(
-		view_id=resp["view"]["id"],
+		view_id=resp['view']['id'],
 		hash=resp["view"]["hash"],
 		view=views.new_user_form()
 	)
 
 
-def check_and_create_new_user(body, client):
+def check_and_create_new_user(body, client, ack):
 	resp = client.views_open(
 		trigger_id=body['trigger_id'],
 		view=views.loading("Attempting to create user")
@@ -721,21 +750,21 @@ def check_and_create_new_user(body, client):
 	name = body['view']['state']['values']['new_user_name']['plain_text_input-action']['value']
 	surname = body['view']['state']['values']['new_user_surname']['plain_text_input-action']['value']
 
-	# check the user is not dense: does the email already exist?
-	p(email)
+	# check the user is not dense: does the email already exist in Zendesk?
 	results = clients.zendesk.search(email, type='user')
 
-	for item in results:
-		p(item.name)
-
-	if results:
+	if 10 > len(results) > 0:
 		resp = client.views_update(
-			view_id=resp["view"]["id"],
-			hash=resp["view"]["hash"],
-			view=views.user_search_request(body, results)
+			view_id=resp['view']['id'],
+			hash=resp['view']['hash'],
+			view=views.user_search_request(body, zenpy_results=results, failed_addition=True)
 		)
-
-
+	elif len(results) == 0:
+		# No users found continue creation
+		ack()
+	else:
+		# No results found
+		ack()
 
 
 def check_stock(body, client, initial=False, get_level=False):
@@ -815,18 +844,6 @@ def check_stock(body, client, initial=False, get_level=False):
 		hash=hash_val,
 		view=views.stock_check_flow_maker(body, initial=initial, get_level=get_level)
 	)
-
-
-# if initial:
-# 	resp = client.views_update(
-# 		view_id=resp["view"]["id"],
-# 		view=views.stock_check_flow_maker(body)
-# 	)
-# else:
-# 	resp = client.views_update(
-# 		external_id="stock_checker",
-# 		view=views.stock_check_flow_maker(body)
-# 	)
 
 
 def show_walk_in_info(body, client):
@@ -981,50 +998,15 @@ def process_waste_entry(body, client):
 	)
 
 
-def slack_user_search(body, client, initial=False, stack_view=False):
-	if initial:
-		# Show loading screen
-		if stack_view:
-			body = client.views_push(
-				trigger_id=body['trigger_id'],
-				view=views.loading(f"Setting Up User Search")
-			)
-		else:
-			body = client.views_open(
-				trigger_id=body['trigger_id'],
-				view=views.loading(f"Setting Up User Search")
-			)
-
-		client.views_update(
-			view_id=body["view"]["id"],
-			hash=body["view"]["hash"],
-			view=views.user_search_request(body, initial=initial)
-		)
-	else:
-
-		resp = client.views_push(
-			trigger_id=body['trigger_id'],
-			view=views.loading(f"Searching Database")
-		)
-
-		search_term = body['actions'][0]['value']
-		results = clients.zendesk.search(search_term, type='user')
-
-		resp = client.views_update(
-			view_id=resp["view"]["id"],
-			hash=resp["view"]["hash"],
-			view=views.user_search_request(body, results)
-		)
-
-
-def test_route(body, client, say):
+def test_user_init(body, client):
 	"""loads loading screen for user and returns slack response for manipulation in console"""
 	resp = client.views_open(
 		trigger_id=body['trigger_id'],
 		view={
+			"type": "modal",
 			"title": {
 				"type": "plain_text",
-				"text": "Repair Details",
+				"text": "views_open",
 				"emoji": True
 			},
 			"submit": {
@@ -1032,8 +1014,6 @@ def test_route(body, client, say):
 				"text": "Submit",
 				"emoji": True
 			},
-			"type": "modal",
-			"callback_id": "parts_submit",
 			"close": {
 				"type": "plain_text",
 				"text": "Cancel",
@@ -1041,26 +1021,45 @@ def test_route(body, client, say):
 			},
 			"blocks": [
 				{
-					"dispatch_action": True,
-					"type": "input",
-					"element": {
-						"type": "plain_text_input",
-						"dispatch_action_config": {
-							"trigger_actions_on": [
-								"on_character_entered"
-							]
-						},
-						"action_id": "user_search"
-					},
-					"label": {
+					"type": "header",
+					"text": {
 						"type": "plain_text",
-						"text": "Label",
+						"text": "This is a header block",
 						"emoji": True
 					}
+				},
+				{
+					"type": "section",
+					"fields": [
+						{
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": True
+						},
+						{
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": True
+						},
+						{
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": True
+						},
+						{
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": True
+						},
+						{
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": True
+						}
+					]
 				}
 			]
-		}
-	)
+		})
 	return resp
 
 
