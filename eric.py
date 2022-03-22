@@ -721,9 +721,21 @@ def check_and_create_new_user(body, client):
 	name = body['view']['state']['values']['new_user_name']['plain_text_input-action']['value']
 	surname = body['view']['state']['values']['new_user_surname']['plain_text_input-action']['value']
 
-	print(email, phone, name, surname)
+	# check the user is not dense: does the email already exist?
+	p(email)
+	results = clients.zendesk.search(email, type='user')
 
-	raise Exception("BOOKMARK!!!! Got data from form, just need to check against Zendesk and react accordingly")
+	for item in results:
+		p(item.name)
+
+	if results:
+		resp = client.views_update(
+			view_id=resp["view"]["id"],
+			hash=resp["view"]["hash"],
+			view=views.user_search_request(body, results)
+		)
+
+
 
 
 def check_stock(body, client, initial=False, get_level=False):
@@ -971,7 +983,6 @@ def process_waste_entry(body, client):
 
 def slack_user_search(body, client, initial=False, stack_view=False):
 	if initial:
-		p('============= initial')
 		# Show loading screen
 		if stack_view:
 			body = client.views_push(
