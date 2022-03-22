@@ -25,22 +25,27 @@ COLOURED_PARTS = [
 ]
 
 
-def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False):
+def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False, force_device=False):
     mainboard_item.log(f"Generating Search Terms for {mainboard_item.name}: {mainboard_item.mon_id}")
 
     terms = []
 
+    if force_device:
+        device_id = force_device
+    else:
+        device_id = mainboard_item.device.ids[0]
+
     # If no repair is supplied, retrieve the following
     if not mainboard_item.repairs.ids or generic:
         mainboard_item.log("No Repairs Supplied - Fetching Screens, Battery & Rear Cam")
-        terms.append(f"{mainboard_item.device.ids[0]}-{69}-{10}")  # Device screen black uni
-        terms.append(f"{mainboard_item.device.ids[0]}-{84}-{10}")  # Device screen black tosh
-        terms.append(f"{mainboard_item.device.ids[0]}-{83}-{10}")  # Device screen black lg
-        terms.append(f"{mainboard_item.device.ids[0]}-{69}-{16}")  # Device screen white uni
-        terms.append(f"{mainboard_item.device.ids[0]}-{84}-{16}")  # Device screen white tosh
-        terms.append(f"{mainboard_item.device.ids[0]}-{83}-{16}")  # Device screen white lg
-        terms.append(f"{mainboard_item.device.ids[0]}-{71}")  # Device battery
-        terms.append(f"{mainboard_item.device.ids[0]}-{70}")  # Device r cam
+        terms.append(f"{device_id}-{69}-{10}")  # Device screen black uni
+        terms.append(f"{device_id}-{84}-{10}")  # Device screen black tosh
+        terms.append(f"{device_id}-{83}-{10}")  # Device screen black lg
+        terms.append(f"{device_id}-{69}-{16}")  # Device screen white uni
+        terms.append(f"{device_id}-{84}-{16}")  # Device screen white tosh
+        terms.append(f"{device_id}-{83}-{16}")  # Device screen white lg
+        terms.append(f"{device_id}-{71}")  # Device battery
+        terms.append(f"{device_id}-{70}")  # Device r cam
 
     else:
         for repair_id in mainboard_item.repairs.ids:
@@ -52,13 +57,13 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False):
             if label in COLOURED_PARTS:
                 if not mainboard_item.device_colour.index:
                     mainboard_item.log(f"No Colour Supplied - Autogenerating for Black and White")
-                    terms.append(f"{mainboard_item.device.ids[0]}-{repair_id}-10")
-                    terms.append(f"{mainboard_item.device.ids[0]}-{repair_id}-16")
+                    terms.append(f"{device_id}-{repair_id}-10")
+                    terms.append(f"{device_id}-{repair_id}-16")
                     continue
                 else:
-                    search_term = f"{int(mainboard_item.device.ids[0])}-{int(repair_id)}-{int(mainboard_item.device_colour.index)}"
+                    search_term = f"{int(device_id)}-{int(repair_id)}-{int(mainboard_item.device_colour.index)}"
             else:
-                search_term = f"{mainboard_item.device.ids[0]}-{repair_id}"
+                search_term = f"{device_id}-{repair_id}"
 
             mainboard_item.log(f"Generated {search_term}")
 
