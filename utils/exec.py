@@ -75,6 +75,8 @@ def generate_repair_set(forced_repair_ids=()):
     if forced_repair_ids:
         repair_ids = forced_repair_ids
         gennie.log(f"Forcing Repair IDs: {repair_ids}")
+    elif gennie.repairs.ids:
+        repair_ids = gennie.repairs.ids
     else:
         for option in STANDARD_REPAIR_OPTIONS:
             if option in gennie.device.labels[0]:
