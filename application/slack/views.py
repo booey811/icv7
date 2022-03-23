@@ -4,7 +4,7 @@ from pprint import pprint as p
 
 import data
 from . import helper, config
-from application import mon_config
+from application import mon_config, BaseItem, EricTicket
 
 
 def add_divider_block(blocks):
@@ -533,6 +533,116 @@ def todays_repairs(bookings):
 	add_divider_block(view['blocks'])
 
 	add_book_new_repair_button(view["blocks"])
+
+	return view
+
+
+def walkin_booking_info(body, zen_user, monday_item: BaseItem = None, ticket: EricTicket = None):
+	def get_base_modal():
+		return {
+			"title": {
+				"type": "plain_text",
+				"text": "Repair Information",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Accept Walk-In",
+				"emoji": True
+			},
+			"type": "modal",
+			"callback_id": "accept_walkin_repair",
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+	def add_header(title, blocks):
+		blocks.append({
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": title,
+				"emoji": True
+			}
+		})
+		return blocks
+
+	def add_plain_line(text, blocks):
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "plain_text",
+				"text": text,
+				"emoji": True
+			}
+		})
+		return blocks
+
+	def add_combined_line(title, value, blocks):
+		blocks += [
+			{
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": f"*{title}*"
+				}
+			},
+			{
+				"type": "context",
+				"elements": [
+					{
+						"type": "mrkdwn",
+						"text": f"{value}"
+					}
+				]
+			}
+		]
+		return blocks
+
+	def add_client_info(blocks):
+
+		to_add = []
+		add_plain_line(f"{zen_user.name}[{zen_user.id}]", to_add)
+		add_plain_line(zen_user.email, to_add)
+		add_plain_line(zen_user.phone, to_add)
+		add_divider_block(to_add)
+		blocks += to_add
+		return blocks
+
+	def add_client_repair_data(device_str, repairs_list, blocks):
+		# report client provided data back to the view
+		if not device_str:
+			device_str = "Not Provided - Please Confirm"
+		if repairs_list:
+			repairs_str = ", ".join(repairs_list)
+		else:
+			repairs_str = "Not Provided - Please Confirm"
+		to_add = []
+		add_combined_line("Device", device_str, to_add)
+		add_combined_line("Requested Repairs", repairs_str, to_add)
+		blocks += to_add
+		return blocks
+
+	metadata = helper.get_metadata(body)
+
+	view = get_base_modal()
+
+	add_client_info(view['blocks'])
+	metadata["zendesk"]["user"] = str(zen_user.id)
+	if ticket:
+		metadata["zendesk"]["ticket"] = str(ticket.id)
+
+	if monday_item:
+		add_client_repair_data(monday_item.device.labels[0], monday_item.repairs.labels, view["blocks"])
+		metadata["main"] = monday_item.mon_id
+
+	add_header("Confirmations", view['blocks'])
+
+	view["private_metadata"] = json.dumps(metadata)
 
 	return view
 
@@ -1141,7 +1251,7 @@ def user_search_request(body, zenpy_results=None, research=False):
 						"emoji": True
 					},
 					"value": str(zendesk_id),
-					"action_id": "user_select"
+					"action_id": "new_walkin_repair"
 				}
 			})
 			return blocks
@@ -1406,15 +1516,15 @@ def new_user_result_view(body, zendesk_user):
 					"text": f"*{attribute}*"
 				}
 			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "mrkdwn",
-						"text": str(val)
-					}
-				]
-			}]
+				{
+					"type": "context",
+					"elements": [
+						{
+							"type": "mrkdwn",
+							"text": str(val)
+						}
+					]
+				}]
 
 		info = {
 			"name": zendesk_user.name,
@@ -1437,12 +1547,7 @@ def new_user_result_view(body, zendesk_user):
 	return view
 
 
-
-
-
-
 def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
-
 	def get_base_modal():
 
 		if failed_to_create:

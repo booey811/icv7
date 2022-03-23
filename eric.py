@@ -872,20 +872,54 @@ def check_stock(body, client, initial=False, get_level=False):
 	)
 
 
-def show_walk_in_info(body, client):
+def show_walk_in_info(body, client, from_search=False, from_booking=False):
+
 	# send loading view
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
-		view=views.loading("Getting available bookings")
+		view=views.loading("Getting Walk-In Acceptance Data")
 	)
 
-	main_id = body['actions'][0]['value']
-	item = BaseItem(CustomLogger(), main_id)
+	meta = s_help.get_metadata(body)
+	item = None
+	ticket = None
+
+	if from_booking:
+		item = BaseItem(CustomLogger(), body['actions'][0]['value'])
+		ticket = EricTicket(item.logger, item.zendesk_id.value)
+		user = ticket.zenpy_ticket.requester
+	elif from_search:
+		user = clients.zendesk.users(id=body['actions'][0]['value'])
+	else:
+		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
+
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=views.walk_in_info(item)
+		view=views.walkin_booking_info(body, user, item, ticket)
 	)
+
+def accept_walkin_repair_data(ack, body, logger, client):
+
+	ack({
+		"response_action": "update",
+		"view": views.loading("Not Yet developed - Used for data viewing on local machine")
+	})
+
+	metadata = s_help.get_metadata(body)
+
+	p(metadata)
+
+
+
+	#
+	# main_id = body['actions'][0]['value']
+	# item = BaseItem(CustomLogger(), main_id)
+	# resp = client.views_update(
+	# 	view_id=resp["view"]["id"],
+	# 	hash=resp["view"]["hash"],
+	# 	view=views.walk_in_info(item)
+	# )
 
 
 def begin_slack_repair_process(body, client):
