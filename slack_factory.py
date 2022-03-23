@@ -76,14 +76,14 @@ def _add_routing(app):
 
 		@app.command("/test")
 		def run_test_action(ack, body, logger, client, say):
-			ack(
-				text="TEST LOAD SCREEN",
-				blocks=loader("TESTER")
-			)
 
-			time.sleep(2)
+			ack({
+				"response_action": "open",
+				"view": loader("Getting Walk-In Acceptance Data")
+			})
+			time.sleep(5)
 
-			eric.test_route(body, client)
+			eric.show_walk_in_info(body, client)
 
 		@app.command("/devrepair")
 		def begin_slack_repair_process(ack, body, logger, client):

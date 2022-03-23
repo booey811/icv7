@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import json
 from pprint import pprint as p
 
+from zenpy.lib.api_objects import User
+
 from application import BaseItem, EricTicket
 
 
@@ -109,6 +111,11 @@ def get_metadata(resp_body, update=False, new_data_item=None):
 			meta["zendesk"]["user"]['email'] = data_item.user['email']
 			meta["zendesk"]["user"]['phone'] = data_item.user['phone']
 
+		elif type(data_item) is User:
+			meta["zendesk"]["user"]['id'] = data_item.id
+			meta["zendesk"]["user"]['name'] = data_item.name
+			meta["zendesk"]["user"]['email'] = data_item.email
+			meta["zendesk"]["user"]['phone'] = data_item.phone
 		else:
 			raise Exception(f"Cannot Update Metadata with {type(data_item)}")
 

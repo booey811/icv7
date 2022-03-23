@@ -6,6 +6,7 @@ import json
 
 import rq
 import zenpy.lib.api_objects
+from zenpy.lib.exception import APIException as zen_ex
 
 from moncli.api_v2.exceptions import MondayApiError
 
@@ -702,7 +703,6 @@ def slack_user_search_init(body, client):
 
 
 def slack_user_search_results(body, client):
-
 	meta = s_help.get_metadata(body)
 	external_id = meta['external_id']
 
@@ -739,7 +739,6 @@ def show_new_user_form(body, client):
 
 
 def check_and_create_new_user(body, client, ack):
-
 	external_id = s_help.create_external_view_id(body, "creating_user")
 
 	ack({
@@ -759,23 +758,16 @@ def check_and_create_new_user(body, client, ack):
 
 	if len(results) == 0:
 		# create user
-		if phone:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email,
-				phone=phone
-			)
-		else:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email
-			)
-
+		user = zenpy.lib.api_objects.User(
+			name=f"{name} {surname}",
+			email=email,
+			phone=phone
+		)
 		try:
 			user = clients.zendesk.users.create(user)
 			# generate view
 			view = views.new_user_result_view(body, user)
-		except zenpy.ZenpyException as e:
+		except zen_ex as e:
 			view = views.failed_new_user_creation_view(email, len(results), e)
 
 	else:
@@ -886,6 +878,7 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False):
 		user = ticket.zenpy_ticket.requester
 	elif from_search:
 		user = clients.zendesk.users(id=body['actions'][0]['value'])
+		p(user)
 	else:
 		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
 
@@ -897,16 +890,14 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False):
 		view=view
 	)
 
-def handle_walk_in_updates(body, client, phase):
 
+def handle_walk_in_updates(body, client, phase):
 	metadata = s_help.get_metadata(body)
 
 	resp = client.views_update(
 		external_id=metadata["external_id"],
 		view=views.walkin_booking_info(body=body, phase=phase)
 	)
-
-
 
 
 def begin_slack_repair_process(body, client):

@@ -703,18 +703,23 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	def add_client_info(blocks):
 		if zen_user:
+			p("USER ====================================")
 			name = zen_user.name
-			z_id = zen_user.email
+			p(name)
 			email = zen_user.email
+			p(email)
 			phone = zen_user.phone
+			p(phone)
 		else:
 			name = metadata["zendesk"]["user"]["name"]
-			z_id = metadata["zendesk"]["ticket"]["id"]
 			email = metadata["zendesk"]["user"]["email"]
 			phone = metadata["zendesk"]["user"]["phone"]
 
+
+		p("CLIENT")
+
 		to_add = []
-		add_plain_line(f"{name}[{z_id}]", to_add)
+		add_plain_line(f"{name}", to_add)
 		add_plain_line(email, to_add)
 		add_plain_line(phone, to_add)
 		add_divider_block(to_add)
@@ -729,6 +734,9 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		else:
 			device_str = metadata["device"]["model"]
 			repairs_str = ", ".join(metadata["repairs"]["labels"])
+
+		if not device_str:
+			device_str = "Unconfirmed - Please confirm"
 
 		if not repairs_str:
 			repairs_str = "Unconfirmed - Please confirm"
@@ -747,9 +755,11 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "init":
 			if ticket:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=ticket)
-
 			if monday_item:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=monday_item)
+			if zen_user:
+				metadata = helper.get_metadata(body, update=metadata, new_data_item=zen_user)
+
 
 		add_client_info(view['blocks'])
 		add_client_repair_data(view["blocks"])
@@ -814,6 +824,9 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
+
+		p("VIEW SUBMISSSON ============================")
+		p(view)
 		return view
 
 
@@ -1546,6 +1559,7 @@ def new_user_result_view(body, zendesk_user):
 		return {
 			"type": "modal",
 			"private_metadata": json.dumps(metadata),
+			"callback_id": "new_walkin_repair",
 			"title": {
 				"type": "plain_text",
 				"text": "Create New User",
@@ -1606,15 +1620,19 @@ def new_user_result_view(body, zendesk_user):
 		return blocks
 
 	metadata = helper.get_metadata(body)
-	metadata["zendesk"]["user"] = zendesk_user.id
+	metadata["zendesk"]["user"]['id'] = zendesk_user.id
 
 	view = get_base_modal()
 	add_attribute_block(view["blocks"])
 
+	add_divider_block(view["blocks"])
+
+	add_header_block(view["blocks"], f"Please close this view and search for the user to begin repairs (we'll fix this sooon!")
+
 	return view
 
 
-def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
+def failed_new_user_creation_view(email, no_of_results, failed_to_create=False, phone_issue=False):
 	def get_base_modal():
 
 		if failed_to_create:
@@ -1701,6 +1719,9 @@ def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
 					}
 				]
 			}
+
+		if phone_issue:
+			add_header_block(base['blocks'], "The phone number you entered is not possible")
 
 		return base
 
