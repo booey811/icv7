@@ -70,6 +70,10 @@ PART_SELECTION_OPTIONS = {
 	]
 }
 
+REPAIR_TYPES = [
+	"Repair", "Diagnostic"
+]
+
 
 class TwoWayDict(dict):
 

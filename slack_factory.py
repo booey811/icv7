@@ -197,6 +197,21 @@ def _add_routing(app):
 
 			eric.handle_walk_in_updates(body, client, "device_type")
 
+		@app.action("select_accept_device")
+		def accept_walkin_device(ack, body, logger, client):
+			logger.info("Walkin Accept Device Selected")
+			ack()
+
+			eric.handle_walk_in_updates(body, client, "device")
+
+
+		@app.action("radio_accept_device")
+		def accept_walkin_repair_type(ack, body, logger, client):
+			logger.info("Walkin Accept Device Selected")
+			ack()
+
+			eric.handle_walk_in_updates(body, client, "repair_type")
+
 		@app.action("select_booking")
 		def begin_walk_in_receipt(ack, body, logger, client):
 			logger.info('Beginning walk in acceptance process')
