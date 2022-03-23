@@ -98,7 +98,7 @@ def loading(footnotes='', external_id=False):
 		"type": "modal",
 		"title": {
 			"type": "plain_text",
-			"text": "Beginning Repairs",
+			"text": "Processing",
 			"emoji": True
 		},
 		"close": {
@@ -351,7 +351,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 	# check if this was initiated by a command, meaning its the entry point
 	if initial:
 		view = get_base_modal_view()
-		p("Stock checker init view ======================================= ")
 		add_device_type_options(view['blocks'])
 		return view
 
@@ -1095,7 +1094,7 @@ def user_search_request(body, zenpy_results=None, research=False):
 			"external_id": external_id,
 			"title": {
 				"type": "plain_text",
-				"text": "Stock Checker",
+				"text": "User Search",
 				"emoji": True
 			},
 			"submit": {
