@@ -65,7 +65,11 @@ def _init_metadata():
 		"extra": {
 			"selected_repairs": []
 		},
-		"external_id": ""
+		"external_id": "",
+		"zendesk": {
+			"user": '',
+			"ticket": ""
+		}
 	}
 
 	return dct

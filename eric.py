@@ -5,6 +5,7 @@ from pprint import pprint as p
 import json
 
 import rq
+import zenpy.lib.api_objects
 
 from moncli.api_v2.exceptions import MondayApiError
 
@@ -737,15 +738,20 @@ def show_new_user_form(body, client):
 	resp = client.views_update(
 		view_id=resp['view']['id'],
 		hash=resp["view"]["hash"],
-		view=views.new_user_form()
+		view=views.new_user_form(body)
 	)
 
 
 def check_and_create_new_user(body, client, ack):
-	resp = client.views_open(
-		trigger_id=body['trigger_id'],
-		view=views.loading("Attempting to create user")
-	)
+
+	external_id = s_help.create_external_view_id(body, "creating_user")
+
+	ack({
+		"response_action": "update",
+		"view": views.loading("Attempting to Create User", external_id)
+	})
+
+	meta = s_help.get_metadata(body)
 
 	email = body['view']['state']['values']['new_user_email']['plain_text_input-action']['value']
 	phone = body['view']['state']['values']['new_user_phone']['plain_text_input-action']['value']
@@ -755,18 +761,36 @@ def check_and_create_new_user(body, client, ack):
 	# check the user is not dense: does the email already exist in Zendesk?
 	results = clients.zendesk.search(email, type='user')
 
-	if 10 > len(results) > 0:
-		resp = client.views_update(
-			view_id=resp['view']['id'],
-			hash=resp['view']['hash'],
-			view=views.user_search_request(body, zenpy_results=results, failed_addition=True)
-		)
-	elif len(results) == 0:
-		# No users found continue creation
-		ack()
+	if len(results) == 0:
+		# create user
+		if phone:
+			user = zenpy.lib.api_objects.User(
+				name=f"{name} {surname}",
+				email=email,
+				phone=phone
+			)
+		else:
+			user = zenpy.lib.api_objects.User(
+				name=f"{name} {surname}",
+				email=email
+			)
+
+		try:
+			user = clients.zendesk.users.create(user)
+			# generate view
+			view = views.new_user_result_view(body, user)
+		except zenpy.ZenpyException as e:
+			view = views.failed_new_user_creation_view(email, len(results), e)
+
 	else:
-		# No results found
-		ack()
+		p("USERS FOUND ===============================")
+		# user found with that email, please go back to search and enter this email
+		view = views.failed_new_user_creation_view(email, len(results))
+
+	resp = client.views_update(
+		external_id=external_id,
+		view=view
+	)
 
 
 def check_stock(body, client, initial=False, get_level=False):

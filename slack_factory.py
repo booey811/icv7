@@ -36,6 +36,7 @@ def create_slack_app():
 def loader(footnotes=''):
 	"""returns the view for the modal screen showing that the application has received a request and is processing it
 	adds in a footnote to the loading screen for more specific information"""
+
 	blocks = [{
 				"type": "header",
 				"text": {
@@ -57,7 +58,15 @@ def loader(footnotes=''):
 		}
 		blocks.append(context)
 
-	return blocks
+	view = {
+		"type": "modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Creating User"
+		},
+		"blocks": blocks
+	}
+	return view
 
 
 def _add_routing(app):
