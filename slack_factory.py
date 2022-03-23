@@ -162,7 +162,7 @@ def _add_routing(app):
 
 		# Other Action Routes
 
-		@app.action("new_walkin_repair")
+		@app.action("DEPRECATED1")
 		def create_new_walkin_repair(ack, body, logger, client):
 			logger.info("Request received to book in new repair")
 			ack()
@@ -183,12 +183,20 @@ def _add_routing(app):
 
 			eric.show_new_user_form(body, client)
 
+		@app.action("new_walkin_repair")
+		def accept_walkin_from_user_select(ack, body, logger, client):
+			logger.info("New Walk-In Request from User Select Menu")
+			p("-================================= CAUGHT")
+			ack()
+
+			eric.show_walk_in_info(body, client, from_search=True)
+
 		@app.action("select_booking")
 		def begin_walk_in_receipt(ack, body, logger, client):
 			logger.info('Beginning walk in acceptance process')
 			ack()
 
-			eric.show_walk_in_info(body, client)
+			eric.show_walk_in_info(body, client, from_booking=True)
 
 		@app.action("end_repair_phase")
 		def end_repair_phase(ack, body, logger, client):
@@ -276,6 +284,13 @@ def _add_routing(app):
 			logger.info("New User Inputs Received, Adding User")
 
 			eric.check_and_create_new_user(body, client, ack)
+
+		@app.view("accept_walkin_repair")
+		def accept_walkin_repair_data(ack, body, logger, client):
+			logger.info("Walk In Repair Accepted - Processing")
+			ack()
+			eric.accept_walkin_repair_data(ack, body, logger, client)
+
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
