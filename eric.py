@@ -760,11 +760,12 @@ def check_and_create_new_user(body, client, ack):
 		# create user
 		user = zenpy.lib.api_objects.User(
 			name=f"{name} {surname}",
-			email=email,
-			phone=phone
+			email=email
 		)
 		try:
 			user = clients.zendesk.users.create(user)
+			user.phone = phone
+			user = clients.zendesk.users.update(user)
 			# generate view
 			view = views.new_user_result_view(body, user)
 		except zen_ex as e:

@@ -703,20 +703,21 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	def add_client_info(blocks):
 		if zen_user:
-			p("USER ====================================")
 			name = zen_user.name
-			p(name)
 			email = zen_user.email
-			p(email)
 			phone = zen_user.phone
-			p(phone)
+
 		else:
 			name = metadata["zendesk"]["user"]["name"]
 			email = metadata["zendesk"]["user"]["email"]
 			phone = metadata["zendesk"]["user"]["phone"]
 
-
-		p("CLIENT")
+		if not name:
+			name = "Somehow, we don't have a name on this client's account - please take one"
+		if not email:
+			email = "Somehow, we don't have an email associated with this client's account - please take one"
+		if not phone:
+			phone = "Somehow, we don't have a phone number for this client's account - please take one"
 
 		to_add = []
 		add_plain_line(f"{name}", to_add)
@@ -778,7 +779,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "init":
 			raise UpdateComplete
 
-		p(body)
 
 		device_type = body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option']['value']
 
@@ -824,9 +824,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
-
-		p("VIEW SUBMISSSON ============================")
-		p(view)
 		return view
 
 
@@ -1620,7 +1617,7 @@ def new_user_result_view(body, zendesk_user):
 		return blocks
 
 	metadata = helper.get_metadata(body)
-	metadata["zendesk"]["user"]['id'] = zendesk_user.id
+	metadata = helper.get_metadata(body, update=metadata, new_data_item=zendesk_user)
 
 	view = get_base_modal()
 	add_attribute_block(view["blocks"])
@@ -1628,6 +1625,7 @@ def new_user_result_view(body, zendesk_user):
 	add_divider_block(view["blocks"])
 
 	add_header_block(view["blocks"], f"Please close this view and search for the user to begin repairs (we'll fix this sooon!")
+
 
 	return view
 
