@@ -705,25 +705,27 @@ def slack_user_search_init(body, client):
 
 
 def slack_user_search_results(body, client):
+
+	meta = s_help.get_metadata(body)
+	external_id = meta['external_id']
+
 	resp = client.views_update(
 		# trigger_id=body['trigger_id'],
-		external_id="user_search",
+		external_id=external_id,
 		view=views.loading(f"Searching Database")
 	)
 
 	search_term = body['actions'][0]['value']
 	results = clients.zendesk.search(search_term, type='user')
 
-	if 100 >= len(results) > 0:
-		resp = client.views_update(
-			view_id=resp['view']['id'],
-			hash=resp["view"]["hash"],
-			view=views.user_search_request(body, zenpy_results=results)
-		)
+	p("RESULTS ======================================================================================================")
+	p(len(results))
 
-	else:
-		# create user flow
-		print("CREATE USER FLOW")
+	resp = client.views_update(
+		view_id=resp["view"]["id"],
+		hash=resp["view"]["hash"],
+		view=views.user_search_request(body, zenpy_results=results)
+	)
 
 
 def show_new_user_form(body, client):

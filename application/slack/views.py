@@ -1082,10 +1082,14 @@ def user_search_request(body, zenpy_results=None, research=False):
 		zenpy_results = []
 
 	def add_base_modal():
+
+		external_id = helper.create_external_view_id(body, "user_search")
+		metadata['external_id'] = external_id
+
 		return {
 			"type": "modal",
 			"private_metadata": json.dumps(metadata),
-			"external_id": "user_search",
+			"external_id": external_id,
 			"title": {
 				"type": "plain_text",
 				"text": "Stock Checker",
@@ -1172,15 +1176,21 @@ def user_search_request(body, zenpy_results=None, research=False):
 		return blocks
 
 	def add_failed_user_addition(blocks):
-		add_header_block(blocks, f"Sorry, we found {len(zenpy_results)} users with that email:")
+		add_header_block(blocks, f"Sorry, we found {len(zenpy_results)} users with this search:")
 
-	def add_new_user_button(blocks):
+	def add_new_user_button(blocks, no_users_found=False):
+
+		if no_users_found:
+			text = "No users Found with this search term - create one?"
+		else:
+			text = "Can't find the person you're looking for?  :point_right:"
+
 
 		blocks.append({
 			"type": "section",
 			"text": {
 				"type": "mrkdwn",
-				"text": "Can't find the person you're looking for?  :point_right:"
+				"text": text
 			},
 			"accessory": {
 				"type": "button",
@@ -1224,16 +1234,21 @@ def user_search_request(body, zenpy_results=None, research=False):
 	view = add_base_modal()
 	add_search_input(view['blocks'])
 
-	if zenpy_results:
-		if len(zenpy_results) > 50:
-			add_failed_search_block(view['blocks'])
-		else:
-			add_results_blocks(view['blocks'], zenpy_search_object=zenpy_results)
-			add_divider_block(view['blocks'])
+	no_user_found = False
+	if len(zenpy_results) == 0:
+		no_user_found = True
+	elif len(zenpy_results) < 25:
+		add_results_blocks(view['blocks'], zenpy_search_object=zenpy_results)
+		add_divider_block(view['blocks'])
+	elif len(zenpy_results) > 24:
+		add_failed_search_block(view['blocks'])
+	else:
+		raise Exception(f"Mathematically Impossible Number of Zendesk Search Results {len(zenpy_results)}")
 
 	add_divider_block(view['blocks'])
+	add_new_user_button(view["blocks"], no_users_found=no_user_found)
 
-	add_new_user_button(view['blocks'])
+
 
 	# metadata = helper.get_metadata(body)
 	# if not metadata["views"]["user_search"]:

@@ -64,7 +64,8 @@ def _init_metadata():
 		},
 		"extra": {
 			"selected_repairs": []
-		}
+		},
+		"external_id": ""
 	}
 
 	return dct
@@ -83,3 +84,11 @@ def get_metadata(resp_body):
 		return _init_metadata()
 
 
+def create_external_view_id(body, view_name):
+	p(body)
+	try:
+		user_id = body['user_id']
+	except KeyError:
+		user_id = body['user']['id']
+	now = str(datetime.now())
+	return f"{view_name}-{user_id}-{now}"
