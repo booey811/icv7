@@ -59,8 +59,16 @@ def _init_metadata():
 		"repairs": [],
 		"parts": [],
 		"financial": [],
+		"views": {
+			"user_search": ""
+		},
 		"extra": {
 			"selected_repairs": []
+		},
+		"external_id": "",
+		"zendesk": {
+			"user": '',
+			"ticket": ""
 		}
 	}
 
@@ -80,3 +88,11 @@ def get_metadata(resp_body):
 		return _init_metadata()
 
 
+def create_external_view_id(body, view_name):
+	p(body)
+	try:
+		user_id = body['user_id']
+	except KeyError:
+		user_id = body['user']['id']
+	now = str(datetime.now())
+	return f"{view_name}-{user_id}-{now}"

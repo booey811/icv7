@@ -7,8 +7,42 @@ from . import helper, config
 from application import mon_config
 
 
-def add_divider_block():
-	return {"type": "divider"}
+def add_divider_block(blocks):
+	blocks.append({"type": "divider"})
+	return blocks
+
+
+def add_header_block(blocks, text):
+	blocks.append({
+		"type": "header",
+		"text": {
+			"type": "plain_text",
+			"text": text,
+			"emoji": True
+		}
+	})
+	return blocks
+
+
+def add_book_new_repair_button(blocks):
+	blocks.append({
+		"type": "section",
+		"text": {
+			"type": "mrkdwn",
+			"text": "Want to add a new repair? Click here  :point_right:"
+		},
+		"accessory": {
+			"type": "button",
+			"text": {
+				"type": "plain_text",
+				"text": ":iphone: New Repair",
+				"emoji": True
+			},
+			"value": "no_value_needed",
+			"action_id": "new_repair"
+		}
+	})
+	return blocks
 
 
 def _convert_monday_time_to_string(monday_date_column):
@@ -57,14 +91,14 @@ def _construct_markdown_option(title, description='', chosen_value=''):
 	return dct
 
 
-def loading(footnotes=''):
+def loading(footnotes='', external_id=False):
 	"""returns the view for the modal screen showing that the application has received a request and is processing it
 	adds in a footnote to the loading screen for more specific information"""
 	view = {
 		"type": "modal",
 		"title": {
 			"type": "plain_text",
-			"text": "Beginning Repairs",
+			"text": "Processing",
 			"emoji": True
 		},
 		"close": {
@@ -95,6 +129,9 @@ def loading(footnotes=''):
 			]
 		}
 		view['blocks'].append(context)
+
+	if external_id:
+		view["external_id"] = external_id
 
 	return view
 
@@ -314,7 +351,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 	# check if this was initiated by a command, meaning its the entry point
 	if initial:
 		view = get_base_modal_view()
-		p("Stock checker init view ======================================= ")
 		add_device_type_options(view['blocks'])
 		return view
 
@@ -373,6 +409,25 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 
 def bookings_search_input(body, invalid_search=False):
+	def add_book_new_repair_button(blocks):
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Want to add a new repair? Click here  :point_right:"
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": ":iphone: New Repair",
+					"emoji": True
+				},
+				"value": "no_value_needed",
+				"action_id": "new_repair"
+			}
+		})
+
 	metadata = helper.get_metadata(body)
 
 	search = {
@@ -425,13 +480,9 @@ def bookings_search_input(body, invalid_search=False):
 
 		search['blocks'] = to_add + search['blocks']
 
+	add_book_new_repair_button(search['blocks'])
+
 	return search
-
-
-def bookings_search_results(body):
-	search_block_id = body['actions'][0]['block_id']
-
-	basic = {}
 
 
 def todays_repairs(bookings):
@@ -477,6 +528,12 @@ def todays_repairs(bookings):
 		},
 		"blocks": generate_results_blocks(bookings)
 	}
+
+	add_divider_block(view['blocks'])
+	add_divider_block(view['blocks'])
+
+	add_book_new_repair_button(view["blocks"])
+
 	return view
 
 
@@ -1022,60 +1079,59 @@ def continue_parts_search(resp_body):
 	return basic
 
 
-def user_search_request():
-	basic = {
-		"title": {
-			"type": "plain_text",
-			"text": "User Search",
-			"emoji": True
-		},
-		"type": "modal",
-		"callback_id": "user_search_request",
-		"close": {
-			"type": "plain_text",
-			"text": "Cancel",
-			"emoji": True
-		},
-		"blocks": [
-			{
-				"dispatch_action": True,
-				"type": "input",
-				"element": {
-					"type": "plain_text_input",
-					"action_id": "user_search"
-				},
-				"label": {
-					"type": "plain_text",
-					"text": "User Search",
-					"emoji": True
-				}
+def user_search_request(body, zenpy_results=None, research=False):
+	if not zenpy_results:
+		zenpy_results = []
+
+	def add_base_modal():
+
+		external_id = helper.create_external_view_id(body, "user_search")
+		metadata['external_id'] = external_id
+
+		return {
+			"type": "modal",
+			"private_metadata": json.dumps(metadata),
+			"external_id": external_id,
+			"title": {
+				"type": "plain_text",
+				"text": "User Search",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+	def add_search_input(blocks):
+		blocks.append({
+			"dispatch_action": True,
+			"type": "input",
+			"block_id": "text_input_user_search",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "user_search"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "User Search",
+				"emoji": True
 			}
-		]
-	}
-	return basic
+		})
+		return blocks
 
+	def add_results_blocks(blocks, zenpy_search_object):
 
-def user_search_results(zenpy_search_object):
-	def _generate_results_blocks():
-		def _get_name(username, zendesk_id):
+		add_divider_block(blocks)
 
-			def _get_username():
-				if not username:
-					return "looks like we're missing this data"
-				else:
-					return username
-
-			def _get_id():
-				if not zendesk_id:
-					return "looks like we're missing this data"
-				else:
-					return str(zendesk_id)
-
-			dct = {
+		def add_name_and_button(username, zendesk_id, blocks):
+			blocks.append({
 				"type": "section",
 				"text": {
 					"type": "mrkdwn",
-					"text": _get_username()
+					"text": str(username),
 				},
 				"accessory": {
 					"type": "button",
@@ -1084,83 +1140,401 @@ def user_search_results(zenpy_search_object):
 						"text": "Select User",
 						"emoji": True
 					},
-					"value": _get_id(),
+					"value": str(zendesk_id),
 					"action_id": "user_select"
 				}
-			}
-			return dct
+			})
+			return blocks
 
-		def _get_email(email):
+		def add_context_lines(email, phone, blocks):
 
-			def _email():
-				if not email:
-					return "looks like we're missing this data"
-				else:
-					return email
+			if not email:
+				email = "looks like we're missing this data"
 
-			dct = {
+			if not phone:
+				phone = "looks like we're missing this data"
+
+			blocks.append({
 				"type": "context",
 				"elements": [
 					{
 						"type": "mrkdwn",
-						"text": f"*Email*: {_email()}"
-					}
-				]
-			}
-			return dct
-
-		def _get_phone(phone):
-
-			def _phone():
-				if not phone:
-					return "looks like we're missing this data"
-				else:
-					return phone
-
-			dct = {
-				"type": "context",
-				"elements": [
+						"text": f"*Email*: {str(email)}"
+					},
 					{
 						"type": "mrkdwn",
-						"text": f"*Phone*: {_phone()}"
+						"text": f"*Phone*: {str(phone)}"
 					}
 				]
-			}
-			return dct
+			})
 
-		blocks = []
+			return blocks
 
 		for user in zenpy_search_object:
-			blocks.append(_get_name(user.name, user.id))
-			blocks.append(_get_email(user.email))
-			blocks.append(_get_phone(user.phone))
-			blocks.append({"type": "divider"})
-
-		from pprint import pprint as p
-
-		p(len(blocks))
-
-		p(blocks)
+			add_name_and_button(user.name, user.id, blocks)
+			add_context_lines(user.email, user.phone, blocks)
+			add_divider_block(blocks)
 
 		return blocks
 
-	basic = {
-		"title": {
-			"type": "plain_text",
-			"text": "User Search",
-			"emoji": True
-		},
-		"type": "modal",
-		"callback_id": "user_search_results",
-		"close": {
-			"type": "plain_text",
-			"text": "Search Again",
-			"emoji": True
-		},
-		"blocks": _generate_results_blocks()
-	}
+	def add_failed_user_addition(blocks):
+		add_header_block(blocks, f"Sorry, we found {len(zenpy_results)} users with this search:")
 
-	return basic
+	def add_new_user_button(blocks, no_users_found=False):
+
+		if no_users_found:
+			text = "No users Found with this search term - create one?"
+		else:
+			text = "Can't find the person you're looking for?  :point_right:"
+
+		blocks.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": text
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": ":new:   New User",
+					"emoji": True
+				},
+				"value": "no_value_needed",
+				"action_id": "button_new_user"
+			}
+		})
+		return blocks
+
+	def add_failed_search_block(blocks):
+
+		blocks += [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "We found too many results there",
+					"emoji": True
+				}
+			},
+			{
+				"type": "context",
+				"elements": [
+					{
+						"type": "plain_text",
+						"text": "Please try to be a little more specific (email addresses work brilliantly!)",
+						"emoji": True
+					}
+				]
+			}
+		]
+		return blocks
+
+	metadata = helper.get_metadata(body)
+
+	view = add_base_modal()
+	add_search_input(view['blocks'])
+
+	no_user_found = False
+	if len(zenpy_results) == 0:
+		no_user_found = True
+	elif len(zenpy_results) < 25:
+		add_results_blocks(view['blocks'], zenpy_search_object=zenpy_results)
+		add_divider_block(view['blocks'])
+	elif len(zenpy_results) > 24:
+		add_failed_search_block(view['blocks'])
+	else:
+		raise Exception(f"Mathematically Impossible Number of Zendesk Search Results {len(zenpy_results)}")
+
+	add_divider_block(view['blocks'])
+	add_new_user_button(view["blocks"], no_users_found=no_user_found)
+
+	# metadata = helper.get_metadata(body)
+	# if not metadata["views"]["user_search"]:
+	# 	try:
+	# 		metadata["views"]["user_search"] = body["view"]["id"]
+	# 	except KeyError:
+	# 		print("Cannot Gt View ID from Response Body")
+	#
+	# view = add_base_modal()
+	# add_search_input(view['blocks'])
+	#
+	# if initial:
+	# 	pass
+	# else:
+	# 	if failed_addition:
+	# 		add_failed_user_addition(view['blocks'])
+	# 	add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
+	# 	add_divider_block(view['blocks'])
+
+	return view
+
+
+def new_user_form(body):
+	def get_base_modal():
+		external_id = helper.create_external_view_id(body, "new_user_input")
+		metadata['external_id'] = external_id
+
+		return {
+			"type": "modal",
+			"callback_id": "new_user_input",
+			"private_metadata": json.dumps(metadata),
+			"external_id": external_id,
+			"title": {
+				"type": "plain_text",
+				"text": "Add New User",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Add User",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []}
+
+	def add_input_blocks(blocks):
+		blocks += [
+			{
+				"type": "input",
+				"block_id": "new_user_name",
+				"optional": False,
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "First Name",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+				"block_id": "new_user_surname",
+				"optional": False,
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Surname",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+				"block_id": "new_user_email",
+				"optional": False,
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Email Address",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+				"block_id": "new_user_phone",
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "plain_text_input-action"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Phone Number",
+					"emoji": True
+				}
+			}
+		]
+
+	metadata = helper.get_metadata(body)
+
+	view = get_base_modal()
+	add_input_blocks(view['blocks'])
+
+	return view
+
+
+def new_user_result_view(body, zendesk_user):
+	def get_base_modal():
+		return {
+			"type": "modal",
+			"private_metadata": json.dumps(metadata),
+			"title": {
+				"type": "plain_text",
+				"text": "Create New User",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Create New Repair",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": [
+				{
+					"type": "header",
+					"text": {
+						"type": "plain_text",
+						"text": "User Created",
+						"emoji": True
+					}
+				}
+			]
+		}
+
+	def add_attribute_block(blocks):
+
+		def get_blocks(attribute, val):
+			return [{
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": f"*{attribute}*"
+				}
+			},
+			{
+				"type": "context",
+				"elements": [
+					{
+						"type": "mrkdwn",
+						"text": str(val)
+					}
+				]
+			}]
+
+		info = {
+			"name": zendesk_user.name,
+			"email": zendesk_user.email,
+			"phone": zendesk_user.phone
+		}
+
+		for att in info:
+			if info[att]:
+				blocks += get_blocks(att, info[att])
+
+		return blocks
+
+	metadata = helper.get_metadata(body)
+	metadata["zendesk"]["user"] = zendesk_user.id
+
+	view = get_base_modal()
+	add_attribute_block(view["blocks"])
+
+	return view
+
+
+
+
+
+
+def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
+
+	def get_base_modal():
+
+		if failed_to_create:
+			base = {
+				"type": "modal",
+				"callback_id": "user_creation_failed",
+				"title": {
+					"type": "plain_text",
+					"text": "Create New User",
+					"emoji": True
+				},
+				"close": {
+					"type": "plain_text",
+					"text": "Cancel",
+					"emoji": True
+				},
+				"blocks": [
+					{
+						"type": "header",
+						"text": {
+							"type": "plain_text",
+							"text": "Could Not Create User",
+							"emoji": True
+						}
+					},
+					{
+						"type": "section",
+						"text": {
+							"type": "mrkdwn",
+							"text": f"An error occurred while adding this user to Zendesk: {str(failed_to_create)}"
+						}
+					},
+					{
+						"type": "context",
+						"elements": [
+							{
+								"type": "mrkdwn",
+								"text": "Please return to search and use this email address to find the user"
+							}
+						]
+					}
+				]
+			}
+
+		else:
+			p("USERS FOUIND VIEw")
+
+			base = {
+				"type": "modal",
+				"callback_id": "user_already_exists",
+				"title": {
+					"type": "plain_text",
+					"text": "Create New User",
+					"emoji": True
+				},
+				"close": {
+					"type": "plain_text",
+					"text": "Return to Search",
+					"emoji": True
+				},
+				"blocks": [
+					{
+						"type": "header",
+						"text": {
+							"type": "plain_text",
+							"text": "Too Many Results Found",
+							"emoji": True
+						}
+					},
+					{
+						"type": "section",
+						"text": {
+							"type": "mrkdwn",
+							"text": f"We found {no_of_results} users with email address {email}"
+						}
+					},
+					{
+						"type": "context",
+						"elements": [
+							{
+								"type": "mrkdwn",
+								"text": "Please return to search and use this email address to find the user"
+							}
+						]
+					}
+				]
+			}
+
+		return base
+
+	view = get_base_modal()
+	return view
 
 
 class OptionBuilder:
