@@ -810,7 +810,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		)
 
 		if phase == "repair_type":
-			p(view)
 			raise UpdateComplete
 
 	except UpdateComplete as e:
