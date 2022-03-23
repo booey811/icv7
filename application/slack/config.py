@@ -21,6 +21,7 @@ PART_SELECTION_OPTIONS = {
 		'Reshaping',
 		'Logic Board',
 		'No Parts Used',
+		"Other"
 	],
 	"iPhone": [
 		'Front Screen',  # will need to check for LCD/OLED variant and Manufacturer requirements
@@ -64,8 +65,14 @@ PART_SELECTION_OPTIONS = {
 		'Front Screen',
 		'Battery',
 		'Crown',
+	],
+	"Other": [
 	]
 }
+
+REPAIR_TYPES = [
+	"Repair", "Diagnostic"
+]
 
 
 class TwoWayDict(dict):

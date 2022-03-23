@@ -6,6 +6,7 @@ import json
 
 import rq
 import zenpy.lib.api_objects
+from zenpy.lib.exception import APIException as zen_ex
 
 from moncli.api_v2.exceptions import MondayApiError
 
@@ -694,10 +695,6 @@ def show_todays_repairs_group(body, client, dev=False):
 	)
 
 
-def new_walkin_repair(body, client):
-	pass
-
-
 def slack_user_search_init(body, client):
 	resp = client.views_open(
 		trigger_id=body["trigger_id"],
@@ -706,7 +703,6 @@ def slack_user_search_init(body, client):
 
 
 def slack_user_search_results(body, client):
-
 	meta = s_help.get_metadata(body)
 	external_id = meta['external_id']
 
@@ -743,7 +739,6 @@ def show_new_user_form(body, client):
 
 
 def check_and_create_new_user(body, client, ack):
-
 	external_id = s_help.create_external_view_id(body, "creating_user")
 
 	ack({
@@ -763,23 +758,17 @@ def check_and_create_new_user(body, client, ack):
 
 	if len(results) == 0:
 		# create user
-		if phone:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email,
-				phone=phone
-			)
-		else:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email
-			)
-
+		user = zenpy.lib.api_objects.User(
+			name=f"{name} {surname}",
+			email=email
+		)
 		try:
 			user = clients.zendesk.users.create(user)
+			user.phone = phone
+			user = clients.zendesk.users.update(user)
 			# generate view
 			view = views.new_user_result_view(body, user)
-		except zenpy.ZenpyException as e:
+		except zen_ex as e:
 			view = views.failed_new_user_creation_view(email, len(results), e)
 
 	else:
@@ -890,36 +879,26 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False):
 		user = ticket.zenpy_ticket.requester
 	elif from_search:
 		user = clients.zendesk.users(id=body['actions'][0]['value'])
+		p(user)
 	else:
 		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
+
+	view = views.walkin_booking_info(body=body, zen_user=user, monday_item=item, ticket=ticket)
 
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=views.walkin_booking_info(body, user, item, ticket)
+		view=view
 	)
 
-def accept_walkin_repair_data(ack, body, logger, client):
 
-	ack({
-		"response_action": "update",
-		"view": views.loading("Not Yet developed - Used for data viewing on local machine")
-	})
-
+def handle_walk_in_updates(body, client, phase):
 	metadata = s_help.get_metadata(body)
 
-	p(metadata)
-
-
-
-	#
-	# main_id = body['actions'][0]['value']
-	# item = BaseItem(CustomLogger(), main_id)
-	# resp = client.views_update(
-	# 	view_id=resp["view"]["id"],
-	# 	hash=resp["view"]["hash"],
-	# 	view=views.walk_in_info(item)
-	# )
+	resp = client.views_update(
+		external_id=metadata["external_id"],
+		view=views.walkin_booking_info(body=body, phase=phase)
+	)
 
 
 def begin_slack_repair_process(body, client):

@@ -38,13 +38,13 @@ def loader(footnotes=''):
 	adds in a footnote to the loading screen for more specific information"""
 
 	blocks = [{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "Please wait... Eric is thinking big thoughts",
-					"emoji": True
-				}
-			}]
+		"type": "header",
+		"text": {
+			"type": "plain_text",
+			"text": "Please wait... Eric is thinking big thoughts",
+			"emoji": True
+		}
+	}]
 
 	if footnotes:
 		context = {
@@ -76,14 +76,14 @@ def _add_routing(app):
 
 		@app.command("/test")
 		def run_test_action(ack, body, logger, client, say):
-			ack(
-				text="TEST LOAD SCREEN",
-				blocks=loader("TESTER")
-			)
 
-			time.sleep(2)
+			ack({
+				"response_action": "open",
+				"view": loader("Getting Walk-In Acceptance Data")
+			})
+			time.sleep(5)
 
-			eric.test_route(body, client)
+			eric.show_walk_in_info(body, client)
 
 		@app.command("/devrepair")
 		def begin_slack_repair_process(ack, body, logger, client):
@@ -186,10 +186,31 @@ def _add_routing(app):
 		@app.action("new_walkin_repair")
 		def accept_walkin_from_user_select(ack, body, logger, client):
 			logger.info("New Walk-In Request from User Select Menu")
-			p("-================================= CAUGHT")
 			ack()
 
 			eric.show_walk_in_info(body, client, from_search=True)
+
+		@app.action("select_accept_device_type")
+		def accept_walkin_device_type(ack, body, logger, client):
+			logger.info("Walkin Accept Device Type Selected")
+			ack()
+
+			eric.handle_walk_in_updates(body, client, "device_type")
+
+		@app.action("select_accept_device")
+		def accept_walkin_device(ack, body, logger, client):
+			logger.info("Walkin Accept Device Selected")
+			ack()
+
+			eric.handle_walk_in_updates(body, client, "device")
+
+
+		@app.action("radio_accept_device")
+		def accept_walkin_repair_type(ack, body, logger, client):
+			logger.info("Walkin Accept Device Selected")
+			ack()
+
+			eric.handle_walk_in_updates(body, client, "repair_type")
 
 		@app.action("select_booking")
 		def begin_walk_in_receipt(ack, body, logger, client):
