@@ -24,6 +24,44 @@ def add_header_block(blocks, text):
 	return blocks
 
 
+def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_action_id):
+	def get_option(text):
+		option = {
+			"text": {
+				"type": "plain_text",
+				"text": text,
+				"emoji": True
+			},
+			"value": text
+		}
+		return option
+
+	slack_options = []
+	for option in options:
+		slack_options.append(get_option(option))
+
+	basic = {
+		"type": "section",
+		"block_id": block_id,
+		"text": {
+			"type": "mrkdwn",
+			"text": title
+		},
+		"accessory": {
+			"type": "static_select",
+			"placeholder": {
+				"type": "plain_text",
+				"text": placeholder,
+				"emoji": True
+			},
+			"options": slack_options,
+			"action_id": selection_action_id
+		}
+	}
+	blocks.append(basic)
+	return blocks
+
+
 def add_book_new_repair_button(blocks):
 	blocks.append({
 		"type": "section",
@@ -377,8 +415,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		add_device_options(view['blocks'])
 		add_repair_options(view['blocks'])
 		add_divider_block()
-		p("NO REPAIR FOUND META")
-		p(metadata)
 		add_no_results_block(view['blocks'])
 
 	else:
@@ -537,8 +573,13 @@ def todays_repairs(bookings):
 	return view
 
 
-def walkin_booking_info(body, zen_user, monday_item: BaseItem = None, ticket: EricTicket = None):
+def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem = None, ticket: EricTicket = None):
+	class UpdateComplete(Exception):
+		pass
+
 	def get_base_modal():
+		external_id = helper.create_external_view_id(body, "walk_in_info")
+		metadata['external_id'] = external_id
 		return {
 			"title": {
 				"type": "plain_text",
@@ -552,6 +593,7 @@ def walkin_booking_info(body, zen_user, monday_item: BaseItem = None, ticket: Er
 			},
 			"type": "modal",
 			"callback_id": "accept_walkin_repair",
+			"external_id": external_id,
 			"close": {
 				"type": "plain_text",
 				"text": "Cancel",
@@ -571,15 +613,18 @@ def walkin_booking_info(body, zen_user, monday_item: BaseItem = None, ticket: Er
 		})
 		return blocks
 
-	def add_plain_line(text, blocks):
-		blocks.append({
+	def add_plain_line(text, blocks, block_id=''):
+		block = {
 			"type": "section",
 			"text": {
 				"type": "plain_text",
 				"text": text,
 				"emoji": True
 			}
-		})
+		}
+		if block_id:
+			block["block_id"] = block
+		blocks.append(block)
 		return blocks
 
 	def add_combined_line(title, value, blocks):
@@ -604,23 +649,37 @@ def walkin_booking_info(body, zen_user, monday_item: BaseItem = None, ticket: Er
 		return blocks
 
 	def add_client_info(blocks):
+		if zen_user:
+			name = zen_user.name
+			z_id = zen_user.email
+			email = zen_user.email
+			phone = zen_user.phone
+		else:
+			name = metadata["zendesk"]["user"]["name"]
+			z_id = metadata["zendesk"]["ticket"]["id"]
+			email = metadata["zendesk"]["user"]["email"]
+			phone = metadata["zendesk"]["user"]["phone"]
 
 		to_add = []
-		add_plain_line(f"{zen_user.name}[{zen_user.id}]", to_add)
-		add_plain_line(zen_user.email, to_add)
-		add_plain_line(zen_user.phone, to_add)
+		add_plain_line(f"{name}[{z_id}]", to_add)
+		add_plain_line(email, to_add)
+		add_plain_line(phone, to_add)
 		add_divider_block(to_add)
 		blocks += to_add
 		return blocks
 
-	def add_client_repair_data(device_str, repairs_list, blocks):
+	def add_client_repair_data(blocks):
 		# report client provided data back to the view
-		if not device_str:
-			device_str = "Not Provided - Please Confirm"
-		if repairs_list:
-			repairs_str = ", ".join(repairs_list)
+		if monday_item:
+			device_str = monday_item.device.labels[0]
+			repairs_str = ", ".join(monday_item.repairs.labels)
 		else:
-			repairs_str = "Not Provided - Please Confirm"
+			device_str = metadata["device"]["model"]
+			repairs_str = ", ".join(metadata["repairs"]["labels"])
+
+		if not repairs_str:
+			repairs_str = "Unconfirmed - Please confirm"
+
 		to_add = []
 		add_combined_line("Device", device_str, to_add)
 		add_combined_line("Requested Repairs", repairs_str, to_add)
@@ -628,23 +687,54 @@ def walkin_booking_info(body, zen_user, monday_item: BaseItem = None, ticket: Er
 		return blocks
 
 	metadata = helper.get_metadata(body)
-
 	view = get_base_modal()
 
-	add_client_info(view['blocks'])
-	metadata["zendesk"]["user"] = str(zen_user.id)
-	if ticket:
-		metadata["zendesk"]["ticket"] = str(ticket.id)
+	try:
 
-	if monday_item:
-		add_client_repair_data(monday_item.device.labels[0], monday_item.repairs.labels, view["blocks"])
-		metadata["main"] = monday_item.mon_id
+		if phase == "init":
+			if ticket:
+				metadata = helper.get_metadata(body, update=metadata, new_data_item=ticket)
 
-	add_header("Confirmations", view['blocks'])
+			if monday_item:
+				metadata = helper.get_metadata(body, update=metadata, new_data_item=monday_item)
 
-	view["private_metadata"] = json.dumps(metadata)
+		add_client_info(view['blocks'])
+		add_client_repair_data(view["blocks"])
 
-	return view
+		add_header("Confirmations", view['blocks'])
+
+		add_dropdown_ui(
+			title="Device Type",
+			placeholder="Select a device type",
+			options=['iPhone', 'iPad', 'MacBook', 'Apple Watch', 'Other'],
+			blocks=view['blocks'],
+			block_id="select_device_type",
+			selection_action_id='select_accept_device_type'
+		)
+
+		if phase == "init":
+			raise UpdateComplete
+
+		p(body)
+
+		selected_option = body['actions'][0]['selected_option']['value']
+
+		add_dropdown_ui(
+			title="Device",
+			placeholder="Select device",
+			options=[item for item in data.MAIN_DEVICE if selected_option in item],
+			blocks=view['blocks'],
+			block_id="select_device",
+			selection_action_id="select_accept_device"
+		)
+
+		if phase == "device_type":
+			raise UpdateComplete
+
+	except UpdateComplete as e:
+		view["private_metadata"] = json.dumps(metadata)
+		p(view)
+		return view
 
 
 def pre_repair_info(main_item, resp_body):
@@ -1490,7 +1580,6 @@ def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
 			}
 
 		else:
-			p("USERS FOUIND VIEw")
 
 			base = {
 				"type": "modal",

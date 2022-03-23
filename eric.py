@@ -694,10 +694,6 @@ def show_todays_repairs_group(body, client, dev=False):
 	)
 
 
-def new_walkin_repair(body, client):
-	pass
-
-
 def slack_user_search_init(body, client):
 	resp = client.views_open(
 		trigger_id=body["trigger_id"],
@@ -893,33 +889,23 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False):
 	else:
 		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
 
+	view = views.walkin_booking_info(body=body, zen_user=user, monday_item=item, ticket=ticket)
+
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
-		view=views.walkin_booking_info(body, user, item, ticket)
+		view=view
 	)
 
-def accept_walkin_repair_data(ack, body, logger, client):
-
-	ack({
-		"response_action": "update",
-		"view": views.loading("Not Yet developed - Used for data viewing on local machine")
-	})
+def handle_walk_in_updates(body, client, phase):
 
 	metadata = s_help.get_metadata(body)
 
-	p(metadata)
+	resp = client.views_update(
+		external_id=metadata["external_id"],
+		view=views.walkin_booking_info(body=body, phase=phase)
+	)
 
-
-
-	#
-	# main_id = body['actions'][0]['value']
-	# item = BaseItem(CustomLogger(), main_id)
-	# resp = client.views_update(
-	# 	view_id=resp["view"]["id"],
-	# 	hash=resp["view"]["hash"],
-	# 	view=views.walk_in_info(item)
-	# )
 
 
 def begin_slack_repair_process(body, client):

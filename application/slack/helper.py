@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import json
 from pprint import pprint as p
 
-from application import BaseItem
+from application import BaseItem, EricTicket
 
 
 def add_device_type_metadata(main_item, custom_metadata):
@@ -53,10 +53,20 @@ def get_refurb_request_markdown(main_item, repairs):
 
 
 def _init_metadata():
-
 	dct = {
 		"main": "",
-		"repairs": [],
+		"device": {
+			"model": "",
+			"id": ''
+		},
+		"repairs": {
+			"labels": [],
+			"ids": []
+		},
+		"general": {
+			"repair_type": "",
+			"service": ""
+		},
 		"parts": [],
 		"financial": [],
 		"views": {
@@ -67,25 +77,59 @@ def _init_metadata():
 		},
 		"external_id": "",
 		"zendesk": {
-			"user": '',
-			"ticket": ""
+			"user": {
+				"id": '',
+				"name": '',
+				'email': '',
+				'phone': ''
+			},
+			"ticket": {
+				'id': ''
+			}
 		}
 	}
 
 	return dct
 
 
-def get_metadata(resp_body):
+def get_metadata(resp_body, update=False, new_data_item=None):
+	def handle_data_item(data_item):
 
-	try:
-		meta = resp_body['view']['private_metadata']
+		if type(data_item) is BaseItem:
+			meta["main"] = data_item.mon_id
+			meta["repairs"]["labels"] = data_item.repairs.labels
+			meta['general']['service'] = data_item.service.label
+			meta["general"]['repair_type'] = data_item.repair_type.label
+			meta["device"]["model"] = data_item.device.labels[0]
+
+		elif type(data_item) is EricTicket:
+			meta["zendesk"]["ticket"]['id'] = data_item.id
+			meta["zendesk"]["user"]['id'] = data_item.user["id"]
+			meta["zendesk"]["user"]['name'] = data_item.user['name']
+			meta["zendesk"]["user"]['email'] = data_item.user['email']
+			meta["zendesk"]["user"]['phone'] = data_item.user['phone']
+
+		else:
+			raise Exception(f"Cannot Update Metadata with {type(data_item)}")
+
+	if not update:
 		try:
-			return json.loads(resp_body['view']['private_metadata'])
-		except json.JSONDecodeError:
-			return _init_metadata()
+			meta = resp_body['view']['private_metadata']
+			try:
+				meta = json.loads(resp_body['view']['private_metadata'])
+			except json.JSONDecodeError:
+				meta = _init_metadata()
 
-	except KeyError as e:
-		return _init_metadata()
+		except KeyError as e:
+			meta = _init_metadata()
+
+	else:
+		meta = update
+
+	if new_data_item:
+		handle_data_item(new_data_item)
+
+	return meta
 
 
 def create_external_view_id(body, view_name):
