@@ -1559,6 +1559,7 @@ def new_user_result_view(body, zendesk_user):
 		return {
 			"type": "modal",
 			"private_metadata": json.dumps(metadata),
+			"callback_id": "new_user_walkin_submission",
 			"title": {
 				"type": "plain_text",
 				"text": "Create New User",
@@ -1619,7 +1620,7 @@ def new_user_result_view(body, zendesk_user):
 		return blocks
 
 	metadata = helper.get_metadata(body)
-	metadata["zendesk"]["user"] = zendesk_user.id
+	metadata = helper.get_metadata(body, update=metadata, new_data_item=zendesk_user)
 
 	view = get_base_modal()
 	add_attribute_block(view["blocks"])
