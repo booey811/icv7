@@ -702,6 +702,7 @@ def slack_user_search_init(body, client):
 
 
 def slack_user_search_results(body, client):
+
 	meta = s_help.get_metadata(body)
 	external_id = meta['external_id']
 
@@ -788,6 +789,7 @@ def check_and_create_new_user(body, client, ack):
 
 
 def check_stock(body, client, initial=False, get_level=False):
+
 	p(body)
 
 	def get_stock_level(metadata, repair_selection):
@@ -868,12 +870,27 @@ def check_stock(body, client, initial=False, get_level=False):
 	)
 
 
-def show_walk_in_info(body, client, from_search=False, from_booking=False):
+def show_walk_in_info(body, client, from_search=False, from_booking=False, from_create=None):
 	# send loading view
-	resp = client.views_push(
-		trigger_id=body['trigger_id'],
-		view=views.loading("Getting Walk-In Acceptance Data")
-	)
+
+	ext_id = s_help.create_external_view_id(body, "walkin_info_view")
+	view = views.loading("Getting Walk-In Acceptance Data", external_id=ext_id)
+
+
+
+	if from_create:
+		from_create(
+			{
+				"response_action": "push",
+				"view": view
+			}
+		)
+	else:
+
+		resp = client.views_push(
+			trigger_id=body['trigger_id'],
+			view=view
+		)
 
 	meta = s_help.get_metadata(body)
 	item = None
@@ -885,17 +902,17 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False):
 		user = ticket.zenpy_ticket.requester
 	elif from_search:
 		user = clients.zendesk.users(id=body['actions'][0]['value'])
+	elif from_create:
+		user = clients.zendesk.users(id=meta["zendesk"]["user"]["id"])
 	else:
 		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
 
 	view = views.walkin_booking_info(body=body, zen_user=user, monday_item=item, ticket=ticket)
 
 	resp = client.views_update(
-		view_id=resp["view"]["id"],
-		hash=resp["view"]["hash"],
+		external_id=ext_id,
 		view=view
 	)
-
 
 def handle_walk_in_updates(body, client, phase):
 	metadata = s_help.get_metadata(body)
