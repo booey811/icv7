@@ -645,7 +645,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 				"emoji": True
 			},
 			"type": "modal",
-			"callback_id": "accept_walkin_repair",
+			"callback_id": "walkin_acceptance_submission",
 			"external_id": external_id,
 			"close": {
 				"type": "plain_text",

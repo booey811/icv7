@@ -306,11 +306,11 @@ def _add_routing(app):
 
 			eric.check_and_create_new_user(body, client, ack)
 
-		@app.view("accept_walkin_repair")
+		@app.view("walkin_acceptance_submission")
 		def accept_walkin_repair_data(ack, body, logger, client):
 			logger.info("Walk In Repair Accepted - Processing")
-			ack()
-			eric.accept_walkin_repair_data(ack, body, logger, client)
+
+			eric.process_walkin_submission(ack, body, client)
 
 
 	elif os.environ["SLACK"] == "OFF":

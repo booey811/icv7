@@ -702,7 +702,6 @@ def slack_user_search_init(body, client):
 
 
 def slack_user_search_results(body, client):
-
 	meta = s_help.get_metadata(body)
 	external_id = meta['external_id']
 
@@ -739,7 +738,6 @@ def show_new_user_form(body, client):
 
 
 def check_and_create_new_user(body, client, ack):
-
 	external_id = s_help.create_external_view_id(body, "creating_user")
 
 	ack({
@@ -790,7 +788,6 @@ def check_and_create_new_user(body, client, ack):
 
 
 def check_stock(body, client, initial=False, get_level=False):
-
 	p(body)
 
 	def get_stock_level(metadata, repair_selection):
@@ -872,7 +869,6 @@ def check_stock(body, client, initial=False, get_level=False):
 
 
 def show_walk_in_info(body, client, from_search=False, from_booking=False):
-
 	# send loading view
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
@@ -900,8 +896,8 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False):
 		view=view
 	)
 
-def handle_walk_in_updates(body, client, phase):
 
+def handle_walk_in_updates(body, client, phase):
 	metadata = s_help.get_metadata(body)
 
 	resp = client.views_update(
@@ -910,6 +906,24 @@ def handle_walk_in_updates(body, client, phase):
 	)
 
 
+def process_walkin_submission(ack, body, client):
+
+	ext = s_help.create_external_view_id(body, "loading_walkin_submission")   # generate external ID
+
+	view = views.loading("TEST LOADING SCREEN", external_id=ext)  # generate view with specified external ID
+
+	ack({  # Push view in ack_response
+		"response_action": "push",
+		"view": view
+	})
+
+	print("Routing COMPLETE - app connected to eric")
+	p(ext)
+
+	client.views_update(  # use external ID to update
+		external_id=ext,
+		view=views.loading("NEW LOADING SCREEEN")
+	)
 
 
 def begin_slack_repair_process(body, client):
