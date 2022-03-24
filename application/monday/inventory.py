@@ -55,7 +55,7 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False, fo
             mainboard_item.log(f"Generating for {label}")
 
             if label in COLOURED_PARTS:
-                if not mainboard_item.device_colour.index:
+                if not mainboard_item.device_colour.label:
                     mainboard_item.log(f"No Colour Supplied - Autogenerating for Black and White")
                     terms.append(f"{device_id}-{repair_id}-10")
                     terms.append(f"{device_id}-{repair_id}-16")
