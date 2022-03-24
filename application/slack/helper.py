@@ -116,6 +116,7 @@ def get_metadata(resp_body, update=False, new_data_item=None):
 			meta["zendesk"]["user"]['name'] = data_item.name
 			meta["zendesk"]["user"]['email'] = data_item.email
 			meta["zendesk"]["user"]['phone'] = data_item.phone
+
 		else:
 			raise Exception(f"Cannot Update Metadata with {type(data_item)}")
 
