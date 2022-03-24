@@ -451,7 +451,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
 		add_repair_options(view['blocks'])
-		add_divider_block()
+		add_divider_block(view["blocks"])
 		add_stock_level_block(view['blocks'], get_level)
 
 	elif fetching_stock_levels:
@@ -459,7 +459,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
 		add_repair_options(view['blocks'])
-		add_divider_block()
+		add_divider_block(view["blocks"])
 		add_micro_loader(view['blocks'])
 
 	elif repair_not_found:
@@ -467,7 +467,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
 		add_repair_options(view['blocks'])
-		add_divider_block()
+		add_divider_block(view["blocks"])
 		add_no_results_block(view['blocks'])
 
 	else:
@@ -702,19 +702,25 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		return blocks
 
 	def add_client_info(blocks):
+
 		if zen_user:
 			name = zen_user.name
-			z_id = zen_user.email
 			email = zen_user.email
 			phone = zen_user.phone
 		else:
 			name = metadata["zendesk"]["user"]["name"]
-			z_id = metadata["zendesk"]["ticket"]["id"]
 			email = metadata["zendesk"]["user"]["email"]
 			phone = metadata["zendesk"]["user"]["phone"]
 
+		if not name:
+			name = "Somehow, we don't have a name for this client's account"
+		if not email:
+			email = "Somehow, we don't have an email address associated with this account"
+		if not phone:
+			phone = "No Phone Number Know, please acquire one"
+
 		to_add = []
-		add_plain_line(f"{name}[{z_id}]", to_add)
+		add_plain_line(f"{name}", to_add)
 		add_plain_line(email, to_add)
 		add_plain_line(phone, to_add)
 		add_divider_block(to_add)
@@ -733,6 +739,9 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if not repairs_str:
 			repairs_str = "Unconfirmed - Please confirm"
 
+		if not device_str:
+			device_str = "Unconfirmed - Please confirm with the client"
+
 		to_add = []
 		add_combined_line("Device", device_str, to_add)
 		add_combined_line("Requested Repairs", repairs_str, to_add)
@@ -747,6 +756,9 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "init":
 			if ticket:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=ticket)
+
+			if zen_user:
+				metadata = helper.get_metadata(body, update=metadata, new_data_item=zen_user)
 
 			if monday_item:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=monday_item)
@@ -814,6 +826,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
+		p(view)
 		return view
 
 

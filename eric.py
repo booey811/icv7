@@ -790,6 +790,9 @@ def check_and_create_new_user(body, client, ack):
 
 
 def check_stock(body, client, initial=False, get_level=False):
+
+	p(body)
+
 	def get_stock_level(metadata, repair_selection):
 
 		def get_search_term_from_metadata(meta):

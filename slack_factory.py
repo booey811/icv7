@@ -135,7 +135,7 @@ def _add_routing(app):
 		def check_stock_levels(ack, body, logger, client):
 			logger.info("Beginning Stock Check Flow")
 			ack()
-			eric.check_stock(body, client)
+			eric.check_stock(body, client, initial=True)
 
 		# =========== Action Block Submissions
 		# Working Theory: Should be responded to with 'Push'
