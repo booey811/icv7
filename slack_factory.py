@@ -1,5 +1,6 @@
 import os
 import time
+import json
 
 import eric
 from pprint import pprint as p
@@ -73,17 +74,6 @@ def _add_routing(app):
 	if os.environ["SLACK"] == "ON":
 
 		# =========== Commands
-
-		@app.command("/test")
-		def run_test_action(ack, body, logger, client, say):
-
-			ack({
-				"response_action": "open",
-				"view": loader("Getting Walk-In Acceptance Data")
-			})
-			time.sleep(5)
-
-			eric.show_walk_in_info(body, client)
 
 		@app.command("/devrepair")
 		def begin_slack_repair_process(ack, body, logger, client):
@@ -306,11 +296,21 @@ def _add_routing(app):
 
 			eric.check_and_create_new_user(body, client, ack)
 
+
+		@app.view("new_user_walkin_submission")
+		def port_new_user_to_booking_info(ack, body, logger, client):
+			logger.info("New User Created and Repair Acceptance Begun")
+
+			eric.show_walk_in_info(body, client, from_create=ack)
+
+
 		@app.view("accept_walkin_repair")
 		def accept_walkin_repair_data(ack, body, logger, client):
 			logger.info("Walk In Repair Accepted - Processing")
 			ack()
 			eric.accept_walkin_repair_data(ack, body, logger, client)
+
+
 
 
 	elif os.environ["SLACK"] == "OFF":
