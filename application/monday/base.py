@@ -158,6 +158,8 @@ class BaseItem(BaseItemStructure):
         # Check input
         if type(name) != str:
             raise Exception('New Item Name Must Be A String')
+        else:
+            name = name.replace('"', "in").replace("'", "")
 
         self.log(f'Creating New Item for Board[{self.moncli_board_obj.name}]')
 
