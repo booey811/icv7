@@ -6,6 +6,7 @@ import json
 
 import rq
 import zenpy.lib.api_objects
+from zenpy.lib.exception import APIException as zen_ex
 
 from moncli.api_v2.exceptions import MondayApiError
 
@@ -757,23 +758,17 @@ def check_and_create_new_user(body, client, ack):
 
 	if len(results) == 0:
 		# create user
-		if phone:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email,
-				phone=phone
-			)
-		else:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email
-			)
-
+		user = zenpy.lib.api_objects.User(
+			name=f"{name} {surname}",
+			email=email
+		)
 		try:
 			user = clients.zendesk.users.create(user)
+			user.phone = phone
+			user = clients.zendesk.users.update(user)
 			# generate view
 			view = views.new_user_result_view(body, user)
-		except zenpy.ZenpyException as e:
+		except zen_ex as e:
 			view = views.failed_new_user_creation_view(email, len(results), e)
 
 	else:
