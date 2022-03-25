@@ -61,29 +61,30 @@ def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_act
 	blocks.append(basic)
 	return blocks
 
-def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
 
+def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
 	basic = {
-			"type": "input",
-			"block_id": block_id,
-			"element": {
-				"type": "plain_text_input",
-				"multiline": True,
-				"action_id": action_id,
-				"placeholder": {
-					"type": "plain_text",
-					"text": placeholder
-				},
-			},
-			"label": {
+		"type": "input",
+		"block_id": block_id,
+		"element": {
+			"type": "plain_text_input",
+			"multiline": True,
+			"action_id": action_id,
+			"placeholder": {
 				"type": "plain_text",
-				"text": title,
-				"emoji": True
-			}
+				"text": placeholder
+			},
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
 		}
+	}
 
 	blocks.append(basic)
 	return blocks
+
 
 def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	def get_option(text):
@@ -99,21 +100,22 @@ def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	options = [get_option(item) for item in options]
 
 	basic = {
-			"type": "section",
-			"block_id": block_id,
-			"text": {
-				"type": "mrkdwn",
-				"text": f"*{title}*"
-			},
-			"accessory": {
-				"type": "radio_buttons",
-				"options": options,
-				"action_id": action_id
-			}
+		"type": "section",
+		"block_id": block_id,
+		"text": {
+			"type": "mrkdwn",
+			"text": f"*{title}*"
+		},
+		"accessory": {
+			"type": "radio_buttons",
+			"options": options,
+			"action_id": action_id
 		}
+	}
 
 	blocks.append(basic)
 	return blocks
+
 
 def add_book_new_repair_button(blocks):
 	blocks.append({
@@ -782,7 +784,8 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 		p(body)
 
-		device_type = body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option']['value']
+		device_type = \
+		body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option']['value']
 
 		add_dropdown_ui(
 			title="Device",
@@ -798,8 +801,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 		device = body['view']['state']['values']['select_device']['select_accept_device']['selected_option']['value']
 
-
-
 		add_radio_buttons_ui(
 			title="Repair Type",
 			block_id="select_repair_type",
@@ -811,7 +812,8 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "device":
 			raise UpdateComplete
 
-		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option']['value']
+		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option'][
+			'value']
 
 		add_multiline_text_input(
 			title="Repair Notes",

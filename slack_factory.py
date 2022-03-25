@@ -193,7 +193,6 @@ def _add_routing(app):
 
 			eric.handle_walk_in_updates(body, client, "device")
 
-
 		@app.action("radio_accept_device")
 		def accept_walkin_repair_type(ack, body, logger, client):
 			logger.info("Walkin Accept Device Selected")
@@ -295,20 +294,17 @@ def _add_routing(app):
 
 			eric.check_and_create_new_user(body, client, ack)
 
-
 		@app.view("new_user_walkin_submission")
 		def port_new_user_to_booking_info(ack, body, logger, client):
 			logger.info("New User Created and Repair Acceptance Begun")
 
 			eric.show_walk_in_info(body, client, from_create=ack)
 
-
 		@app.view("accept_walkin_repair")
 		def accept_walkin_repair_data(ack, body, logger, client):
 			logger.info("Walk In Repair Accepted - Processing")
 			ack()
-			eric.accept_walkin_repair_data(ack, body, logger, client)
-
+			eric.process_walkin_submission(body)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
