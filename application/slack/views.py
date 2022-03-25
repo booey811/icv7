@@ -221,10 +221,52 @@ def loading(footnotes='', external_id=False):
 				}
 			]
 		}
+		# noinspection PyTypeChecker
 		view['blocks'].append(context)
 
 	if external_id:
 		view["external_id"] = external_id
+
+	return view
+
+
+def error(footnotes=''):
+	view = {
+		"type": "modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Error Reporting",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "Uh Oh, We Ran Into A Problem",
+					"emoji": True
+				}
+			}
+		]
+	}
+
+	if footnotes:
+		secondary = {
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": footnotes
+				}
+			]
+		}
+		# noinspection PyTypeChecker
+		view['blocks'].append(secondary)
 
 	return view
 
@@ -763,7 +805,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			if zen_user:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=zen_user)
 
-
 		add_client_info(view['blocks'])
 		add_client_repair_data(view["blocks"])
 
@@ -781,9 +822,9 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "init":
 			raise UpdateComplete
 
-
 		device_type = \
-		body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option']['value']
+			body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option'][
+				'value']
 
 		add_dropdown_ui(
 			title="Device",

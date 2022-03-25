@@ -889,14 +889,24 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False, from_
 
 	if from_booking:
 		item = BaseItem(CustomLogger(), body['actions'][0]['value'])
-		ticket = EricTicket(item.logger, item.zendesk_id.value)
-		user = ticket.zenpy_ticket.requester
+		if not item.zendesk_id.value:
+			client.views_update(
+				external_id=ext_id,
+				view=views.error(f"{item.name}[{item.mon_id}] has no Zendesk ticket linked to it, meaning we are "
+				                 f"unable to contact the client (and the booking was taken incorrectly). In future, "
+				                 f"we'll create the ticket here, but for now you'll need to go back and use the "
+				                 f"'/users' command to book this repair in")
+			)
+			raise Exception(f"No Zendesk Ticket Associated with Booking: {item.name}")
+		else:
+			ticket = EricTicket(item.logger, item.zendesk_id.value)
+			user = ticket.zenpy_ticket.requester
 	elif from_search:
 		user = clients.zendesk.users(id=body['actions'][0]['value'])
 	elif from_create:
 		user = clients.zendesk.users(id=meta["zendesk"]["user"]["id"])
 	else:
-		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
+		raise Exception("show_walk_in_info received a call without coming from a booking, search result or user create")
 
 	view = views.walkin_booking_info(body=body, zen_user=user, monday_item=item, ticket=ticket)
 
@@ -915,15 +925,42 @@ def handle_walk_in_updates(body, client, phase):
 	)
 
 
-def process_walkin_submission(body, client):
-	ext = s_help.create_external_view_id(body, "loading_walkin_submission")  # generate external ID
+def process_walkin_submission(body, client, ack):
+	ext = s_help.create_external_view_id(body, "walkin_submission")  # generate external ID
+	view = views.loading("Processing Walk-In Data", external_id=ext)  # generate view with specified external ID
 
-	view = views.loading("TEST LOADING SCREEN", external_id=ext)  # generate view with specified external ID
+	# port to Monday
+	data_dict = s_help.convert_walkin_submission_to_dict(body)
 
-	client.views_update(  # use external ID to update
-		external_id=ext,
-		view=views.loading("NEW LOADING SCREEEN")
-	)
+	if not data_dict["zendesk_id"]:
+		# create ticket & add to monday
+		if data_dict["main_id"]:
+			raise Exception("Slack Repair Acceptance Has a Main ID But No Zendesk Ticket (Shouldn't happen)")
+
+		if not data_dict["zen_user_id"]:
+			raise Exception("Slack Repair Acceptance Submission Commissioned without Zendesk References")
+
+		ticket = EricTicket(CustomLogger(), None, data_dict["zen_user_id"])
+		ticket.zenpy_ticket.subject = f"Your {data_dict['device_str']} {data_dict['repair_type_str']}"
+		ticket.add_comment(
+			f"INTAKE NOTES\n\n{data_dict['notes']}",
+			public=False
+		)
+
+		tags = [
+			f"device-{data.MAIN_DEVICE[data_dict['device_str']]}",
+			f"service-1",  # Walk-In Service (Has to be as this flow is only to be used upstairs)
+			f"repair_type-{data.MAIN_REPAIR_TYPE[data_dict['repair_type_str']]}",
+		]
+
+		zenpy_ticket = ticket.commit()
+		data_dict["zendesk_id"] = zenpy_ticket.id
+
+	raise Exception("DEV FROM HERE PORTING TO MONDAY")
+
+	if not data_dict["main_id"]:
+		if not data_dict["zendesk_id"]:
+			raise Exception("")
 
 
 def begin_slack_repair_process(body, client):

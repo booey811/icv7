@@ -300,11 +300,10 @@ def _add_routing(app):
 
 			eric.show_walk_in_info(body, client, from_create=ack)
 
-		@app.view("accept_walkin_repair")
+		@app.view("walkin_acceptance_submission")
 		def accept_walkin_repair_data(ack, body, logger, client):
 			logger.info("Walk In Repair Accepted - Processing")
-			ack()
-			eric.process_walkin_submission(body)
+			eric.process_walkin_submission(body, client, ack)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
