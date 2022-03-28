@@ -86,6 +86,29 @@ def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
 	return blocks
 
 
+def add_single_text_input(title, placeholder, block_id, action_id, blocks, optional=True):
+	basic = {
+		"type": "input",
+		"block_id": block_id,
+		"optional": optional,
+		"element": {
+			"type": "plain_text_input",
+			"action_id": action_id,
+			"placeholder": {
+				"type": "plain_text",
+				"text": placeholder
+			},
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+	blocks.append(basic)
+	return blocks
+
+
 def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	def get_option(text):
 		return {
@@ -896,12 +919,29 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option'][
 			'value']
 
+		print("REPAIR TYPE ========================================")
+		print(repair_type)
+
 		add_multiline_text_input(
 			title="Repair Notes",
-			placeholder='Got Catch Em All!..... The infos I mean',
+			placeholder='Gotta Catch Em All!..... The infos I mean',
 			block_id="text_notes",
 			action_id="text_accept_notes",
 			blocks=view["blocks"]
+		)
+
+		if repair_type == "Diagnostic":
+			pc_optional = False
+		else:
+			pc_optional = True
+
+		add_single_text_input(
+			title="Passcode",
+			placeholder="Passcode is required for ALL diagnostics",
+			block_id='text_pc',
+			action_id="text_accept_pc",
+			blocks=view["blocks"],
+			optional=pc_optional
 		)
 
 		if phase == "repair_type":

@@ -31,20 +31,23 @@ def send_direct_request(data, url, method, as_json=True):
 
 def user_search(eric_object_with_email, logger, name=None):
     # extract data from eric object
-    name = eric_object_with_email.name
-    phone = 0
+    try:
+        name = eric_object_with_email.name
+        phone = 0
 
-    try:
-        email = eric_object_with_email.email.value
+        try:
+            email = eric_object_with_email.email.value
+        except AttributeError:
+            logger.log(f"Eric Item[{eric_object_with_email.mon_id}] has no email attribute")
+            logger.hard_log()
+            raise AttributeError("User Search Hard Log - No Email on Eric Object")
+        try:
+            phone = eric_object_with_email.phone.value
+        except AttributeError:
+            logger.log(f"Eric Item[{eric_object_with_email.mon_id}] has no email attribute")
+            logger.soft_log()
     except AttributeError:
-        logger.log(f"Eric Item[{eric_object_with_email.mon_id}] has no email attribute")
-        logger.hard_log()
-        raise AttributeError("User Search Hard Log - No Email on Eric Object")
-    try:
-        phone = eric_object_with_email.phone.value
-    except AttributeError:
-        logger.log(f"Eric Item[{eric_object_with_email.mon_id}] has no email attribute")
-        logger.soft_log()
+        email = eric_object_with_email
 
     # begin user search
 

@@ -301,16 +301,27 @@ def _add_routing(app):
 			eric.show_walk_in_info(body, client, from_create=ack)
 
 		@app.view("walkin_acceptance_submission")
-		def accept_walkin_repair_data(ack, body, logger, client):
+		def handle_final_walkin_submission(ack, body, logger, client):
 			logger.info("Walk In Repair Accepted - Processing")
-			eric.process_walkin_submission(body, client, ack)
+			errors = {}
+			repair_type = body["view"]["state"]["values"]['text_pc']["text_accept_pc"]["value"]
+			pc = body["view"]["state"]["values"]['text_pc']["text_accept_pc"]["value"]
+			p(body)
+			if not pc and repair_type == "Diagnostic":
+				errors["text_accept_pc"] = "Passcodes are required for Diagnostics"
 
-		@app.view("success_screen")
-		def generic_success_screen_response(ack, logger):
-			logger.info("Success screen reported")
-			ack({
-				"response_action": "clear"
-			})
+			if len(errors) > 0:
+				ack(
+					response_action="errors",
+					errors=errors
+				)
+				return
+
+			ack(
+				response_action="clear"
+			)
+			logger.info(body)
+			eric.process_walkin_submission(body, client, ack)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

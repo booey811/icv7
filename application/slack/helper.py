@@ -161,6 +161,7 @@ def convert_walkin_submission_to_dict(body):
 		'device_type_str': state["select_device_type"]["select_accept_device_type"]["selected_option"]["value"],
 		'repair_type_str': state["select_repair_type"]["radio_accept_device"]["selected_option"]["value"],
 		'notes': state["text_notes"]["text_accept_notes"]["value"],
+		'pc': state['text_pc']["text_accept_pc"]["value"]
 	}
 
 	meta = get_metadata(body)

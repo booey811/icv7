@@ -5,7 +5,7 @@ from pprint import pprint as p
 import json
 
 import rq
-import zenpy.lib.api_objects
+import zenpy.lib.api_objects as zen_obj
 from zenpy.lib.exception import APIException as zen_ex
 
 from moncli.api_v2.exceptions import MondayApiError
@@ -758,7 +758,7 @@ def check_and_create_new_user(body, client, ack):
 
 	if len(results) == 0:
 		# create user
-		user = zenpy.lib.api_objects.User(
+		user = zen_obj.User(
 			name=f"{name} {surname}",
 			email=email
 		)
@@ -944,12 +944,18 @@ def process_walkin_submission(body, client, ack):
 		if not data_dict["zen_user_id"]:
 			raise Exception("Slack Repair Acceptance Submission Commissioned without Zendesk References")
 
-		ticket = EricTicket(cuslog, None, data_dict["zen_user_id"])
-		ticket.zenpy_ticket.subject = f"Your {data_dict['device_str']} {data_dict['repair_type_str']}"
-		ticket.add_comment(
+		eric_ticket = EricTicket(cuslog, None, new=data_dict["zen_user_id"])
+
+		eric_ticket.zenpy_ticket.subject = f"Your {data_dict['device_str']} {data_dict['repair_type_str']}"
+
+		eric_ticket.add_comment(
 			intake_notes,
 			public=False
 		)
+
+		zenp_ticket = eric_ticket.commit()
+
+		eric_ticket = EricTicket(cuslog, zenp_ticket)
 
 		tags = [
 			f"device-{data.MAIN_DEVICE[data_dict['device_str']]}",
@@ -957,29 +963,32 @@ def process_walkin_submission(body, client, ack):
 			f"repair_type-{data.MAIN_REPAIR_TYPE[data_dict['repair_type_str']]}",
 		]
 
-		zenpy_ticket = ticket.commit()
-		ticket = EricTicket(cuslog, zenpy_ticket)
-		data_dict["zendesk_id"] = zenpy_ticket.id
+		eric_ticket.add_tags(tags)
+
+		data_dict["zendesk_id"] = eric_ticket.zenpy_ticket.id
 
 		if not data_dict["main_id"]:
-			name = f"{ticket.user['name']}"
+			name = f"{eric_ticket.user['name']}"
 			client_label = 'End User'
-			blank = BaseItem(cuslog, board_id=989883897)  # Mainboard ID
+			blank = BaseItem(cuslog, board_id=349212843)  # Mainboard ID
 
-			blank.device.add(data_dict["device_sr"])
+			blank.device.add(data_dict["device_str"])
 			blank.repair_type.label = data_dict["repair_type_str"]
 			blank.service.label = "Walk-In"
 			blank.zendesk_id.value = data_dict["zendesk_id"]
 			blank.ticket_url.value = [
 				f"https://icorrect.zendesk.com/agent/tickets/{data_dict['zendesk_id']}",
-				data_dict['zendesk_id']
+				str(data_dict['zendesk_id'])
 			]
-			blank.phone.value = ticket.user["phone"]
-			blank.email.value = ticket.user["email"]
+			blank.phone.value = eric_ticket.user["phone"]
+			blank.email.value = eric_ticket.user["email"]
+			blank.notifications_status.label = "ON"
+			if data_dict["pc"]:
+				blank.passcode.value = data_dict["pc"]
 
-			if ticket.organisation:
-				name += f' ({ticket.organisation["name"]})'
-				blank.company_name.value = ticket.organisation["name"]
+			if eric_ticket.organisation:
+				name += f' ({eric_ticket.organisation["name"]})'
+				blank.company_name.value = eric_ticket.organisation["name"]
 				client_label = "Corporate"
 
 			blank.client.label = client_label
@@ -991,9 +1000,10 @@ def process_walkin_submission(body, client, ack):
 
 			data_dict["main_id"] = blank.moncli_obj.id
 
-			ticket.fields.main_id.adjust(str(blank.moncli_obj.id))
-			ticket.add_tags(["mondayactive"])
-			ticket.commit()
+			eric_ticket.fields.main_id.adjust(str(blank.moncli_obj.id))
+			eric_ticket.add_tags(["mondayactive"])
+			eric_ticket.commit()
+			blank.add_update(intake_notes)
 
 	elif data_dict["zendesk_id"]:
 		ticket = EricTicket(cuslog, data_dict["zendesk_id"])
@@ -1001,9 +1011,20 @@ def process_walkin_submission(body, client, ack):
 			intake_notes,
 			public=False
 		)
+
+		main = BaseItem(cuslog, data_dict["main_id"])
+		main.device.replace(data_dict["device_str"])
+		main.repair_type.label = data_dict["repair_type_str"]
+		if data_dict["pc"]:
+			main.passcode.value = data_dict["pc"]
+		main.commit()
+
+		main.add_update(
+			intake_notes
+		)
+
 	else:
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
-
 
 
 def begin_slack_repair_process(body, client):
