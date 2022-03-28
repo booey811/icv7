@@ -678,7 +678,7 @@ def bookings_search_input(body, invalid_search=False):
 
 		search['blocks'] = to_add + search['blocks']
 
-	add_book_new_repair_button(search['blocks'])
+	# add_book_new_repair_button(search['blocks'])
 
 	return search
 
