@@ -102,7 +102,10 @@ def get_metadata(resp_body, update=False, new_data_item=None):
 			meta["repairs"]["labels"] = data_item.repairs.labels
 			meta['general']['service'] = data_item.service.label
 			meta["general"]['repair_type'] = data_item.repair_type.label
-			meta["device"]["model"] = data_item.device.labels[0]
+			try:
+				meta["device"]["model"] = data_item.device.labels[0]
+			except IndexError:
+				meta['device']["model"] = "Unconfirmed"
 
 		elif type(data_item) is EricTicket:
 			meta["zendesk"]["ticket"]['id'] = data_item.id
