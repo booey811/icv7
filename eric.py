@@ -461,6 +461,8 @@ def checkout_stock_profile(webhook, logger, test=None):
 	if finance.repair_profile.label != "Complete":
 		logger.log("Repair Profile Not Complete - Cancelling")
 		raise UserError("Cannot Checkout Stock - No Repair Profile Created")
+	if finance.be_generator.value:
+		return True
 	try:
 		for subitem in finance.moncli_obj.subitems:
 			financial.checkout_stock_for_line_item(subitem.id, finance.main_id.value)
