@@ -839,7 +839,10 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 	def add_client_repair_data(blocks):
 		# report client provided data back to the view
 		if monday_item:
-			device_str = monday_item.device.labels[0]
+			try:
+				device_str = monday_item.device.labels[0]
+			except IndexError:
+				device_str = "Unconfirmed"
 			repairs_str = ", ".join(monday_item.repairs.labels)
 		else:
 			device_str = metadata["device"]["model"]
@@ -956,7 +959,10 @@ def pre_repair_info(main_item, resp_body):
 	item_id = main_item.mon_id
 	client_name = main_item.name
 	repair_type = main_item.repair_type.label
-	device_label = main_item.device.labels[0]
+	try:
+		device_label = main_item.device.labels[0]
+	except IndexError:
+		device_label = "Unconfirmed"
 	repairs_string = ", ".join(main_item.repairs.labels)
 	received_date = _convert_monday_time_to_string(main_item.received_date)
 	deadline = _convert_monday_time_to_string(main_item.deadline_date)
@@ -1042,7 +1048,10 @@ def pre_repair_info(main_item, resp_body):
 
 def repair_phase_view(main_item, body):
 	item_id = main_item.mon_id
-	device = main_item.device.labels[0]
+	try:
+		device = main_item.device.labels[0]
+	except IndexError:
+		device = "Unconfirmed"
 	repair_type = main_item.repair_type.label
 	repairs_string = ", ".join(main_item.repairs.labels)
 	start_time = datetime.datetime.now().strftime("%X")
