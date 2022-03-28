@@ -62,28 +62,51 @@ def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_act
 	return blocks
 
 def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
-
 	basic = {
-			"type": "input",
-			"block_id": block_id,
-			"element": {
-				"type": "plain_text_input",
-				"multiline": True,
-				"action_id": action_id,
-				"placeholder": {
-					"type": "plain_text",
-					"text": placeholder
-				},
-			},
-			"label": {
+		"type": "input",
+		"block_id": block_id,
+		"element": {
+			"type": "plain_text_input",
+			"multiline": True,
+			"action_id": action_id,
+			"placeholder": {
 				"type": "plain_text",
-				"text": title,
-				"emoji": True
-			}
+				"text": placeholder
+			},
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
 		}
+	}
 
 	blocks.append(basic)
 	return blocks
+
+
+def add_single_text_input(title, placeholder, block_id, action_id, blocks, optional=True):
+	basic = {
+		"type": "input",
+		"block_id": block_id,
+		"optional": optional,
+		"element": {
+			"type": "plain_text_input",
+			"action_id": action_id,
+			"placeholder": {
+				"type": "plain_text",
+				"text": placeholder
+			},
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+	blocks.append(basic)
+	return blocks
+
 
 def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	def get_option(text):
@@ -99,18 +122,18 @@ def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	options = [get_option(item) for item in options]
 
 	basic = {
-			"type": "section",
-			"block_id": block_id,
-			"text": {
-				"type": "mrkdwn",
-				"text": f"*{title}*"
-			},
-			"accessory": {
-				"type": "radio_buttons",
-				"options": options,
-				"action_id": action_id
-			}
+		"type": "section",
+		"block_id": block_id,
+		"text": {
+			"type": "mrkdwn",
+			"text": f"*{title}*"
+		},
+		"accessory": {
+			"type": "radio_buttons",
+			"options": options,
+			"action_id": action_id
 		}
+	}
 
 	blocks.append(basic)
 	return blocks
@@ -219,10 +242,94 @@ def loading(footnotes='', external_id=False):
 				}
 			]
 		}
+		# noinspection PyTypeChecker
 		view['blocks'].append(context)
 
 	if external_id:
 		view["external_id"] = external_id
+
+	return view
+
+
+def error(footnotes=''):
+	view = {
+		"type": "modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Error Reporting",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "Uh Oh, We Ran Into A Problem",
+					"emoji": True
+				}
+			}
+		]
+	}
+
+	if footnotes:
+		secondary = {
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": footnotes
+				}
+			]
+		}
+		# noinspection PyTypeChecker
+		view['blocks'].append(secondary)
+
+	return view
+
+
+def success(footnotes=''):
+	view = {
+		"type": "modal",
+		"callback_id": "success_screen",
+		"title": {
+			"type": "plain_text",
+			"text": "Success!",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Close",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "Operation Complete! Yay!",
+					"emoji": True
+				}
+			}
+		]
+	}
+
+	if footnotes:
+		secondary = {
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": footnotes
+				}
+			]
+		}
+		# noinspection PyTypeChecker
+		view['blocks'].append(secondary)
 
 	return view
 
@@ -569,7 +676,7 @@ def bookings_search_input(body, invalid_search=False):
 
 		search['blocks'] = to_add + search['blocks']
 
-	add_book_new_repair_button(search['blocks'])
+	# add_book_new_repair_button(search['blocks'])
 
 	return search
 
@@ -645,7 +752,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 				"emoji": True
 			},
 			"type": "modal",
-			"callback_id": "accept_walkin_repair",
+			"callback_id": "walkin_acceptance_submission",
 			"external_id": external_id,
 			"close": {
 				"type": "plain_text",
@@ -730,7 +837,10 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 	def add_client_repair_data(blocks):
 		# report client provided data back to the view
 		if monday_item:
-			device_str = monday_item.device.labels[0]
+			try:
+				device_str = monday_item.device.labels[0]
+			except IndexError:
+				device_str = "Unconfirmed"
 			repairs_str = ", ".join(monday_item.repairs.labels)
 		else:
 			device_str = metadata["device"]["model"]
@@ -756,12 +866,10 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "init":
 			if ticket:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=ticket)
-
-			if zen_user:
-				metadata = helper.get_metadata(body, update=metadata, new_data_item=zen_user)
-
 			if monday_item:
 				metadata = helper.get_metadata(body, update=metadata, new_data_item=monday_item)
+			if zen_user:
+				metadata = helper.get_metadata(body, update=metadata, new_data_item=zen_user)
 
 		add_client_info(view['blocks'])
 		add_client_repair_data(view["blocks"])
@@ -780,9 +888,9 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "init":
 			raise UpdateComplete
 
-		p(body)
-
-		device_type = body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option']['value']
+		device_type = \
+			body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option'][
+				'value']
 
 		add_dropdown_ui(
 			title="Device",
@@ -797,8 +905,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			raise UpdateComplete
 
 		device = body['view']['state']['values']['select_device']['select_accept_device']['selected_option']['value']
-
-
 
 		add_radio_buttons_ui(
 			title="Repair Type",
@@ -815,10 +921,24 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 		add_multiline_text_input(
 			title="Repair Notes",
-			placeholder='Got Catch Em All!..... The infos I mean',
+			placeholder='Gotta Catch Em All!..... The infos I mean',
 			block_id="text_notes",
 			action_id="text_accept_notes",
 			blocks=view["blocks"]
+		)
+
+		if repair_type == "Diagnostic":
+			pc_optional = False
+		else:
+			pc_optional = True
+
+		add_single_text_input(
+			title="Passcode",
+			placeholder="Passcode is required for ALL diagnostics",
+			block_id='text_pc',
+			action_id="text_accept_pc",
+			blocks=view["blocks"],
+			optional=pc_optional
 		)
 
 		if phase == "repair_type":
@@ -826,7 +946,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
-		p(view)
 		return view
 
 
@@ -834,7 +953,10 @@ def pre_repair_info(main_item, resp_body):
 	item_id = main_item.mon_id
 	client_name = main_item.name
 	repair_type = main_item.repair_type.label
-	device_label = main_item.device.labels[0]
+	try:
+		device_label = main_item.device.labels[0]
+	except IndexError:
+		device_label = "Unconfirmed"
 	repairs_string = ", ".join(main_item.repairs.labels)
 	received_date = _convert_monday_time_to_string(main_item.received_date)
 	deadline = _convert_monday_time_to_string(main_item.deadline_date)
@@ -920,7 +1042,10 @@ def pre_repair_info(main_item, resp_body):
 
 def repair_phase_view(main_item, body):
 	item_id = main_item.mon_id
-	device = main_item.device.labels[0]
+	try:
+		device = main_item.device.labels[0]
+	except IndexError:
+		device = "Unconfirmed"
 	repair_type = main_item.repair_type.label
 	repairs_string = ", ".join(main_item.repairs.labels)
 	start_time = datetime.datetime.now().strftime("%X")
@@ -1628,7 +1753,7 @@ def new_user_result_view(body, zendesk_user):
 	return view
 
 
-def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
+def failed_new_user_creation_view(email, no_of_results, failed_to_create=False, phone_issue=False):
 	def get_base_modal():
 
 		if failed_to_create:
@@ -1715,6 +1840,9 @@ def failed_new_user_creation_view(email, no_of_results, failed_to_create=False):
 					}
 				]
 			}
+
+		if phone_issue:
+			add_header_block(base['blocks'], "The phone number you entered is not possible")
 
 		return base
 

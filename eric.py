@@ -5,7 +5,8 @@ from pprint import pprint as p
 import json
 
 import rq
-import zenpy.lib.api_objects
+import zenpy.lib.api_objects as zen_obj
+from zenpy.lib.exception import APIException as zen_ex
 
 from moncli.api_v2.exceptions import MondayApiError
 
@@ -702,7 +703,6 @@ def slack_user_search_init(body, client):
 
 
 def slack_user_search_results(body, client):
-
 	meta = s_help.get_metadata(body)
 	external_id = meta['external_id']
 
@@ -739,7 +739,6 @@ def show_new_user_form(body, client):
 
 
 def check_and_create_new_user(body, client, ack):
-
 	external_id = s_help.create_external_view_id(body, "creating_user")
 
 	ack({
@@ -759,23 +758,17 @@ def check_and_create_new_user(body, client, ack):
 
 	if len(results) == 0:
 		# create user
-		if phone:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email,
-				phone=phone
-			)
-		else:
-			user = zenpy.lib.api_objects.User(
-				name=f"{name} {surname}",
-				email=email
-			)
-
+		user = zen_obj.User(
+			name=f"{name} {surname}",
+			email=email
+		)
 		try:
 			user = clients.zendesk.users.create(user)
+			user.phone = phone
+			user = clients.zendesk.users.update(user)
 			# generate view
 			view = views.new_user_result_view(body, user)
-		except zenpy.ZenpyException as e:
+		except zen_ex as e:
 			view = views.failed_new_user_creation_view(email, len(results), e)
 
 	else:
@@ -899,14 +892,24 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False, from_
 
 	if from_booking:
 		item = BaseItem(CustomLogger(), body['actions'][0]['value'])
-		ticket = EricTicket(item.logger, item.zendesk_id.value)
-		user = ticket.zenpy_ticket.requester
+		if not item.zendesk_id.value:
+			client.views_update(
+				external_id=ext_id,
+				view=views.error(f"{item.name}[{item.mon_id}] has no Zendesk ticket linked to it, meaning we are "
+				                 f"unable to contact the client (and the booking was taken incorrectly). In future, "
+				                 f"we'll create the ticket here, but for now you'll need to go back and use the "
+				                 f"'/users' command to book this repair in")
+			)
+			raise Exception(f"No Zendesk Ticket Associated with Booking: {item.name}")
+		else:
+			ticket = EricTicket(item.logger, item.zendesk_id.value)
+			user = ticket.zenpy_ticket.requester
 	elif from_search:
 		user = clients.zendesk.users(id=body['actions'][0]['value'])
 	elif from_create:
 		user = clients.zendesk.users(id=meta["zendesk"]["user"]["id"])
 	else:
-		raise Exception("show_walk_in_info received a call without coming from a booking or search result")
+		raise Exception("show_walk_in_info received a call without coming from a booking, search result or user create")
 
 	view = views.walkin_booking_info(body=body, zen_user=user, monday_item=item, ticket=ticket)
 
@@ -915,8 +918,8 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False, from_
 		view=view
 	)
 
-def handle_walk_in_updates(body, client, phase):
 
+def handle_walk_in_updates(body, client, phase):
 	metadata = s_help.get_metadata(body)
 
 	resp = client.views_update(
@@ -925,6 +928,106 @@ def handle_walk_in_updates(body, client, phase):
 	)
 
 
+def process_walkin_submission(body, client, ack):
+	ext = s_help.create_external_view_id(body, "walkin_submission")  # generate external ID
+	view = views.loading("Processing Walk-In Data", external_id=ext)  # generate view with specified external ID
+
+	# port to Monday
+	data_dict = s_help.convert_walkin_submission_to_dict(body)
+	intake_notes = f"INTAKE NOTES\n\n{data_dict['notes']}"
+	ticket = None
+
+	cuslog = CustomLogger()
+
+	if not data_dict["zendesk_id"]:
+		# create ticket & add to monday
+		if data_dict["main_id"]:
+			raise Exception("Slack Repair Acceptance Has a Main ID But No Zendesk Ticket (Shouldn't happen)")
+
+		if not data_dict["zen_user_id"]:
+			raise Exception("Slack Repair Acceptance Submission Commissioned without Zendesk References")
+
+		eric_ticket = EricTicket(cuslog, None, new=data_dict["zen_user_id"])
+
+		eric_ticket.zenpy_ticket.subject = f"Your {data_dict['device_str']} {data_dict['repair_type_str']}"
+
+		eric_ticket.add_comment(
+			intake_notes,
+			public=False
+		)
+
+		zenp_ticket = eric_ticket.commit()
+
+		eric_ticket = EricTicket(cuslog, zenp_ticket)
+
+		tags = [
+			f"device-{data.MAIN_DEVICE[data_dict['device_str']]}",
+			f"service-1",  # Walk-In Service (Has to be as this flow is only to be used upstairs)
+			f"repair_type-{data.MAIN_REPAIR_TYPE[data_dict['repair_type_str']]}",
+		]
+
+		eric_ticket.add_tags(tags)
+
+		data_dict["zendesk_id"] = eric_ticket.zenpy_ticket.id
+
+		if not data_dict["main_id"]:
+			name = f"{eric_ticket.user['name']}"
+			client_label = 'End User'
+			blank = BaseItem(cuslog, board_id=349212843)  # Mainboard ID
+
+			blank.device.add(data_dict["device_str"])
+			blank.repair_type.label = data_dict["repair_type_str"]
+			blank.service.label = "Walk-In"
+			blank.zendesk_id.value = data_dict["zendesk_id"]
+			blank.ticket_url.value = [
+				f"https://icorrect.zendesk.com/agent/tickets/{data_dict['zendesk_id']}",
+				str(data_dict['zendesk_id'])
+			]
+			blank.phone.value = eric_ticket.user["phone"]
+			blank.email.value = eric_ticket.user["email"]
+			blank.notifications_status.label = "ON"
+			if data_dict["pc"]:
+				blank.passcode.value = data_dict["pc"]
+
+			if eric_ticket.organisation:
+				name += f' ({eric_ticket.organisation["name"]})'
+				blank.company_name.value = eric_ticket.organisation["name"]
+				client_label = "Corporate"
+
+			blank.client.label = client_label
+
+			blank.new_item(
+				name=name,
+				convert_eric=True
+			)
+
+			data_dict["main_id"] = blank.moncli_obj.id
+
+			eric_ticket.fields.main_id.adjust(str(blank.moncli_obj.id))
+			eric_ticket.add_tags(["mondayactive"])
+			eric_ticket.commit()
+			blank.add_update(intake_notes)
+
+	elif data_dict["zendesk_id"]:
+		ticket = EricTicket(cuslog, data_dict["zendesk_id"])
+		ticket.add_comment(
+			intake_notes,
+			public=False
+		)
+
+		main = BaseItem(cuslog, data_dict["main_id"])
+		main.device.replace(data_dict["device_str"])
+		main.repair_type.label = data_dict["repair_type_str"]
+		if data_dict["pc"]:
+			main.passcode.value = data_dict["pc"]
+		main.commit()
+
+		main.add_update(
+			intake_notes
+		)
+
+	else:
+		raise Exception("Unexpected Exception in Walk-In Processing Route")
 
 
 def begin_slack_repair_process(body, client):

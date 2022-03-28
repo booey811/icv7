@@ -102,7 +102,10 @@ def get_metadata(resp_body, update=False, new_data_item=None):
 			meta["repairs"]["labels"] = data_item.repairs.labels
 			meta['general']['service'] = data_item.service.label
 			meta["general"]['repair_type'] = data_item.repair_type.label
-			meta["device"]["model"] = data_item.device.labels[0]
+			try:
+				meta["device"]["model"] = data_item.device.labels[0]
+			except IndexError:
+				meta['device']["model"] = "Unconfirmed"
 
 		elif type(data_item) is EricTicket:
 			meta["zendesk"]["ticket"]['id'] = data_item.id
@@ -141,10 +144,33 @@ def get_metadata(resp_body, update=False, new_data_item=None):
 
 
 def create_external_view_id(body, view_name):
-	p(body)
 	try:
 		user_id = body['user_id']
 	except KeyError:
 		user_id = body['user']['id']
 	now = str(datetime.now())
-	return f"{view_name}-{user_id}-{now}"
+	return f"{view_name}-{user_id}-{now}".replace(":", "").replace(" ", "").replace("-", "").replace(".", "")
+
+
+def convert_walkin_submission_to_dict(body):
+	"""takes in the response body from slack repair intake and returns a dictionary of values and attributes for a main
+	board item"""
+
+	# get input data
+	state = body["view"]["state"]["values"]
+
+	data_dict = {
+		"device_str": state["select_device"]["select_accept_device"]['selected_option']['value'],
+		'device_type_str': state["select_device_type"]["select_accept_device_type"]["selected_option"]["value"],
+		'repair_type_str': state["select_repair_type"]["radio_accept_device"]["selected_option"]["value"],
+		'notes': state["text_notes"]["text_accept_notes"]["value"],
+		'pc': state['text_pc']["text_accept_pc"]["value"]
+	}
+
+	meta = get_metadata(body)
+	data_dict["main_id"] = meta["main"]
+	data_dict["zen_user_id"] = meta["zendesk"]["user"]["id"]
+	data_dict["zendesk_id"] = meta["zendesk"]["ticket"]["id"]
+
+	return data_dict
+

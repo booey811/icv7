@@ -544,7 +544,7 @@ class LinkColumn(BaseColumnValue):
         for item in url_then_text:
             if type(item) is not str:
                 raise ValueError(f'LinkColumn ({self.title}) value setter supplied with incorrect list containing '
-                                 f'non-strings')
+                                 f'non-strings: {url_then_text}')
 
         # Set private variables
         self._url = url_then_text[0]

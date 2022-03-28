@@ -59,7 +59,9 @@ BOARD_MAPPING_DICT = {
 			"status_183": "user_errors",
 			'date6': 'booking_date',
 			'date36': 'deadline_date',
-			'date4': 'received_date'
+			'date4': 'received_date',
+			'link1': 'ticket_url',
+			"text15": "company_name"
 		},
 		"zendesk": [
 			'status4',  # Status
