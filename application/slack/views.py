@@ -271,6 +271,48 @@ def error(footnotes=''):
 	return view
 
 
+def success(footnotes=''):
+	view = {
+		"type": "modal",
+		"callback_id": "success_screen",
+		"title": {
+			"type": "plain_text",
+			"text": "Success!",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Close",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "header",
+				"text": {
+					"type": "plain_text",
+					"text": "Operation Complete! Yay!",
+					"emoji": True
+				}
+			}
+		]
+	}
+
+	if footnotes:
+		secondary = {
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": footnotes
+				}
+			]
+		}
+		# noinspection PyTypeChecker
+		view['blocks'].append(secondary)
+
+	return view
+
+
 def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_levels=False, repair_not_found=False):
 	if get_level is None:
 		get_level = []

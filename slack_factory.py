@@ -305,6 +305,13 @@ def _add_routing(app):
 			logger.info("Walk In Repair Accepted - Processing")
 			eric.process_walkin_submission(body, client, ack)
 
+		@app.view("success_screen")
+		def generic_success_screen_response(ack, logger):
+			logger.info("Success screen reported")
+			ack({
+				"response_action": "clear"
+			})
+
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
 
