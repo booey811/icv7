@@ -12,7 +12,7 @@ from rq import Queue
 import application.monday.config
 from worker import conn
 
-from application import create_app, verify_monday, ChallengeReceived
+from application import create_app, verify_monday, ChallengeReceived, inventory
 import eric
 from utils import exec as utils_exec
 from slack_factory import create_slack_app
@@ -38,8 +38,7 @@ app = create_app()
 # Index/Home
 @app.route('/', methods=['GET'])
 def index():
-	print('Hello World')
-	return 'Hello Returns'
+	return 'Index Route'
 
 
 # Process Stock Count

@@ -3,6 +3,8 @@ import os
 from moncli.entities import MondayClient
 from zenpy import Zenpy
 
+import settings
+
 
 def create_monday_client(user: str = 'system') -> MondayClient:
     """

@@ -1032,12 +1032,9 @@ def process_walkin_submission(body, client, ack):
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
 
 
-def begin_slack_repair_process(body, client):
+def begin_slack_repair_process(body, client, dev=False):
 	# Get active user IDs
-	# if os.environ["ENV"] == 'devlocal':  # local development, use Safan as test user
-	# 	username = 'safan'
-	# else:
-	# 	username = slack_config.USER_IDS[body['user_id']]
+
 
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
 	print("========================= BEGINNING REPAIR PROCESS =========================")
