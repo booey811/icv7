@@ -1,3 +1,5 @@
+from application import clients
+
 _MAIN_REPAIRS = {'10': 'Audio IC',
                  '101': 'Wireless Charging',
                  '102': 'Siri',
@@ -567,6 +569,14 @@ _DEVICE_TYPE = {  # device type, conversion to Repairs Board (Device Type Status
 }
 
 
+def _get_product_groups():
+	basic = {}
+	groups = clients.monday.system.get_boards('groups.[id, title]', ids=[2477699024])[0].groups
+	for group in groups:
+		basic[str(group.id)] = str(group.title)
+	return TwoWayDict(basic)
+
+
 class TwoWayDict(dict):
 
 	def __setitem__(self, key, value):
@@ -598,3 +608,4 @@ MAIN_SERVICE = TwoWayDict(_MAIN_SERVICE)
 MAIN_REPAIR_TYPE = TwoWayDict(_MAIN_REPAIR_TYPE)
 DEVICE_TYPE = TwoWayDict(_DEVICE_TYPE)
 MAIN_CLIENT = TwoWayDict(_MAIN_CLIENT)
+PRODUCT_GROUPS = _get_product_groups()
