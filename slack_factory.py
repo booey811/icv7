@@ -151,13 +151,6 @@ def _add_routing(app):
 
 		# Other Action Routes
 
-		@app.action("DEPRECATED1")
-		def create_new_walkin_repair(ack, body, logger, client):
-			logger.info("Request received to book in new repair")
-			ack()
-
-			eric.new_walkin_repair(body, client)
-
 		@app.action("user_search")
 		def user_search_results(ack, body, logger, client):
 			logger.info("Searching Zendesk for User Input")
