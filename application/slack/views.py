@@ -3,8 +3,8 @@ import json
 from pprint import pprint as p
 
 import data
-from . import helper, config
-from application import mon_config, BaseItem, EricTicket
+from . import helper, config, exceptions
+from application import mon_config, BaseItem, EricTicket, clients
 
 
 def add_divider_block(blocks):
@@ -60,6 +60,7 @@ def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_act
 	}
 	blocks.append(basic)
 	return blocks
+
 
 def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
 	basic = {
@@ -137,6 +138,7 @@ def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 
 	blocks.append(basic)
 	return blocks
+
 
 def add_book_new_repair_button(blocks):
 	blocks.append({
@@ -461,19 +463,34 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 		return blocks
 
-	def add_repair_options(blocks):
+	def add_repair_options(device: str, blocks):
+
+		def query_monday_for_products(device_name: str):
+
+			try:
+				group_id = str(data.PRODUCT_GROUPS[device])
+			except KeyError:
+				raise exceptions.ProductGroupNameError(device_name)
+
+			options = clients.monday.system.get_boards(
+				"id",
+				"groups.items.[id, name]",
+				ids=[2477699024],
+				groups={"ids": [group_id]}
+			)[0].groups[0].items
+			return options
 
 		def get_repair_options():
 			options = []
 
-			for repair in config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']]:
+			for repair in query_monday_for_products(device):
 				options.append({
 					"text": {
 						"type": "plain_text",
-						"text": repair,
+						"text": str(repair.name),
 						"emoji": True
 					},
-					"value": repair
+					"value": str(repair.id)
 				})
 			return options
 
@@ -500,25 +517,28 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 		return blocks
 
-	def add_stock_level_block(blocks, repair_info: list):
+	def add_stock_level_block(blocks, parts_list: list):
+		for repair_info in parts_list:
+			try:
+				level = repair_info[1].value
+				if not level:
+					level = 0
+				stock_level = int(float(level))
+			except ValueError:
+				stock_level = 0
 
-		try:
-			stock_level = int(float(repair_info[1]))
-		except ValueError:
-			stock_level = 0
+			if stock_level < 1:
+				text = f"{repair_info[0]}: {stock_level} | :no_entry_sign: NO STOCK"
+			else:
+				text = f"{repair_info[0]}: {stock_level} | :tada: STOCK AVAILABLE"
 
-		if stock_level < 1:
-			text = f"{repair_info[0]}: {stock_level} | :no_entry_sign: NO STOCK"
-		else:
-			text = f"{repair_info[0]}: {stock_level} | :tada: STOCK AVAILABLE"
-
-		blocks.append({
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": text
-			}
-		})
+			blocks.append({
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": text
+				}
+			})
 		return blocks
 
 	def add_micro_loader(blocks):
@@ -557,7 +577,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
-		add_repair_options(view['blocks'])
+		add_repair_options(metadata['extra']['device'], view['blocks'])
 		add_divider_block(view["blocks"])
 		add_stock_level_block(view['blocks'], get_level)
 
@@ -565,7 +585,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
-		add_repair_options(view['blocks'])
+		add_repair_options(metadata['extra']['device'], view['blocks'])
 		add_divider_block(view["blocks"])
 		add_micro_loader(view['blocks'])
 
@@ -573,7 +593,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
 		add_device_options(view['blocks'])
-		add_repair_options(view['blocks'])
+		add_repair_options(metadata['extra']['device'], view['blocks'])
 		add_divider_block(view["blocks"])
 		add_no_results_block(view['blocks'])
 
@@ -591,13 +611,13 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
 			add_device_options(view['blocks'])
-			add_repair_options(view['blocks'])
+			add_repair_options(metadata['extra']['device'], view['blocks'])
 		elif phase == 'select_stock_repair':
 			metadata['extra']['repair'] = chosen.strip()
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
 			add_device_options(view['blocks'])
-			add_repair_options(view['blocks'])
+			add_repair_options(metadata['extra']['device'], view['blocks'])
 		else:
 			raise Exception(f"encountered weird choice for phase in stock checker: {phase}")
 
@@ -917,7 +937,8 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 		if phase == "device":
 			raise UpdateComplete
 
-		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option']['value']
+		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option'][
+			'value']
 
 		add_multiline_text_input(
 			title="Repair Notes",

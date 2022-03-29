@@ -718,7 +718,6 @@ def slack_user_search_results(body, client):
 	results = clients.zendesk.search(search_term, type='user')
 
 	p("RESULTS ======================================================================================================")
-	p(len(results))
 
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
@@ -786,8 +785,6 @@ def check_and_create_new_user(body, client, ack):
 
 def check_stock(body, client, initial=False, get_level=False):
 
-	p(body)
-
 	def get_stock_level(metadata, repair_selection):
 
 		def get_search_term_from_metadata(meta):
@@ -830,8 +827,6 @@ def check_stock(body, client, initial=False, get_level=False):
 
 	elif get_level:
 		p("GETTING LEVEL =====================")
-		view_id = body['view']['id']
-		hash_val = body['view']['hash']
 
 		resp = client.views_update(
 			view_id=body['view']['id'],
@@ -839,19 +834,28 @@ def check_stock(body, client, initial=False, get_level=False):
 			view=views.stock_check_flow_maker(body, fetching_stock_levels=True)
 		)
 
-		meta_info = s_help.get_metadata(body)
-		chosen_repair = body['actions'][0]['selected_option']['value']
-		try:
-			repair_info = get_stock_level(metadata=meta_info, repair_selection=chosen_repair)
-		except IndexError as e:
-			resp = client.views_update(
-				view_id=resp['view']['id'],
-				hash=resp['view']['hash'],
-				view=views.stock_check_flow_maker(body, repair_not_found=True)
-			)
-			return e
+		chosen_repair_product_id = body['actions'][0]['selected_option']['value']
+		part_ids_raw = clients.monday.system.get_items('id', ids=[chosen_repair_product_id])[0].get_column_value("connect_boards8").value
+		parts = clients.monday.system.get_items(ids=list(set(part_ids_raw)))
+		info = []
+		for part in parts:
+			info.append([part.name, part.get_column_value(id="quantity")])
 
-		get_level = repair_info
+		get_level = info
+
+		meta_info = s_help.get_metadata(body)
+
+		# try:
+		# 	repair_info = get_stock_level(metadata=meta_info, repair_selection=chosen_repair)
+		# except IndexError as e:
+		# 	resp = client.views_update(
+		# 		view_id=resp['view']['id'],
+		# 		hash=resp['view']['hash'],
+		# 		view=views.stock_check_flow_maker(body, repair_not_found=True)
+		# 	)
+		# 	return e
+		#
+		# get_level = repair_info
 		view_id = resp['view']['id']
 		hash_val = resp['view']['hash']
 
@@ -1091,7 +1095,7 @@ def begin_parts_search(body, client):
 
 	"""
 	print("========================= SEARCHING PARTS DATA (FIRST TIME) =========================")
-	p(body)
+
 
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],

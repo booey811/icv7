@@ -15,3 +15,8 @@ class CannotGetChannel(Exception):
 		stri = ",".join([item for item in channels])
 		self.summary = f'Cannot Find Channel: {channel_input} in slack.config.CHANNELS. Available channels: '
 		print(self.summary)
+
+
+class ProductGroupNameError(Exception):
+	def __init__(self, device: str):
+		self.error_message = f"Could not find group with title: {device}"
