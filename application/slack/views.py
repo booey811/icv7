@@ -349,11 +349,11 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 				"text": "Stock Checker",
 				"emoji": True
 			},
-			"submit": {
-				"type": "plain_text",
-				"text": "Cancel",
-				"emoji": True
-			},
+			# "submit": {
+			# 	"type": "plain_text",
+			# 	"text": "Cancel",
+			# 	"emoji": True
+			# },
 			"blocks": []
 		}
 
@@ -428,7 +428,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 			options = []
 
-			for item in data.MAIN_DEVICE:
+			for item in data.PRODUCT_GROUPS:
 				if selection in item:
 					options.append({
 						"text": {
@@ -436,7 +436,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 							"text": item,
 							"emoji": True
 						},
-						"value": item
+						"value": data.PRODUCT_GROUPS[item]
 					})
 			return options
 
@@ -471,6 +471,9 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 				group_id = str(data.PRODUCT_GROUPS[device])
 			except KeyError:
 				raise exceptions.ProductGroupNameError(device_name)
+
+			print("------------------------- gorup if")
+			print(group_id)
 
 			options = clients.monday.system.get_boards(
 				"id",
@@ -607,7 +610,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 			add_device_type_options(view['blocks'])
 			add_device_options(view['blocks'])
 		elif phase == "select_stock_device":
-			metadata['extra']['device'] = chosen.strip()
+			metadata['extra']['device'] = data.PRODUCT_GROUPS[chosen.strip()]
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
 			add_device_options(view['blocks'])
