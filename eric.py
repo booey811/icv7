@@ -784,7 +784,6 @@ def check_and_create_new_user(body, client, ack):
 
 
 def check_stock(body, client, initial=False, get_level=False):
-
 	def get_stock_level(metadata, repair_selection):
 
 		def get_search_term_from_metadata(meta):
@@ -835,11 +834,14 @@ def check_stock(body, client, initial=False, get_level=False):
 		)
 
 		chosen_repair_product_id = body['actions'][0]['selected_option']['value']
-		part_ids_raw = clients.monday.system.get_items('id', ids=[chosen_repair_product_id])[0].get_column_value("connect_boards8").value
+		part_ids_raw = clients.monday.system.get_items('id', ids=[chosen_repair_product_id])[0].get_column_value(
+			"connect_boards8").value
 		parts = clients.monday.system.get_items(ids=list(set(part_ids_raw)))
 		info = []
 		for part in parts:
-			info.append([part.name, part.get_column_value(id="quantity")])
+			stock_level = part.get_column_value(id="quantity").value
+			print("=========================== STOCK")
+			info.append([part.name, stock_level])
 
 		get_level = info
 
@@ -875,8 +877,6 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False, from_
 
 	ext_id = s_help.create_external_view_id(body, "walkin_info_view")
 	view = views.loading("Getting Walk-In Acceptance Data", external_id=ext_id)
-
-
 
 	if from_create:
 		from_create(
@@ -1039,7 +1039,6 @@ def process_walkin_submission(body, client, ack):
 def begin_slack_repair_process(body, client, dev=False):
 	# Get active user IDs
 
-
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
 	print("========================= BEGINNING REPAIR PROCESS =========================")
 	username = 'dev'
@@ -1095,7 +1094,6 @@ def begin_parts_search(body, client):
 
 	"""
 	print("========================= SEARCHING PARTS DATA (FIRST TIME) =========================")
-
 
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],

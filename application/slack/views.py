@@ -519,13 +519,13 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 	def add_stock_level_block(blocks, parts_list: list):
 		for repair_info in parts_list:
-			try:
-				level = repair_info[1].value
-				if not level:
-					level = 0
-				stock_level = int(float(level))
-			except ValueError:
-				stock_level = 0
+			# try:
+			level = repair_info[1]
+			if not level:
+				level = 0
+			stock_level = int(float(level))
+			# except (ValueError, AttributeError):
+			# 	stock_level = 0
 
 			if stock_level < 1:
 				text = f"{repair_info[0]}: {stock_level} | :no_entry_sign: NO STOCK"
