@@ -139,26 +139,69 @@ def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	blocks.append(basic)
 	return blocks
 
-def add_button_section(title, button_text, button_value, block_id, action_id, blocks):
 
-	view = 	{
+def add_radio_buttons_input_version(title, block_id, options, blocks, optional=True, action_id=None):
+	def get_options():
+
+		result = []
+
+		for option in options:
+			option_title = option[0]
+			option_value = option[1]
+
+			result.append({
+				"text": {
+					"type": "plain_text",
+					"text": option_title,
+					"emoji": True
+				},
+				"value": option_value
+			})
+
+		return result
+
+	basic = {
+		"type": "input",
+		"block_id": block_id,
+		"optional": optional,
+		"element": {
+			"type": "radio_buttons",
+			"options": get_options(),
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+
+	if action_id:
+		basic["action_id"] = action_id
+
+	blocks.append(basic)
+
+	return blocks
+
+
+def add_button_section(title, button_text, button_value, block_id, action_id, blocks):
+	view = {
 		"type": "section",
 		"block_id": block_id,
 		"text": {
-				"type": "mrkdwn",
-				"text": title
+			"type": "mrkdwn",
+			"text": title
+		},
+		"accessory": {
+			"type": "button",
+			"text": {
+				"type": "plain_text",
+				"text": button_text,
+				"emoji": True
 			},
-			"accessory": {
-				"type": "button",
-				"text": {
-					"type": "plain_text",
-					"text": button_text,
-					"emoji": True
-				},
-				"value": button_value,
-				"action_id": action_id
-			}
+			"value": button_value,
+			"action_id": action_id
 		}
+	}
 
 	blocks.append(view)
 	return blocks
@@ -957,7 +1000,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			title="Repair Type",
 			block_id="select_repair_type",
 			action_id="radio_accept_device",
-			options=config.REPAIR_TYPES,
+			options=[item for item in config.REPAIR_TYPES],
 			blocks=view['blocks']
 		)
 
@@ -994,6 +1037,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
+		p(view)
 		return view
 
 
@@ -1103,11 +1147,16 @@ def repair_phase_view(main_item, body):
 
 	basic = {
 		"type": "modal",
-		"callback_id": "repair_phase",
+		"callback_id": "repair_phase_ended",
 		"private_metadata": json.dumps(metadata),
 		"title": {
 			"type": "plain_text",
 			"text": "Repairing",
+			"emoji": True
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Finalise Repair",
 			"emoji": True
 		},
 		"close": {
@@ -1157,6 +1206,7 @@ def repair_phase_view(main_item, body):
 			{
 				"type": "input",
 				"optional": True,
+				"block_id": "repair_notes",
 				"element": {
 					"type": "plain_text_input",
 					"multiline": True,
@@ -1170,7 +1220,8 @@ def repair_phase_view(main_item, body):
 			},
 			{
 				"type": "input",
-				"dispatch_action": True,
+				"optional": False,
+				"block_id": "repair_result_select",
 				"label": {
 					"type": "plain_text",
 					"text": "Are you moving on from this repair?",
@@ -1178,6 +1229,7 @@ def repair_phase_view(main_item, body):
 				},
 				"element": {
 					"type": "static_select",
+					"action_id": "repair_result_select",
 					"placeholder": {
 						"type": "plain_text",
 						"text": "Let us know what happened",
@@ -1225,7 +1277,6 @@ def repair_phase_view(main_item, body):
 							"value": "other"
 						}
 					],
-					"action_id": "end_repair_phase"
 				}
 			},
 		]
@@ -1234,7 +1285,6 @@ def repair_phase_view(main_item, body):
 
 
 def initial_parts_search_box(body, external_id, initial: bool, remove=False):
-
 	def get_base_modal():
 		search = {
 			'type': "modal",
@@ -1304,6 +1354,8 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 			metadata["extra"]["selected_repairs"].remove(selected_repair_id)
 		else:
 			metadata["extra"]["selected_repairs"].append(selected_repair_id)
+	else:
+		metadata["extra"]["notes"] = body['view']['state']['values']['repair_notes']['repair_notes']['value']
 
 	view = get_base_modal()
 	if metadata["extra"]["selected_repairs"]:
@@ -1319,6 +1371,74 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 	add_parts_list(repairs, view["blocks"])
 
 	return view
+
+
+def sub_parts_confirmation(body):
+	metadata = helper.get_metadata(body)
+
+	requires_confirmation = []
+	product_items = []
+	if metadata["extra"]["selected_repairs"]:
+		product_items = clients.monday.system.get_items(ids=metadata["extra"]["selected_repairs"])
+
+	for product in product_items:
+		part_ids = product.get_column_value("connect_boards8")
+		if len(part_ids) == 1:
+			metadata["parts"].append(part_ids[0])
+			metadata["extra"]["selected_repairs"].remove(part_ids[0])
+		elif len(part_ids) > 1:
+			# requires clarification (push a selection view)
+			requires_confirmation.append([product, part_ids])
+		elif len(part_ids) == 0:
+			# no parts connected to this product
+			raise Exception(f"No Parts attached to {product.name} Product")
+		else:
+			raise Exception("Mathematically Impossible Thing Happened")
+
+	if requires_confirmation:
+		view = {
+			"type": "modal",
+			"title": {
+				"type": "plain_text",
+				"text": "Parts Confirmation",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Go Back",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+		add_header_block(view["blocks"], "Please confirm variations:")
+
+		for product_data in requires_confirmation:
+			options = []
+			product = product_data[0]
+			part_ids = product_data[1]
+			parts = clients.monday.system.get_items('id', 'name', ids=part_ids)
+			for part in parts:
+				name = part.name
+				value = part.id
+				options.append([name, value])
+
+			add_radio_buttons_input_version(
+				title=product.name,
+				block_id="repairs_sub_parts_select",
+				options=options,
+				blocks=view["blocks"],
+				optional=False
+			)
+
+	else:
+		pass
+
 
 def parts_search_results(resp_body):
 	def generate_results_block(repair_name):

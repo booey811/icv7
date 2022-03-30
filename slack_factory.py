@@ -200,22 +200,20 @@ def _add_routing(app):
 
 			eric.show_walk_in_info(body, client, from_booking=True)
 
-		@app.action("end_repair_phase")
+		@app.view("repair_phase_ended")
 		def end_repair_phase(ack, body, logger, client):
 			logger.info("Response to Repair Phase Complete")
-			ack()
 
-			selected = None
-			for action in body['actions']:
-				if action['action_id'] == 'end_repair_phase':
-					selected = action['selected_option']['value']
+			p(body)
+
+			selected = body['view']['state']['values']['repair_result_select']['repair_result_select']['selected_option']['value']
 
 			if not selected:
 				raise Exception(
 					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
 
 			if selected == 'repaired':
-				eric.add_parts_to_repair(body, client, initial=True)
+				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client)
 			elif selected == 'parts':
@@ -276,12 +274,12 @@ def _add_routing(app):
 		def add_part_to_repair(ack, body, logger, client):
 			logger.info("Adding Part to Repair")
 			ack()
-			eric.add_parts_to_repair(body, client, initial=False)
+			eric.add_parts_to_repair(body, client, ack=ack, initial=False)
 
 		@app.action("repairs_parts_remove")
 		def remove_parts_from_repir(ack, body, logger, client):
 			logger.info("Removing Part from Repair")
-			eric.add_parts_to_repair(body, client, initial=False, remove=True)
+			eric.add_parts_to_repair(body, client, ack=ack, initial=False, remove=True)
 
 		# =========== View Submissions
 
@@ -326,6 +324,12 @@ def _add_routing(app):
 			)
 			logger.info(body)
 			eric.process_walkin_submission(body, client, ack)
+
+		@app.view("repairs_parts_submission")
+		def process_submitted_parts_selection(ack, body, logger, client):
+			logger.log("Parts Submitted - Providing Summary Route")
+			ack()
+			eric.show_repair_and_parts_confirmation(body, client)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

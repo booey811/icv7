@@ -75,7 +75,8 @@ def _init_metadata():
 			"user_search": ""
 		},
 		"extra": {
-			"selected_repairs": []
+			"selected_repairs": [],
+			"notes": ''
 		},
 		"external_id": "",
 		"zendesk": {
