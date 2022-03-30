@@ -200,31 +200,6 @@ def _add_routing(app):
 
 			eric.show_walk_in_info(body, client, from_booking=True)
 
-		@app.view("repair_phase_ended")
-		def end_repair_phase(ack, body, logger, client):
-			logger.info("Response to Repair Phase Complete")
-
-			p(body)
-
-			selected = body['view']['state']['values']['repair_result_select']['repair_result_select']['selected_option']['value']
-
-			if not selected:
-				raise Exception(
-					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
-
-			if selected == 'repaired':
-				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
-			elif selected == 'client':
-				eric.handle_other_repair_issue(body, client)
-			elif selected == 'parts':
-				eric.cannot_complete_repair_no_parts(body, client)
-			elif selected == 'urgent':
-				eric.handle_urgent_repair(body, client)
-			elif selected == 'other':
-				eric.handle_other_repair_issue(body, client)
-			else:
-				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
-
 		@app.action('repair_search')
 		def search_and_show_repairs(ack, body, logger, client):
 
@@ -324,6 +299,31 @@ def _add_routing(app):
 			)
 			logger.info(body)
 			eric.process_walkin_submission(body, client, ack)
+
+		@app.view("repair_phase_ended")
+		def end_repair_phase(ack, body, logger, client):
+			logger.info("Response to Repair Phase Complete")
+
+			selected = \
+				body['view']['state']['values']['repair_result_select']['repair_result_select']['selected_option'][
+					'value']
+
+			if not selected:
+				raise Exception(
+					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
+
+			if selected == 'repaired':
+				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
+			elif selected == 'client':
+				eric.handle_other_repair_issue(body, client)
+			elif selected == 'parts':
+				eric.cannot_complete_repair_no_parts(body, client)
+			elif selected == 'urgent':
+				eric.handle_urgent_repair(body, client)
+			elif selected == 'other':
+				eric.handle_other_repair_issue(body, client)
+			else:
+				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
 
 		@app.view("repairs_parts_submission")
 		def process_submitted_parts_selection(ack, body, logger, client):

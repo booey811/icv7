@@ -76,7 +76,8 @@ def _init_metadata():
 		},
 		"extra": {
 			"selected_repairs": [],
-			"notes": ''
+			"notes": '',
+			"client_repairs": ""
 		},
 		"external_id": "",
 		"zendesk": {

@@ -1107,7 +1107,10 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 
 
 def show_repair_and_parts_confirmation(body, client):
+
 	metadata = s_help.get_metadata(body)
+
+	view = views.repair_completion_confirmation(body)
 
 
 

@@ -24,6 +24,21 @@ def add_header_block(blocks, text):
 	return blocks
 
 
+def add_context_block(blocks, text):
+	basic = {
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": text
+				}
+			]
+		}
+
+	blocks.append(basic)
+	return blocks
+
+
 def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_action_id):
 	def get_option(text):
 		option = {
@@ -1055,7 +1070,8 @@ def pre_repair_info(main_item, resp_body):
 
 	metadata = helper.get_metadata(resp_body)
 	metadata['main'] = main_item.mon_id
-	metadata["extra"]["repair_type"] = repair_type
+	metadata["general"]["repair_type"] = repair_type
+	metadata["extra"]["client_repairs"] = repairs_string
 	helper.add_device_type_metadata(main_item, metadata)
 
 	basic = {
@@ -1289,6 +1305,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 		search = {
 			'type': "modal",
 			"private_metadata": json.dumps(metadata),
+			"callback_id": "repairs_parts_submission",
 			"external_id": external_id,
 			"title": {
 				"type": "plain_text",
@@ -1610,6 +1627,44 @@ def continue_parts_search(resp_body):
 	basic["private_metadata"] = json.dumps(metadata)
 
 	return basic
+
+
+def get_part_variants(body):
+	pass
+
+
+def repair_completion_confirmation(body):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "repair_completion_confirmation",
+			"title": {
+				"type": "plain_text",
+				"text": "Confirming Your Work",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+	view = get_base_modal()
+	add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
+	add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
+	add_divider_block(view['blocks'])
 
 
 def user_search_request(body, zenpy_results=None, research=False):
