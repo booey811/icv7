@@ -139,6 +139,30 @@ def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	blocks.append(basic)
 	return blocks
 
+def add_button_section(title, button_text, button_value, block_id, action_id, blocks):
+
+	view = 	{
+		"type": "section",
+		"block_id": block_id,
+		"text": {
+				"type": "mrkdwn",
+				"text": title
+			},
+			"accessory": {
+				"type": "button",
+				"text": {
+					"type": "plain_text",
+					"text": button_text,
+					"emoji": True
+				},
+				"value": button_value,
+				"action_id": action_id
+			}
+		}
+
+	blocks.append(view)
+	return blocks
+
 
 def add_book_new_repair_button(blocks):
 	blocks.append({
@@ -1075,6 +1099,7 @@ def repair_phase_view(main_item, body):
 	start_time = datetime.datetime.now().strftime("%X")
 
 	metadata = helper.get_metadata(body)
+	metadata["device"]["model"] = device
 
 	basic = {
 		"type": "modal",
@@ -1213,38 +1238,85 @@ def repair_phase_view(main_item, body):
 	return basic
 
 
-def initial_parts_search_box(body):
-	metadata = helper.get_metadata(body)
+def initial_parts_search_box(body, external_id, initial: bool):
 
-	search = {
-		'type': "modal",
-		"private_metadata": json.dumps(metadata),
-		"title": {
-			"type": "plain_text",
-			"text": "Parts Search",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Go Back",
-			"emoji": True
-		},
-		'blocks': [{
-			"dispatch_action": True,
-			"type": "input",
-			"element": {
-				"type": "plain_text_input",
-				"action_id": "repair_search"
-			},
-			"label": {
+	def get_base_modal():
+		search = {
+			'type': "modal",
+			"private_metadata": json.dumps(metadata),
+			"external_id": external_id,
+			"title": {
 				"type": "plain_text",
-				"text": "Enter search term:",
+				"text": "Parts Selection",
 				"emoji": True
-			}
-		}]
-	}
-	return search
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Go Back",
+				"emoji": True
+			},
+			'blocks': []
+		}
+		return search
 
+	def add_selected_parts_block(repair_name, item_id, blocks):
+
+		add_button_section(
+			title=repair_name,
+			button_text="Remove Part",
+			button_value=repair.id,
+			block_id=f"repairs_parts_remove_{item_id}",
+			action_id="repairs_parts_remove",
+			blocks=blocks
+		)
+
+	def add_parts_list(repairs_list, blocks):
+
+		for repair_info in repairs_list:
+			if repair_info.id in metadata["extra"]["selected_repairs"]:
+				continue
+			part_name = repair_info.name.replace(metadata["device"]["model"], "")
+			add_button_section(
+				title=part_name,
+				button_text="Add Part",
+				button_value=repair_info.id,
+				block_id=f"repairs_parts_select_{repair_info.id}",
+				action_id='repairs_parts_select',
+				blocks=blocks
+			)
+
+		return blocks
+
+	metadata = helper.get_metadata(body)
+	if not metadata["external_id"]:
+		metadata["external_id"] = external_id
+	group_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
+	repairs = clients.monday.system.get_boards(
+		'id',
+		'groups.items.[name, id]',
+		ids=[2477699024],
+		groups={"ids": [group_id]}
+	)[0].groups[0].items
+
+	if not initial:
+		p(body)
+		selected_repair_id = body['actions'][0]["value"]
+		metadata["extra"]["selected_repairs"].append(selected_repair_id)
+
+	view = get_base_modal()
+	if metadata["extra"]["selected_repairs"]:
+		add_header_block(view["blocks"], "Selected Parts")
+		for repair_id in metadata["extra"]["selected_repairs"]:
+			for repair in repairs:
+				if str(repair_id) == str(repair.id):
+					name = repair.name.replace(metadata["device"]["model"], "")
+					add_selected_parts_block(name, repair.id, view["blocks"])
+		add_divider_block(view["blocks"])
+
+	add_header_block(view["blocks"], "Add Parts to Repair")
+	add_parts_list(repairs, view["blocks"])
+
+	return view
 
 def parts_search_results(resp_body):
 	def generate_results_block(repair_name):

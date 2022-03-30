@@ -215,7 +215,7 @@ def _add_routing(app):
 					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
 
 			if selected == 'repaired':
-				eric.begin_parts_search(body, client)
+				eric.add_parts_to_repair(body, client, initial=True)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client)
 			elif selected == 'parts':
@@ -271,6 +271,12 @@ def _add_routing(app):
 		def validate_repair_selection(ack, body, logger, client):
 			logger.info("Parts Validation/Selection process request")
 			ack()
+
+		@app.action("repairs_parts_select")
+		def add_part_to_repair(ack, body, logger, client):
+			logger.info("Adding Part to Repair")
+			ack()
+			eric.add_parts_to_repair(body, client, initial=False)
 
 		# =========== View Submissions
 
