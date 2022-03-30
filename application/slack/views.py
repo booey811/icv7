@@ -1110,11 +1110,6 @@ def repair_phase_view(main_item, body):
 			"text": "Repairing",
 			"emoji": True
 		},
-		"submit": {
-			"type": "plain_text",
-			"text": "Submit",
-			"emoji": True
-		},
 		"close": {
 			"type": "plain_text",
 			"text": "Cancel",
@@ -1238,7 +1233,7 @@ def repair_phase_view(main_item, body):
 	return basic
 
 
-def initial_parts_search_box(body, external_id, initial: bool):
+def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 
 	def get_base_modal():
 		search = {
@@ -1248,6 +1243,11 @@ def initial_parts_search_box(body, external_id, initial: bool):
 			"title": {
 				"type": "plain_text",
 				"text": "Parts Selection",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Proceed",
 				"emoji": True
 			},
 			"close": {
@@ -1299,9 +1299,11 @@ def initial_parts_search_box(body, external_id, initial: bool):
 	)[0].groups[0].items
 
 	if not initial:
-		p(body)
 		selected_repair_id = body['actions'][0]["value"]
-		metadata["extra"]["selected_repairs"].append(selected_repair_id)
+		if remove:
+			metadata["extra"]["selected_repairs"].remove(selected_repair_id)
+		else:
+			metadata["extra"]["selected_repairs"].append(selected_repair_id)
 
 	view = get_base_modal()
 	if metadata["extra"]["selected_repairs"]:

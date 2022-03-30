@@ -1083,13 +1083,14 @@ def begin_specific_slack_repair(body, client):
 		view=views.repair_phase_view(main_item, body)
 	)
 
-def add_parts_to_repair(body, client, initial):
+
+def add_parts_to_repair(body, client, initial, remove=False):
 	metadata = s_help.get_metadata(body)
 	external_id = metadata["external_id"]
 	if not external_id:
 		external_id = s_help.create_external_view_id(body, "repairs_parts_select")
 
-	view = views.initial_parts_search_box(body, external_id, initial)
+	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
 	if initial:
 		resp = client.views_push(
@@ -1101,10 +1102,6 @@ def add_parts_to_repair(body, client, initial):
 			external_id=external_id,
 			view=view
 		)
-
-
-
-
 
 
 def begin_parts_search(body, client):

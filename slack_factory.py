@@ -278,6 +278,11 @@ def _add_routing(app):
 			ack()
 			eric.add_parts_to_repair(body, client, initial=False)
 
+		@app.action("repairs_parts_remove")
+		def remove_parts_from_repir(ack, body, logger, client):
+			logger.info("Removing Part from Repair")
+			eric.add_parts_to_repair(body, client, initial=False, remove=True)
+
 		# =========== View Submissions
 
 		@app.view("pre_repair_info")
