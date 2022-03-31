@@ -1155,6 +1155,39 @@ def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
 		})
 
 
+def show_waste_validations(body, client, ack):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_validation_submission",
+			"title": {
+				"type": "plain_text",
+				"text": "Confirming Wasted Items",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+
+	metadata = s_help.get_metadata(body)
+	view = get_base_modal()
+
+	p(body)
+	p(metadata)
+
+
 def finalise_repair_data():
 	pass
 

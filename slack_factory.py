@@ -325,6 +325,11 @@ def _add_routing(app):
 			else:
 				raise Exception(f"Unknown input from Waste Submission: {waste}")
 
+		@app.view("waste_parts_submission")
+		def validate_wasted_parts(ack, body, logger, client):
+			logger.info("Validating Wasted Repair Info")
+			eric.show_waste_validations(body, client, ack)
+
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
 
