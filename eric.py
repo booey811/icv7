@@ -1180,12 +1180,18 @@ def show_waste_validations(body, client, ack):
 		}
 		return basic
 
-
 	metadata = s_help.get_metadata(body)
 	view = get_base_modal()
 
-	p(body)
-	p(metadata)
+	# repairs = clients.monday.system.get_items('id', ids=[item for item in metadata["extra"]["parts_to_waste"]])
+	#
+	# parts = []
+	#
+	# for repair in repairs:
+	# 	part_ids = repair.get_column_value(id='connect_boards8')
+	# 	if len(part_ids) == 1:
+	# 		parts.append(part_ids[0])
+	# 	elif len(part_ids) > 1:
 
 
 def finalise_repair_data():
