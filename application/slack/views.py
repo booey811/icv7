@@ -1831,7 +1831,6 @@ def repair_completion_confirmation(body, from_variants, meta):
 		block_id='select_waste_opt_in',
 		optional=False,
 		action_id='select_waste_opt_in',
-		dispatch_action=True
 	)
 
 	add_divider_block(view["blocks"])
@@ -2072,12 +2071,12 @@ def register_wasted_parts(body, initial, external_id):
 		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
 		metadata["extra"]["parts_to_waste"][selected_id] = selected_name
 	view = add_base_modal()
-	add_header_block(view["blocks"], "Add Parts To Waste Record")
-
+	p(metadata)
 	if metadata["extra"]["parts_to_waste"]:
 		p(metadata["extra"]["parts_to_waste"])
 		add_header_block(view["blocks"], "To Be Wasted")
 		for repair in metadata["extra"]["parts_to_waste"]:
+			print("ADDING BUTYTION ======================")
 			add_button_section(
 				title=metadata["extra"]["parts_to_waste"][repair],
 				button_text="Remove from Waste",
@@ -2086,6 +2085,8 @@ def register_wasted_parts(body, initial, external_id):
 				action_id="button_waste_remove",
 				blocks=view["blocks"]
 			)
+
+	add_header_block(view["blocks"], "Add Parts To Waste Record")
 
 	repairs = data.get_product_repairs(metadata["device"]["model"]).items
 	for repair in repairs:
@@ -2100,6 +2101,7 @@ def register_wasted_parts(body, initial, external_id):
 			)
 
 	view["private_metadata"] = json.dumps(metadata)
+	p(view)
 	return view
 
 
