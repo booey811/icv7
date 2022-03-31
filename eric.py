@@ -1244,6 +1244,7 @@ def process_waste_entry(ack, body, client, initial=False):
 	else:
 		p("Not INIT =============================================")
 		external_id = meta["external_id"]
+		ack()
 
 	p(external_id)
 	p(meta)

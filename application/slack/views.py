@@ -2066,6 +2066,7 @@ def register_wasted_parts(body, initial, external_id):
 		return basic
 
 	metadata = helper.get_metadata(body)
+	metadata["external_id"] = external_id
 	if not initial:
 		selected_id = body["actions"][0]["value"]
 		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
@@ -2097,6 +2098,8 @@ def register_wasted_parts(body, initial, external_id):
 				action_id="button_waste_selection",
 				blocks=view["blocks"]
 			)
+
+	view["private_metadata"] = json.dumps(metadata)
 	return view
 
 
