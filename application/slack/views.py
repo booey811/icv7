@@ -77,7 +77,8 @@ def add_dropdown_ui_section(title, placeholder, options, blocks, block_id, selec
 	return blocks
 
 
-def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optional=False, action_id=None):
+def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optional=False, action_id=None,
+                          dispatch_action=False):
 	def get_options():
 		results = []
 		for text_and_value in options:
@@ -93,6 +94,7 @@ def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optiona
 
 	basic = {
 		"type": "input",
+		"block_id": block_id,
 		"element": {
 			"type": "static_select",
 			"placeholder": {
@@ -115,6 +117,9 @@ def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optiona
 
 	if action_id:
 		basic["element"]["action_id"] = action_id
+
+	if dispatch_action:
+		basic["dispatch_action"] = True
 
 	blocks.append(basic)
 	return blocks
@@ -371,9 +376,11 @@ def _construct_markdown_option(title, description='', chosen_value=''):
 	return dct
 
 
-def loading(footnotes='', external_id=False):
+def loading(footnotes='', external_id=False, metadata=None):
 	"""returns the view for the modal screen showing that the application has received a request and is processing it
 	adds in a footnote to the loading screen for more specific information"""
+	if metadata is None:
+		metadata = {}
 	view = {
 		"type": "modal",
 		"title": {
@@ -413,6 +420,9 @@ def loading(footnotes='', external_id=False):
 
 	if external_id:
 		view["external_id"] = external_id
+		if metadata:
+			metadata["external_id"] = external_id
+			view["private_metadata"] = json.dumps(metadata)
 
 	return view
 
@@ -1758,6 +1768,7 @@ def repair_completion_confirmation(body, from_variants, meta):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
+			"private_metadata": json.dumps(metadata),
 			"callback_id": "repair_completion_confirmation",
 			"title": {
 				"type": "plain_text",
@@ -1819,7 +1830,8 @@ def repair_completion_confirmation(body, from_variants, meta):
 		blocks=view['blocks'],
 		block_id='select_waste_opt_in',
 		optional=False,
-		action_id='select_waste_opt_in'
+		action_id='select_waste_opt_in',
+		dispatch_action=True
 	)
 
 	add_divider_block(view["blocks"])
@@ -2024,6 +2036,67 @@ def user_search_request(body, zenpy_results=None, research=False):
 	# 	add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
 	# 	add_divider_block(view['blocks'])
 
+	return view
+
+
+def register_wasted_parts(body, initial, external_id):
+	def add_base_modal():
+		basic = {
+			"type": "modal",
+			"external_id": external_id,
+			"callback_id": "waste_parts_submission",
+			"private_metadata": json.dumps(metadata),
+			"title": {
+				"type": "plain_text",
+				"text": "Record Waste",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+	if not initial:
+		selected_id = body["actions"][0]["value"]
+		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
+		metadata["extra"]["parts_to_waste"][selected_id] = selected_name
+	view = add_base_modal()
+	add_header_block(view["blocks"], "Add Parts To Waste Record")
+
+	if metadata["extra"]["parts_to_waste"]:
+		p(metadata["extra"]["parts_to_waste"])
+		add_header_block(view["blocks"], "To Be Wasted")
+		for repair in metadata["extra"]["parts_to_waste"]:
+			add_button_section(
+				title=metadata["extra"]["parts_to_waste"][repair],
+				button_text="Remove from Waste",
+				button_value=repair,
+				block_id=f"button_waste_remove_{repair}",
+				action_id="button_waste_remove",
+				blocks=view["blocks"]
+			)
+
+	repairs = data.get_product_repairs(metadata["device"]["model"]).items
+	for repair in repairs:
+		if repair.id not in metadata["extra"]["parts_to_waste"]:
+			add_button_section(
+				title=repair.name,
+				button_text="Add to Waste",
+				button_value=repair.id,
+				block_id=f"button_waste_select_{repair.id}",
+				action_id="button_waste_selection",
+				blocks=view["blocks"]
+			)
 	return view
 
 

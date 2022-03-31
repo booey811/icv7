@@ -1036,17 +1036,18 @@ def process_walkin_submission(body, client, ack):
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
 
 
-def begin_slack_repair_process(body, client, dev=False):
+def begin_slack_repair_process(body, client, ack, dev=False):
+	ack()
 	# Get active user IDs
 
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
 	print("========================= BEGINNING REPAIR PROCESS =========================")
 	username = 'dev'
+	external_id = s_help.create_external_view_id(body, "begin_repairs")
 
-	# Show loading screen
-	info = client.views_open(
+	client.views_open(
 		trigger_id=body['trigger_id'],
-		view=views.loading(f"Getting {username.capitalize()}'s next repair")
+		view=views.loading(f"Getting {username.capitalize()}'s next repair", external_id=external_id)
 	)
 
 	# Convert from Slack User to Monday User IDs, and get the relevant group
@@ -1058,28 +1059,27 @@ def begin_slack_repair_process(body, client, dev=False):
 			ids=[main_group_id]
 		)[0].items[0])
 
-	resp = info.data
-
 	client.views_update(
-		view_id=resp["view"]["id"],
-		hash=resp["view"]["hash"],
+		external_id=external_id,
 		view=views.pre_repair_info(next_repair, body)
 	)
 
 
-def begin_specific_slack_repair(body, client):
-	print("========================= SPECIFIC REPAIR INFO PHASE =========================")
+def begin_specific_slack_repair(body, client, ack):
 	metadata = s_help.get_metadata(body)
-	main_item = BaseItem(CustomLogger(), metadata['main'])
+	external_id = s_help.create_external_view_id(body, "repair_phase_view")
 
-	resp = client.views_open(
-		trigger_id=body['trigger_id'],
-		view=views.loading(f"Getting Repair Data: {metadata['main']}")
+	ack(
+		response_action="update",
+		view=views.loading(
+			f"Getting Repair Data: {metadata['main']}",
+			external_id=external_id)
 	)
 
+	main_item = BaseItem(CustomLogger(), metadata['main'])
+
 	resp = client.views_update(
-		view_id=resp["view"]["id"],
-		hash=resp["view"]["hash"],
+		external_id=external_id,
 		view=views.repair_phase_view(main_item, body)
 	)
 
@@ -1093,12 +1093,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
 	if initial:
-		ack(
-			{
-				"response_action": "push",
-				"view": view
-			}
-		)
+		ack(response_action="push", view=view)
 	else:
 		resp = client.views_update(
 			external_id=external_id,
@@ -1110,7 +1105,7 @@ def show_variant_selections(body, client, ack):
 	external_id = s_help.create_external_view_id(body, "parts_confirmations")
 
 	ack({
-		"response_action": "push",
+		"response_action": "update",
 		"view": views.loading("Checking Parts Validity", external_id=external_id)
 	})
 
@@ -1152,13 +1147,16 @@ def show_variant_selections(body, client, ack):
 
 
 def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
-
 	view = views.repair_completion_confirmation(body=body, from_variants=from_variants, meta=s_help.get_metadata(body))
 	if from_variants:
 		ack({
 			"response_action": "update",
 			"view": view
 		})
+
+
+def finalise_repair_data():
+	pass
 
 
 def begin_parts_search(body, client):
@@ -1201,7 +1199,6 @@ def display_repairs_search_results(body, client):
 
 
 def continue_parts_search(body, client):
-	print("========================= SEARCHING PARTS DARA (SECONDARY TIME) =========================")
 
 	resp = client.views_update(
 		view_id=body["view"]["id"],
@@ -1237,10 +1234,23 @@ def cannot_complete_repair_no_parts(body, client):
 	)
 
 
-def process_waste_entry(body, client):
-	resp = client.views_push(
-		trigger_id=body['trigger_id'],
-		view=views.loading("We haven't developed this yet....... Nothing is loading")
+def process_waste_entry(ack, body, client, initial=False):
+	meta = s_help.get_metadata(body)
+
+	if initial:
+		p("INIT ===============================================")
+		external_id = s_help.create_external_view_id(body, "add_waste_entry")
+		ack(response_action="push", view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
+	else:
+		p("Not INIT =============================================")
+		external_id = meta["external_id"]
+
+	p(external_id)
+	p(meta)
+
+	client.views_update(
+		external_id=external_id,
+		view=views.register_wasted_parts(body, initial, external_id)
 	)
 
 

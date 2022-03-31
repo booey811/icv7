@@ -84,8 +84,7 @@ def _add_routing(app):
 			view submission = pre_repair_info
 			"""
 			logger.info("Repair process request received")
-			ack()
-			eric.begin_slack_repair_process(body, client)
+			eric.begin_slack_repair_process(body, client, ack, dev=True)
 			return True
 
 		@app.command("/users")
@@ -215,31 +214,6 @@ def _add_routing(app):
 
 			eric.continue_parts_search(body, client)
 
-		@app.action('waste_opt_in')
-		def register_waste_entry(ack, body, logger, client):
-			logger.info("Waste Entry process request")
-			ack()
-
-			selected = None
-			for action in body['actions']:
-				if action['action_id'] == 'waste_opt_in':
-					selected = action['selected_option']['value']
-
-			if not selected:
-				raise Exception("Unexpexcted Action ID in 'actions' object after repair_complete")
-
-			print("SELECTED ========================")
-			print(selected)
-
-			if selected == 'yes':
-				# Waste recording flow
-				eric.process_waste_entry(body, client)
-			elif selected == 'no':
-				# Do Nothing
-				pass
-			else:
-				raise Exception("Unexpected value received in action for waste_opt_in")
-
 		@app.action("parts_selection")
 		def validate_repair_selection(ack, body, logger, client):
 			logger.info("Parts Validation/Selection process request")
@@ -256,13 +230,17 @@ def _add_routing(app):
 			logger.info("Removing Part from Repair")
 			eric.add_parts_to_repair(body, client, ack=ack, initial=False, remove=True)
 
+		@app.action("button_waste_selection")
+		def update_waste_record_view(ack, body, logger, client):
+			logger.info("Waste Record Request Received")
+			eric.process_waste_entry(ack, body, client)
+
 		# =========== View Submissions
 
 		@app.view("pre_repair_info")
 		def begin_specific_slack_repair(ack, body, logger, client):
 			logger.info("Response to Repair Beginning Received")
-			ack()
-			eric.begin_specific_slack_repair(body, client)
+			eric.begin_specific_slack_repair(body, client, ack)
 			return True
 
 		@app.view("new_user_input")
@@ -334,6 +312,18 @@ def _add_routing(app):
 		def add_variants_to_repair_and_confirm(ack, body, logger, client):
 			logger.info("Variants Selected, Adding to Repair and Confirming")
 			eric.show_repair_and_parts_confirmation(body, client, ack, from_variants=True)
+
+		@app.view("repair_completion_confirmation")
+		def process_repair_completion_confirmation(ack, body, logger, client):
+			logger.info("Repair Confirmation Submitted: Checking for Waste and Processing")
+			waste = body['view']['state']['values']['select_waste_opt_in']['select_waste_opt_in']['selected_option'][
+				'value']
+			if waste == 'waste':
+				eric.process_waste_entry(ack, body, client, initial=True)
+			elif waste == 'no_waste':
+				eric.finalise_repair_data()
+			else:
+				raise Exception(f"Unknown input from Waste Submission: {waste}")
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

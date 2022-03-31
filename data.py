@@ -577,6 +577,23 @@ def _get_product_groups():
 	return TwoWayDict(basic)
 
 
+def get_product_repairs(group_id_or_name):
+	try:
+		if ' ' in group_id_or_name:
+			group_id = PRODUCT_GROUPS[group_id_or_name]
+		else:
+			group_id = group_id_or_name
+	except KeyError:
+		raise Exception(f"Cannot Find Groups with ID or Name {group_id_or_name}")
+	group = clients.monday.system.get_boards(
+		'id',
+		'groups.items.[id, name]',
+		ids=[2477699024],
+		groups={"ids": [group_id]})[
+		0].groups[0]
+	return group
+
+
 class TwoWayDict(dict):
 
 	def __setitem__(self, key, value):
