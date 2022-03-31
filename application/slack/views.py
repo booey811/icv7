@@ -39,7 +39,7 @@ def add_context_block(blocks, text):
 	return blocks
 
 
-def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_action_id):
+def add_dropdown_ui_section(title, placeholder, options, blocks, block_id, selection_action_id):
 	def get_option(text):
 		option = {
 			"text": {
@@ -77,9 +77,53 @@ def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_act
 	return blocks
 
 
-def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
+def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optional=False, action_id=None):
+	def get_options():
+		results = []
+		for text_and_value in options:
+			results.append({
+				"text": {
+					"type": "plain_text",
+					"text": text_and_value[0],
+					"emoji": True
+				},
+				"value": text_and_value[1]
+			})
+		return results
+
 	basic = {
 		"type": "input",
+		"element": {
+			"type": "static_select",
+			"placeholder": {
+				"type": "plain_text",
+				"text": placeholder,
+				"emoji": True
+			},
+			"options": get_options(),
+			"action_id": action_id
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+
+	if optional:
+		basic["optional"] = True
+
+	if action_id:
+		basic["element"]["action_id"] = action_id
+
+	blocks.append(basic)
+	return blocks
+
+
+def add_multiline_text_input(title, placeholder, block_id, action_id, blocks, optional=False):
+	basic = {
+		"type": "input",
+		"optional": optional,
 		"block_id": block_id,
 		"element": {
 			"type": "plain_text_input",
@@ -1019,7 +1063,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 		add_header("Confirmations", view['blocks'])
 
-		add_dropdown_ui(
+		add_dropdown_ui_section(
 			title="Device Type",
 			placeholder="Select a device type",
 			options=['iPhone', 'iPad', 'MacBook', 'Apple Watch', 'Other'],
@@ -1035,7 +1079,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option'][
 				'value']
 
-		add_dropdown_ui(
+		add_dropdown_ui_section(
 			title="Device",
 			placeholder="Select device",
 			options=[item for item in data.MAIN_DEVICE if device_type in item],
@@ -1741,8 +1785,9 @@ def repair_completion_confirmation(body, from_variants, meta):
 		for repair_id in metadata["extra"]["selected_repairs"]:
 			p(f"PROCESSING REPAIR ID {repair_id}")
 			part_id = \
-			body["view"]["state"]["values"][f"variant_selection_{repair_id}"][f"radio_variant_selection_{repair_id}"][
-				"selected_option"]["value"]
+				body["view"]["state"]["values"][f"variant_selection_{repair_id}"][
+					f"radio_variant_selection_{repair_id}"][
+					"selected_option"]["value"]
 			metadata["parts"].append(part_id)
 		metadata["extra"]["selected_repairs"] = []
 
@@ -1765,6 +1810,28 @@ def repair_completion_confirmation(body, from_variants, meta):
 
 	add_divider_block(view["blocks"])
 
+	text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
+
+	add_dropdown_ui_input(
+		title="Were any parts damaged during the repair?",
+		placeholder='Please choose a response',
+		options=text_and_values,
+		blocks=view['blocks'],
+		block_id='select_waste_opt_in',
+		optional=False,
+		action_id='select_waste_opt_in'
+	)
+
+	add_divider_block(view["blocks"])
+
+	add_multiline_text_input(
+		title="Final Notes",
+		optional=True,
+		placeholder="If you have any final notes, put them here",
+		block_id='text_final_repair_notes',
+		action_id='text_final_repair_notes',
+		blocks=view['blocks']
+	)
 
 	return view
 
