@@ -1106,15 +1106,59 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 		)
 
 
-def show_repair_and_parts_confirmation(body, client):
+def show_variant_selections(body, client, ack):
+	external_id = s_help.create_external_view_id(body, "parts_confirmations")
 
-	metadata = s_help.get_metadata(body)
+	ack({
+		"response_action": "push",
+		"view": views.loading("Checking Parts Validity", external_id=external_id)
+	})
 
-	view = views.repair_completion_confirmation(body)
+	meta = s_help.get_metadata(body)
+	selected_repairs = clients.monday.system.get_items('id', ids=meta["extra"]["selected_repairs"])
+	variants = {}
+	unprocessed_repair_ids = []
+
+	for repair in selected_repairs:
+		part_ids = repair.get_column_value(id="connect_boards8").value
+		if len(part_ids) == 1:
+			print("ADDING PART TP IDS")
+			print(part_ids[0])
+			meta['parts'].append(part_ids[0])
+		elif len(part_ids) > 1:
+			names_and_ids = []
+			parts = clients.monday.system.get_items(ids=part_ids)
+			for item in parts:
+				names_and_ids.append([item.name, item.id])
+			variants[repair.name] = {
+				"id": repair.id,
+				'info': names_and_ids
+			}
+			unprocessed_repair_ids.append(repair.id)
+		else:
+			raise Exception(f"No Part IDS Attached to Product {repair.name}[{repair.id}]")
+
+		meta["extra"]["selected_repairs"] = unprocessed_repair_ids
+
+	if variants:
+		view = views.display_variant_options(body, variants, meta)
+	else:
+		view = views.repair_completion_confirmation(body=body, meta=meta, from_variants=False)
+
+	resp = client.views_update(
+		external_id=external_id,
+		view=view
+	)
 
 
+def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
 
-
+	view = views.repair_completion_confirmation(body=body, from_variants=from_variants, meta=s_help.get_metadata(body))
+	if from_variants:
+		ack({
+			"response_action": "update",
+			"view": view
+		})
 
 
 def begin_parts_search(body, client):

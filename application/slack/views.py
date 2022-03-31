@@ -26,14 +26,14 @@ def add_header_block(blocks, text):
 
 def add_context_block(blocks, text):
 	basic = {
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": text
-				}
-			]
-		}
+		"type": "context",
+		"elements": [
+			{
+				"type": "mrkdwn",
+				"text": text
+			}
+		]
+	}
 
 	blocks.append(basic)
 	return blocks
@@ -191,7 +191,7 @@ def add_radio_buttons_input_version(title, block_id, options, blocks, optional=T
 	}
 
 	if action_id:
-		basic["action_id"] = action_id
+		basic["element"]["action_id"] = action_id
 
 	blocks.append(basic)
 
@@ -219,6 +219,44 @@ def add_button_section(title, button_text, button_value, block_id, action_id, bl
 	}
 
 	blocks.append(view)
+	return blocks
+
+
+def add_checkbox_section(title, options: list, block_id, action_id, blocks, optional=True):
+	def get_options():
+		results = []
+
+		for text_and_value in options:
+			results.append(
+				{
+					"text": {
+						"type": "plain_text",
+						"text": text_and_value[0],
+						"emoji": True
+					},
+					"value": text_and_value[1]
+				}
+			)
+
+		return results
+
+	basic = {
+		"type": "input",
+		"block_id": block_id,
+		"optional": optional,
+		"element": {
+			"type": "checkboxes",
+			"options": get_options(),
+			"action_id": action_id
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+
+	blocks.append(basic)
 	return blocks
 
 
@@ -1629,12 +1667,50 @@ def continue_parts_search(resp_body):
 	return basic
 
 
-def get_part_variants(body):
-	pass
+def display_variant_options(body, variant_dict, meta):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "variant_selection_submission",
+			"private_metadata": json.dumps(metadata),
+			"title": {
+				"type": "plain_text",
+				"text": "Variation Selection",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+		return basic
+
+	metadata = meta
+	view = get_base_modal()
+	for repair in variant_dict:
+		add_header_block(view["blocks"], repair)
+
+		add_radio_buttons_input_version(
+			title="Please select a part",
+			block_id=f"variant_selection_{variant_dict[repair]['id']}",
+			options=variant_dict[repair]['info'],
+			optional=False,
+			blocks=view['blocks'],
+			action_id=f"radio_variant_selection_{variant_dict[repair]['id']}"
+		)
+
+	return view
 
 
-def repair_completion_confirmation(body):
-
+def repair_completion_confirmation(body, from_variants, meta):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
@@ -1659,12 +1735,38 @@ def repair_completion_confirmation(body):
 
 		return basic
 
-	metadata = helper.get_metadata(body)
+	metadata = meta
+
+	if from_variants:
+		for repair_id in metadata["extra"]["selected_repairs"]:
+			p(f"PROCESSING REPAIR ID {repair_id}")
+			part_id = \
+			body["view"]["state"]["values"][f"variant_selection_{repair_id}"][f"radio_variant_selection_{repair_id}"][
+				"selected_option"]["value"]
+			metadata["parts"].append(part_id)
+		metadata["extra"]["selected_repairs"] = []
 
 	view = get_base_modal()
 	add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
 	add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
 	add_divider_block(view['blocks'])
+	add_header_block(view["blocks"], "To resolve these faults, you have used:")
+
+	text_and_values = [[item.name, item.name] for item in
+	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
+	add_checkbox_section(
+		title="Please confirm",
+		options=text_and_values,
+		block_id="checkbox_parts_confirmation",
+		action_id="checkbox_parts_confirmation",
+		blocks=view['blocks'],
+		optional=False
+	)
+
+	add_divider_block(view["blocks"])
+
+
+	return view
 
 
 def user_search_request(body, zenpy_results=None, research=False):

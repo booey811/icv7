@@ -252,7 +252,7 @@ def _add_routing(app):
 			eric.add_parts_to_repair(body, client, ack=ack, initial=False)
 
 		@app.action("repairs_parts_remove")
-		def remove_parts_from_repir(ack, body, logger, client):
+		def remove_parts_from_repair(ack, body, logger, client):
 			logger.info("Removing Part from Repair")
 			eric.add_parts_to_repair(body, client, ack=ack, initial=False, remove=True)
 
@@ -326,10 +326,14 @@ def _add_routing(app):
 				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
 
 		@app.view("repairs_parts_submission")
-		def process_submitted_parts_selection(ack, body, logger, client):
-			logger.log("Parts Submitted - Providing Summary Route")
-			ack()
-			eric.show_repair_and_parts_confirmation(body, client)
+		def validate_submitted_parts_selection(ack, body, logger, client):
+			logger.info("Parts Submitted - Providing Summary Route")
+			eric.show_variant_selections(body, client, ack)
+
+		@app.view("variant_selection_submission")
+		def add_variants_to_repair_and_confirm(ack, body, logger, client):
+			logger.info("Variants Selected, Adding to Repair and Confirming")
+			eric.show_repair_and_parts_confirmation(body, client, ack, from_variants=True)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
