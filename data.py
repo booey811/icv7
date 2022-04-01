@@ -623,11 +623,11 @@ class TwoWayDict(dict):
 
 class RepairsObject:
 	def __init__(self, repair_item, eric_id):
+
 		self.item = repair_item
 		self.eric_id = eric_id
-		self.name = repair_item.name
+		self.display_name = repair_item.name
 		self.mon_id = repair_item.id
-		self.id = repair_item.id
 		self._part_ids = []
 
 	@property
@@ -662,25 +662,25 @@ class DeviceRepairsObject:
 				DEVICE_TYPES['Other Device'].append(self)
 				return 'Other Device'
 
-		self.data = {
+		self.info = {
 			"group": device_group,
 			"mon_id": device_group.id,
 			"eric_id": group_eric_id,
 			"device_type": _set_device_type(),
-			"device ": device_group.title
+			"display_name": device_group.title
 		}
 
 		self._repairs = []
 
-		for repair in self.data['group'].items:
+		for repair in self.info['group'].items:
 			eric_id = repair.name.replace(device_group.title, '').strip().replace(' ', '_').lower()
 			setattr(self, eric_id, RepairsObject(repair, eric_id))
 			self._repairs.append(getattr(self, eric_id))
 
-	def get_slack_device_options_data(self):
+	def get_slack_repair_options_data(self):
 		data = []
 		for repair in self._repairs:
-			name = repair.name
+			name = repair.display_name
 			eric_id = repair.eric_id
 			data.append([name, eric_id])
 		return data

@@ -30,7 +30,6 @@ def log_catcher_decor(eric_function):
 			eric_function(webhook, logger, test)
 			logger.commit("success")
 		except MondayApiError as e:
-			logger.log("============================ MONDAY SUBMISSION ERROR ==============================")
 			for item in e.messages:
 				logger.log(item)
 			logger.summary = 'Monday Spazzed Out During Submission'
@@ -636,7 +635,6 @@ def create_monthly_invoice(webhook, logger, test=None):
 
 def search_todays_repairs(body, client):
 	# not in use
-	print("========================= SEARCHING FOR BOOKINGS =========================")
 	# triggered by SOMETHING command
 	# send loading view
 	resp = client.views_open(
@@ -717,7 +715,6 @@ def slack_user_search_results(body, client):
 	search_term = body['actions'][0]['value']
 	results = clients.zendesk.search(search_term, type='user')
 
-	p("RESULTS ======================================================================================================")
 
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
@@ -773,7 +770,6 @@ def check_and_create_new_user(body, client, ack):
 			view = views.failed_new_user_creation_view(email, len(results), e)
 
 	else:
-		p("USERS FOUND ===============================")
 		# user found with that email, please go back to search and enter this email
 		view = views.failed_new_user_creation_view(email, len(results))
 
@@ -810,10 +806,9 @@ def check_stock(body, client, initial=False, get_level=False):
 
 		val = item.get_column_value("quantity")
 		stock_level = val.text
-		p("============================== REPAIR INFO")
 		p([repair_selection, stock_level])
 		return [repair_selection, stock_level]
-
+	meta = s_help.get_metadata(body)
 	if initial:
 		# send loading view
 		resp = client.views_open(
@@ -825,39 +820,25 @@ def check_stock(body, client, initial=False, get_level=False):
 		hash_val = resp['view']['hash']
 
 	elif get_level:
-		p("GETTING LEVEL =====================")
-
 		resp = client.views_update(
 			view_id=body['view']['id'],
 			hash=body['view']['hash'],
 			view=views.stock_check_flow_maker(body, fetching_stock_levels=True)
 		)
-
-		chosen_repair_product_id = body['actions'][0]['selected_option']['value']
-		part_ids_raw = clients.monday.system.get_items('id', ids=[chosen_repair_product_id])[0].get_column_value(
+		device = getattr(data.repairs, meta["device"]["eric_id"])
+		repair = getattr(device, body['actions'][0]['selected_option']['value'])
+		part_ids_raw = clients.monday.system.get_items('id', ids=[repair.mon_id])[0].get_column_value(
 			"connect_boards8").value
 		parts = clients.monday.system.get_items(ids=list(set(part_ids_raw)))
 		info = []
 		for part in parts:
 			stock_level = part.get_column_value(id="quantity").value
-			print("=========================== STOCK")
 			info.append([part.name, stock_level])
 
 		get_level = info
 
 		meta_info = s_help.get_metadata(body)
 
-		# try:
-		# 	repair_info = get_stock_level(metadata=meta_info, repair_selection=chosen_repair)
-		# except IndexError as e:
-		# 	resp = client.views_update(
-		# 		view_id=resp['view']['id'],
-		# 		hash=resp['view']['hash'],
-		# 		view=views.stock_check_flow_maker(body, repair_not_found=True)
-		# 	)
-		# 	return e
-		#
-		# get_level = repair_info
 		view_id = resp['view']['id']
 		hash_val = resp['view']['hash']
 
@@ -1041,7 +1022,6 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 	# Get active user IDs
 
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
-	print("========================= BEGINNING REPAIR PROCESS =========================")
 	username = 'dev'
 	external_id = s_help.create_external_view_id(body, "begin_repairs")
 
@@ -1207,7 +1187,6 @@ def begin_parts_search(body, client):
 		requested repair)
 
 	"""
-	print("========================= SEARCHING PARTS DATA (FIRST TIME) =========================")
 
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
@@ -1222,7 +1201,6 @@ def begin_parts_search(body, client):
 
 
 def display_repairs_search_results(body, client):
-	print("========================= DISPLAYING PARTS SEARCH RESULTS =========================")
 
 	resp = client.views_update(
 		view_id=body['view']['id'],
@@ -1277,11 +1255,9 @@ def process_waste_entry(ack, body, client, initial=False):
 	meta = s_help.get_metadata(body)
 
 	if initial:
-		p("INIT ===============================================")
 		external_id = s_help.create_external_view_id(body, "add_waste_entry")
 		ack(response_action="push", view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
 	else:
-		p("Not INIT =============================================")
 		external_id = meta["external_id"]
 		ack()
 
