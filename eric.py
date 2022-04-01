@@ -827,9 +827,7 @@ def check_stock(body, client, initial=False, get_level=False):
 		)
 		device = getattr(data.repairs, meta["device"]["eric_id"])
 		repair = getattr(device, body['actions'][0]['selected_option']['value'])
-		part_ids_raw = clients.monday.system.get_items('id', ids=[repair.mon_id])[0].get_column_value(
-			"connect_boards8").value
-		parts = clients.monday.system.get_items(ids=list(set(part_ids_raw)))
+		parts = clients.monday.system.get_items(ids=repair.part_ids)
 		info = []
 		for part in parts:
 			stock_level = part.get_column_value(id="quantity").value

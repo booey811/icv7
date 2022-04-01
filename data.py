@@ -629,6 +629,7 @@ class RepairsObject:
 		self.display_name = repair_item.name
 		self.mon_id = repair_item.id
 		self._part_ids = []
+		self._parts = []
 
 	@property
 	def part_ids(self):
@@ -637,7 +638,7 @@ class RepairsObject:
 	@part_ids.getter
 	def part_ids(self):
 		if not self._part_ids:
-			self._part_ids = self.item.get_column_values(id='connect_boards8').value
+			self._part_ids = self.item.get_column_value(id='connect_boards8').value
 		return self._part_ids
 
 
