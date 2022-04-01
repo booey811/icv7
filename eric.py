@@ -1018,9 +1018,13 @@ def process_walkin_submission(body, client, ack):
 def begin_slack_repair_process(body, client, ack, dev=False):
 	ack()
 	# Get active user IDs
-
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
-	username = 'dev'
+	if dev:
+		username = 'dev'
+	else:
+		user_id = body['hello']
+		username = slack_config.USER_IDS[user_id]
+
 	external_id = s_help.create_external_view_id(body, "begin_repairs")
 
 	client.views_open(

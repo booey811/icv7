@@ -74,8 +74,21 @@ def _add_routing(app):
 
 		# =========== Commands
 
-		@app.command("/devrepair")
+		@app.command('/repair')
 		def begin_slack_repair_process(ack, body, logger, client):
+			"""
+			occurs when user types /devrepair
+			pushes a loading view while fetching the repair at the top of the users monday group
+			updates view to pre-repair overview showing deadlines and model details and a button to begin the repair,
+			which triggers on view submission
+			view submission = pre_repair_info
+			"""
+			logger.info("Repair process request received")
+			eric.begin_slack_repair_process(body, client, ack)
+			return True
+
+		@app.command("/devrepair")
+		def begin_slack_repair_process_dev(ack, body, logger, client):
 			"""
 			occurs when user types /devrepair
 			pushes a loading view while fetching the repair at the top of the users monday group
