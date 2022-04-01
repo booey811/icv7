@@ -619,6 +619,111 @@ class TwoWayDict(dict):
 			self[item] = dictionary[item]
 
 
+class RepairsObject:
+	def __init__(self, repair_item, eric_id):
+		self.item = repair_item
+		self.eric_id = eric_id
+		self.name = repair_item.name
+		self.mon_id = repair_item.id
+		self.id = repair_item.id
+		self._part_ids = []
+
+	@property
+	def part_ids(self):
+		return self._part_ids
+
+	@part_ids.getter
+	def part_ids(self):
+		if not self._part_ids:
+			self._part_ids = self.item.get_column_values(id='connect_boards8').value
+		return self._part_ids
+
+
+class DeviceRepairsObject:
+	def __init__(self, device_group, group_eric_id):
+
+		def _set_device_type():
+
+			if 'iPhone' in device_group.title:
+				DEVICE_TYPES['iPhone'].append(self)
+				return 'iPhone'
+			elif 'iPad' in device_group.title:
+				DEVICE_TYPES['iPad'].append(self)
+				return 'iPad'
+			elif 'Apple Watch' in device_group.title:
+				DEVICE_TYPES['Apple Watch'].append(self)
+				return 'iPad'
+			elif 'Macbook' in device_group.title or 'MacBook' in device_group.title:
+				DEVICE_TYPES['MacBook'].append(self)
+				return 'MacBook'
+			else:
+				DEVICE_TYPES['Other Device'].append(self)
+				return 'Other Device'
+
+		self.data = {
+			"group": device_group,
+			"mon_id": device_group.id,
+			"eric_id": group_eric_id,
+			"device_type": _set_device_type(),
+			"device ": device_group.title
+		}
+
+		self._repairs = []
+
+		for repair in self.data['group'].items:
+			eric_id = repair.name.replace(device_group.title, '').strip().replace(' ', '_').lower()
+			setattr(self, eric_id, RepairsObject(repair, eric_id))
+			self._repairs.append(getattr(self, eric_id))
+
+	def get_slack_device_options_data(self):
+		data = []
+		for repair in self._repairs:
+			name = repair.name
+			eric_id = repair.eric_id
+			data.append([name, eric_id])
+		return data
+
+
+def get_device_type_data_for_slack():
+	data = []
+	for item in DEVICE_TYPES:
+		name = item
+		devices = DEVICE_TYPES[item]
+		data.append([name, devices])
+	return data
+
+
+class RepairOptionsObject:
+	def __init__(self):
+		for group in _PRODUCT_BOARD.groups:
+
+			if "cts_upl" in group.id or "ew_gro" in group.id:
+				from moncli.api_v2.exceptions import MondayApiError as api_err
+				print(f"creating {group.title}")
+				try:
+					items = group.items
+				except api_err:
+					print(f"archiving {group.title}")
+					group.archive()
+					continue
+				new_group = _PRODUCT_BOARD.add_group(group.title)
+				for item in items:
+					print(f'moving {item.name}')
+					item.move_to_group(new_group.id)
+
+				group.archive('id')
+
+			group_eric_id = group.title.replace(' ', '_').lower()
+
+			setattr(self, group_eric_id, DeviceRepairsObject(group, group_eric_id))
+
+
+_PRODUCT_BOARD = clients.monday.system.get_boards(
+	'id',
+	'groups.[id, title, items]',
+	'groups.items.[id, name]',
+	ids=[2477699024])[0]
+
 MAIN_DEVICE = TwoWayDict(_MAIN_DEVICE)
 MAIN_REPAIRS = TwoWayDict(_MAIN_REPAIRS)
 MAIN_SERVICE = TwoWayDict(_MAIN_SERVICE)
@@ -626,3 +731,13 @@ MAIN_REPAIR_TYPE = TwoWayDict(_MAIN_REPAIR_TYPE)
 DEVICE_TYPE = TwoWayDict(_DEVICE_TYPE)
 MAIN_CLIENT = TwoWayDict(_MAIN_CLIENT)
 PRODUCT_GROUPS = _get_product_groups()
+
+DEVICE_TYPES = {
+	'iPhone': [],
+	'iPad': [],
+	'Apple Watch': [],
+	'MacBook': [],
+	'Other Device': []
+}
+
+repairs = RepairOptionsObject()
