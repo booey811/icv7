@@ -114,9 +114,6 @@ def process_stock_count(webhook, logger, test=None):
 		count_totals[result]['count'].moncli_obj.move_to_group(processed_group.id)
 		count_totals[result]['count'].commit()
 
-	for count_line in to_archive:
-		count_line.moncli_obj.archive()
-
 	logger.clear()
 	return True
 

@@ -186,7 +186,7 @@ class CustomLogger:
             'new_log_type': {'label': log_label},
             "text7": str(self.func),
             "text2": str(os.getenv("ENV")),
-            "long_text": str(self.summary)[:15]
+            "long_text": str(self.summary).replace('"', '').replace('/', '')
         }
 
         if log_level == "success":
