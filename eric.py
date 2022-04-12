@@ -66,14 +66,11 @@ def process_stock_count(webhook, logger, test=None):
 	logger.log('Creating Group')
 	processed_group = count_board.add_group(f'Count | {datetime.datetime.today().strftime("%A %d %m %y")}')
 
+	new_count_group_id = "new_group26476"
+
 	# Get Current Count Group
 	logger.log('Getting Items')
-	if test:
-		mon_item = BaseItem(logger, test)
-		new_count_group = count_board.get_groups('id', ids=[mon_item.group.id])[0]
-	else:
-		group_id = webhook['groupId']
-		new_count_group = count_board.get_groups(ids=[group_id])[0]
+	new_count_group = count_board.get_groups('id', ids=[new_count_group_id])[0]
 	logger.log('Got Items')
 
 	# Iterate Through Counted Items & Consolidate Results into dict of {Part ID: Total Quantities}
@@ -116,6 +113,9 @@ def process_stock_count(webhook, logger, test=None):
 		count_totals[result]['count'].expected_num.value = count_totals[result]['expected']
 		count_totals[result]['count'].moncli_obj.move_to_group(processed_group.id)
 		count_totals[result]['count'].commit()
+
+	for count_line in to_archive:
+		count_line.moncli_obj.archive()
 
 	logger.clear()
 	return True
