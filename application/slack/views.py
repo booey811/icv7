@@ -2035,7 +2035,7 @@ def user_search_request(body, zenpy_results=None, research=False):
 	return view
 
 
-def register_wasted_parts(body, initial, external_id):
+def register_wasted_parts(body, initial, remove, external_id):
 	def add_base_modal():
 		basic = {
 			"type": "modal",
@@ -2066,14 +2066,14 @@ def register_wasted_parts(body, initial, external_id):
 	if not initial:
 		selected_id = body["actions"][0]["value"]
 		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
-		metadata["extra"]["parts_to_waste"][selected_id] = selected_name
+		if remove:
+			del metadata['extra']['parts_to_waste'][selected_id]
+		else:
+			metadata["extra"]["parts_to_waste"][selected_id] = selected_name
 	view = add_base_modal()
-	p(metadata)
 	if metadata["extra"]["parts_to_waste"]:
-		p(metadata["extra"]["parts_to_waste"])
 		add_header_block(view["blocks"], "To Be Wasted")
 		for repair in metadata["extra"]["parts_to_waste"]:
-			print("ADDING BUTYTION ======================")
 			add_button_section(
 				title=metadata["extra"]["parts_to_waste"][repair],
 				button_text="Remove from Waste",
@@ -2098,7 +2098,6 @@ def register_wasted_parts(body, initial, external_id):
 			)
 
 	view["private_metadata"] = json.dumps(metadata)
-	p(view)
 	return view
 
 

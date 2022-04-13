@@ -1253,7 +1253,7 @@ def cannot_complete_repair_no_parts(body, client):
 	)
 
 
-def process_waste_entry(ack, body, client, initial=False):
+def process_waste_entry(ack, body, client, initial=False, remove=False):
 	meta = s_help.get_metadata(body)
 
 	if initial:
@@ -1263,12 +1263,9 @@ def process_waste_entry(ack, body, client, initial=False):
 		external_id = meta["external_id"]
 		ack()
 
-	p(external_id)
-	p(meta)
-
 	client.views_update(
 		external_id=external_id,
-		view=views.register_wasted_parts(body, initial, external_id)
+		view=views.register_wasted_parts(body, initial, remove, external_id)
 	)
 
 

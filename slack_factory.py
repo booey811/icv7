@@ -248,6 +248,11 @@ def _add_routing(app):
 			logger.info("Waste Record Request Received")
 			eric.process_waste_entry(ack, body, client)
 
+		@app.action("button_waste_remove")
+		def handle_some_action(ack, body, logger, client):
+			logger.info("Removing Part From Waste Record")
+			eric.process_waste_entry(ack, body, client, remove=True)
+
 		# =========== View Submissions
 
 		@app.view("pre_repair_info")
