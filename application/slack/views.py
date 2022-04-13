@@ -1393,7 +1393,6 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 	def get_base_modal():
 		search = {
 			'type': "modal",
-			"private_metadata": json.dumps(metadata),
 			"callback_id": "repairs_parts_submission",
 			"external_id": external_id,
 			"title": {
@@ -1447,6 +1446,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 	if not metadata["external_id"]:
 		metadata["external_id"] = external_id
 	group_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
+	metadata['device']['eric_id'] = group_id
 	repairs = clients.monday.system.get_boards(
 		'id',
 		'groups.items.[name, id]',
@@ -1475,6 +1475,8 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 
 	add_header_block(view["blocks"], "Add Parts to Repair")
 	add_parts_list(repairs, view["blocks"])
+
+	view["private_metadata"] = json.dumps(metadata)
 
 	return view
 
@@ -2067,15 +2069,15 @@ def register_wasted_parts(body, initial, remove, external_id):
 		selected_id = body["actions"][0]["value"]
 		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
 		if remove:
-			del metadata['extra']['parts_to_waste'][selected_id]
+			del metadata['extra']['products_to_waste'][selected_id]
 		else:
-			metadata["extra"]["parts_to_waste"][selected_id] = selected_name
+			metadata["extra"]["products_to_waste"][selected_id] = selected_name
 	view = add_base_modal()
-	if metadata["extra"]["parts_to_waste"]:
+	if metadata["extra"]["products_to_waste"]:
 		add_header_block(view["blocks"], "To Be Wasted")
-		for repair in metadata["extra"]["parts_to_waste"]:
+		for repair in metadata["extra"]["products_to_waste"]:
 			add_button_section(
-				title=metadata["extra"]["parts_to_waste"][repair],
+				title=metadata["extra"]["products_to_waste"][repair],
 				button_text="Remove from Waste",
 				button_value=repair,
 				block_id=f"button_waste_remove_{repair}",
@@ -2087,7 +2089,7 @@ def register_wasted_parts(body, initial, remove, external_id):
 
 	repairs = data.get_product_repairs(metadata["device"]["model"]).items
 	for repair in repairs:
-		if repair.id not in metadata["extra"]["parts_to_waste"]:
+		if repair.id not in metadata["extra"]["products_to_waste"]:
 			add_button_section(
 				title=repair.name,
 				button_text="Add to Waste",
@@ -2098,6 +2100,127 @@ def register_wasted_parts(body, initial, remove, external_id):
 			)
 
 	view["private_metadata"] = json.dumps(metadata)
+	return view
+
+
+def select_waste_variants(body):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_validation_submission",
+			"title": {
+				"type": "plain_text",
+				"text": "Confirming Wasted Items",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Proceed",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+	view = get_base_modal()
+	add_header_block(view["blocks"], "Parts Ready to Waste (if any):")
+
+	products_device = getattr(data.repairs, metadata['device']['eric_id'])
+
+	product_repairs_to_waste = []
+	for waste_id in metadata['extra']['products_to_waste']:
+		product_repairs_to_waste.append(
+			products_device.get_product_repair_by_id(waste_id)
+		)
+
+	validations = []
+
+	for product in product_repairs_to_waste:
+		if len(product.part_ids) > 1:
+			validations.append(product)
+		elif len(product.part_ids) == 1:
+			p(metadata)
+			add_context_block(view["blocks"], product.display_name)
+			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = clients.monday.system.get_items('name', ids=product.part_ids)[0].name
+		else:
+			raise Exception(f"{product.info['display_name']} does not have any Parts associated with it")
+
+	add_divider_block(view["blocks"])
+	add_header_block(view["blocks"], "Please Confirm Variants of the Following:")
+
+	for to_validate in validations:
+		options = []
+		for part_id in to_validate.part_ids:
+			part_item = clients.monday.system.get_items(ids=[part_id])[0]
+			options.append([part_item.name, part_item.id])
+		add_radio_buttons_input_version(
+			title=to_validate.display_name,
+			block_id=f'waste_validation_{to_validate.mon_id}',
+			options=options,
+			blocks=view["blocks"],
+			action_id=f'waste_validation_radio',
+			optional=False
+		)
+
+	view["private_metadata"] = json.dumps(metadata)
+
+	return view
+
+
+def waste_parts_quantity_input(body):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_quantity_submission",
+			"title": {
+				"type": "plain_text",
+				"text": "Waste Quantities",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+	radio_selections = body['view']['state']['values']
+
+	for selected in radio_selections:
+		name = radio_selections[selected]['waste_validation_radio']['selected_option']['text']['text']
+		mon_id = radio_selections[selected]['waste_validation_radio']['selected_option']['value']
+		metadata['extra']['parts_to_waste'][mon_id] = name
+
+	view = get_base_modal()
+
+	for part in metadata['extra']['parts_to_waste']:
+		add_single_text_input(
+			title=metadata['extra']['parts_to_waste'][part],
+			placeholder='How Many Parts Should Be Wasted?',
+			block_id=f'waste_quantity_{part}',
+			action_id=f'waste_quantity_text',
+			blocks=view["blocks"],
+			optional=False
+		)
+
 	return view
 
 

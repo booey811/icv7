@@ -81,6 +81,7 @@ def _init_metadata():
 			"notes": '',
 			"client_repairs": "",
 			"parts_to_waste": {},
+			"products_to_waste": {},
 			"device_type": ''
 		},
 		"external_id": "",

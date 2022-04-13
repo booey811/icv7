@@ -715,7 +715,6 @@ def slack_user_search_results(body, client):
 	search_term = body['actions'][0]['value']
 	results = clients.zendesk.search(search_term, type='user')
 
-
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
@@ -808,6 +807,7 @@ def check_stock(body, client, initial=False, get_level=False):
 		stock_level = val.text
 		p([repair_selection, stock_level])
 		return [repair_selection, stock_level]
+
 	meta = s_help.get_metadata(body)
 	if initial:
 		# send loading view
@@ -1138,42 +1138,41 @@ def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
 
 
 def show_waste_validations(body, client, ack):
+	external_id = s_help.create_external_view_id(body, 'waste_validations')
+	loading_view = views.loading(
+		"Searching for Variant Options",
+		external_id=external_id
+	)
+	ack({
+		"response_action": "update",
+		"view": loading_view
+	})
 
-	def get_base_modal():
-		basic = {
-			"type": "modal",
-			"callback_id": "waste_validation_submission",
-			"title": {
-				"type": "plain_text",
-				"text": "Confirming Wasted Items",
-				"emoji": True
-			},
-			"submit": {
-				"type": "plain_text",
-				"text": "Submit",
-				"emoji": True
-			},
-			"close": {
-				"type": "plain_text",
-				"text": "Cancel",
-				"emoji": True
-			},
-			"blocks": []
-		}
-		return basic
+	view = views.select_waste_variants(body)
 
-	metadata = s_help.get_metadata(body)
-	view = get_base_modal()
+	client.views_update(
+		external_id=external_id,
+		view=view
+	)
 
-	# repairs = clients.monday.system.get_items('id', ids=[item for item in metadata["extra"]["parts_to_waste"]])
-	#
-	# parts = []
-	#
-	# for repair in repairs:
-	# 	part_ids = repair.get_column_value(id='connect_boards8')
-	# 	if len(part_ids) == 1:
-	# 		parts.append(part_ids[0])
-	# 	elif len(part_ids) > 1:
+
+def confirm_waste_quantities(body, client, ack):
+	external_id = s_help.create_external_view_id(body, 'waste_quantities')
+	loading_view = views.loading(
+		"Selecting Requested Parts",
+		external_id=external_id
+	)
+	ack({
+		"response_action": "update",
+		"view": loading_view
+	})
+
+	view = views.waste_parts_quantity_input(body)
+
+	client.views_update(
+		external_id=external_id,
+		view=view
+	)
 
 
 def finalise_repair_data():
@@ -1203,7 +1202,6 @@ def begin_parts_search(body, client):
 
 
 def display_repairs_search_results(body, client):
-
 	resp = client.views_update(
 		view_id=body['view']['id'],
 		hash=body['view']['hash'],
@@ -1218,7 +1216,6 @@ def display_repairs_search_results(body, client):
 
 
 def continue_parts_search(body, client):
-
 	resp = client.views_update(
 		view_id=body["view"]["id"],
 		hash=body["view"]["hash"],
@@ -1258,7 +1255,8 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "add_waste_entry")
-		ack(response_action="push", view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
+		ack(response_action="push",
+		    view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
 	else:
 		external_id = meta["external_id"]
 		ack()

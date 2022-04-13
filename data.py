@@ -686,6 +686,12 @@ class DeviceRepairsObject:
 			data.append([name, eric_id])
 		return data
 
+	def get_product_repair_by_id(self, monday_id):
+		for repair in self._repairs:
+			if repair.mon_id == str(monday_id):
+				return repair
+		raise Exception(f'Monday ID ({monday_id}) Repair Product Does Not Exist on {self.info["display_name"]}')
+
 
 def get_device_type_data_for_slack():
 	data = []
