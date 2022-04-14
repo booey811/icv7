@@ -385,6 +385,14 @@ BOARD_MAPPING_DICT = {
 			'mirror4': 'add_to_finance',  # lookup
 			'date0': 'last_report_date',  # date
 		}
+	},
+	"2477606931": {
+		"name": "staff",
+		"columns": {
+			"text": "mon_user_id",
+			"text8": "slack_user_id",
+			"text1": "mainboard_group_id"
+		}
 	}
 }
 

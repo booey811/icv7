@@ -59,11 +59,13 @@ def _init_metadata():
 		"main": "",
 		"device": {
 			"model": "",
-			"id": ''
+			"id": '',
+			"eric_id": ''
 		},
 		"repairs": {
 			"labels": [],
-			"ids": []
+			"ids": [],
+			"eric_ids": []
 		},
 		"general": {
 			"repair_type": "",
@@ -75,7 +77,12 @@ def _init_metadata():
 			"user_search": ""
 		},
 		"extra": {
-			"selected_repairs": []
+			"selected_repairs": [],
+			"notes": '',
+			"client_repairs": "",
+			"parts_to_waste": {},
+			"products_to_waste": {},
+			"device_type": ''
 		},
 		"external_id": "",
 		"zendesk": {

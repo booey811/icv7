@@ -3,8 +3,8 @@ import json
 from pprint import pprint as p
 
 import data
-from . import helper, config
-from application import mon_config, BaseItem, EricTicket
+from . import helper, config, exceptions
+from application import mon_config, BaseItem, EricTicket, clients
 
 
 def add_divider_block(blocks):
@@ -24,7 +24,22 @@ def add_header_block(blocks, text):
 	return blocks
 
 
-def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_action_id):
+def add_context_block(blocks, text):
+	basic = {
+		"type": "context",
+		"elements": [
+			{
+				"type": "mrkdwn",
+				"text": text
+			}
+		]
+	}
+
+	blocks.append(basic)
+	return blocks
+
+
+def add_dropdown_ui_section(title, placeholder, options, blocks, block_id, selection_action_id):
 	def get_option(text):
 		option = {
 			"text": {
@@ -61,9 +76,59 @@ def add_dropdown_ui(title, placeholder, options, blocks, block_id, selection_act
 	blocks.append(basic)
 	return blocks
 
-def add_multiline_text_input(title, placeholder, block_id, action_id, blocks):
+
+def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optional=False, action_id=None,
+                          dispatch_action=False):
+	def get_options():
+		results = []
+		for text_and_value in options:
+			results.append({
+				"text": {
+					"type": "plain_text",
+					"text": text_and_value[0],
+					"emoji": True
+				},
+				"value": text_and_value[1]
+			})
+		return results
+
 	basic = {
 		"type": "input",
+		"block_id": block_id,
+		"element": {
+			"type": "static_select",
+			"placeholder": {
+				"type": "plain_text",
+				"text": placeholder,
+				"emoji": True
+			},
+			"options": get_options(),
+			"action_id": action_id
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+
+	if optional:
+		basic["optional"] = True
+
+	if action_id:
+		basic["element"]["action_id"] = action_id
+
+	if dispatch_action:
+		basic["dispatch_action"] = True
+
+	blocks.append(basic)
+	return blocks
+
+
+def add_multiline_text_input(title, placeholder, block_id, action_id, blocks, optional=False):
+	basic = {
+		"type": "input",
+		"optional": optional,
 		"block_id": block_id,
 		"element": {
 			"type": "plain_text_input",
@@ -138,6 +203,112 @@ def add_radio_buttons_ui(title, block_id, action_id, options, blocks):
 	blocks.append(basic)
 	return blocks
 
+
+def add_radio_buttons_input_version(title, block_id, options, blocks, optional=True, action_id=None):
+	def get_options():
+
+		result = []
+
+		for option in options:
+			option_title = option[0]
+			option_value = option[1]
+
+			result.append({
+				"text": {
+					"type": "plain_text",
+					"text": option_title,
+					"emoji": True
+				},
+				"value": option_value
+			})
+
+		return result
+
+	basic = {
+		"type": "input",
+		"block_id": block_id,
+		"optional": optional,
+		"element": {
+			"type": "radio_buttons",
+			"options": get_options(),
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+
+	if action_id:
+		basic["element"]["action_id"] = action_id
+
+	blocks.append(basic)
+
+	return blocks
+
+
+def add_button_section(title, button_text, button_value, block_id, action_id, blocks):
+	view = {
+		"type": "section",
+		"block_id": block_id,
+		"text": {
+			"type": "mrkdwn",
+			"text": title
+		},
+		"accessory": {
+			"type": "button",
+			"text": {
+				"type": "plain_text",
+				"text": button_text,
+				"emoji": True
+			},
+			"value": button_value,
+			"action_id": action_id
+		}
+	}
+
+	blocks.append(view)
+	return blocks
+
+
+def add_checkbox_section(title, options: list, block_id, action_id, blocks, optional=True):
+	def get_options():
+		results = []
+
+		for text_and_value in options:
+			results.append(
+				{
+					"text": {
+						"type": "plain_text",
+						"text": text_and_value[0],
+						"emoji": True
+					},
+					"value": text_and_value[1]
+				}
+			)
+
+		return results
+
+	basic = {
+		"type": "input",
+		"block_id": block_id,
+		"optional": optional,
+		"element": {
+			"type": "checkboxes",
+			"options": get_options(),
+			"action_id": action_id
+		},
+		"label": {
+			"type": "plain_text",
+			"text": title,
+			"emoji": True
+		}
+	}
+
+	blocks.append(basic)
+	return blocks
+
+
 def add_book_new_repair_button(blocks):
 	blocks.append({
 		"type": "section",
@@ -205,9 +376,11 @@ def _construct_markdown_option(title, description='', chosen_value=''):
 	return dct
 
 
-def loading(footnotes='', external_id=False):
+def loading(footnotes='', external_id=False, metadata=None):
 	"""returns the view for the modal screen showing that the application has received a request and is processing it
 	adds in a footnote to the loading screen for more specific information"""
+	if metadata is None:
+		metadata = {}
 	view = {
 		"type": "modal",
 		"title": {
@@ -247,6 +420,9 @@ def loading(footnotes='', external_id=False):
 
 	if external_id:
 		view["external_id"] = external_id
+		if metadata:
+			metadata["external_id"] = external_id
+			view["private_metadata"] = json.dumps(metadata)
 
 	return view
 
@@ -347,11 +523,11 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 				"text": "Stock Checker",
 				"emoji": True
 			},
-			"submit": {
-				"type": "plain_text",
-				"text": "Cancel",
-				"emoji": True
-			},
+			# "submit": {
+			# 	"type": "plain_text",
+			# 	"text": "Cancel",
+			# 	"emoji": True
+			# },
 			"blocks": []
 		}
 
@@ -403,10 +579,10 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 					{
 						"text": {
 							"type": "plain_text",
-							"text": "Other",
+							"text": "Other Device",
 							"emoji": True
 						},
-						"value": "Other"
+						"value": "Other Device"
 					}
 				],
 				"action_id": "stock_device_type"
@@ -418,24 +594,20 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 			}
 		})
 
-	def add_device_options(blocks):
+	def add_device_options(blocks, devices_list):
 
 		def get_device_options():
-
-			selection = metadata["extra"]['device_type']
-
 			options = []
 
-			for item in data.MAIN_DEVICE:
-				if selection in item:
-					options.append({
-						"text": {
-							"type": "plain_text",
-							"text": item,
-							"emoji": True
-						},
-						"value": item
-					})
+			for device in devices_list:
+				options.append({
+					"text": {
+						"type": "plain_text",
+						"text": device.info["display_name"],
+						"emoji": True
+					},
+					"value": device.info["eric_id"]
+				})
 			return options
 
 		blocks.append({
@@ -461,19 +633,34 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 		return blocks
 
-	def add_repair_options(blocks):
+	def add_repair_options(device_object: data.DeviceRepairsObject, blocks):
+
+		def query_monday_for_products(device_name: str):
+
+			try:
+				group_id = str(data.PRODUCT_GROUPS[device_name])
+			except KeyError:
+				raise exceptions.ProductGroupNameError(device_name)
+
+			options = clients.monday.system.get_boards(
+				"id",
+				"groups.items.[id, name]",
+				ids=[2477699024],
+				groups={"ids": [group_id]}
+			)[0].groups[0].items
+			return options
 
 		def get_repair_options():
+			repairs_info = device_object.get_slack_repair_options_data()
 			options = []
-
-			for repair in config.PART_SELECTION_OPTIONS[metadata['extra']['device_type']]:
+			for repair in repairs_info:
 				options.append({
 					"text": {
 						"type": "plain_text",
-						"text": repair,
+						"text": repair[0],
 						"emoji": True
 					},
-					"value": repair
+					"value": repair[1]
 				})
 			return options
 
@@ -500,25 +687,28 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 
 		return blocks
 
-	def add_stock_level_block(blocks, repair_info: list):
+	def add_stock_level_block(blocks, parts_list: list):
+		for repair_info in parts_list:
+			# try:
+			level = repair_info[1]
+			if not level:
+				level = 0
+			stock_level = int(float(level))
+			# except (ValueError, AttributeError):
+			# 	stock_level = 0
 
-		try:
-			stock_level = int(float(repair_info[1]))
-		except ValueError:
-			stock_level = 0
+			if stock_level < 1:
+				text = f"{repair_info[0]}: {stock_level} | :no_entry_sign: NO STOCK"
+			else:
+				text = f"{repair_info[0]}: {stock_level} | :tada: STOCK AVAILABLE"
 
-		if stock_level < 1:
-			text = f"{repair_info[0]}: {stock_level} | :no_entry_sign: NO STOCK"
-		else:
-			text = f"{repair_info[0]}: {stock_level} | :tada: STOCK AVAILABLE"
-
-		blocks.append({
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": text
-			}
-		})
+			blocks.append({
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": text
+				}
+			})
 		return blocks
 
 	def add_micro_loader(blocks):
@@ -556,24 +746,24 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		chosen = body['actions'][0]['selected_option']['value']
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
-		add_device_options(view['blocks'])
-		add_repair_options(view['blocks'])
+		add_device_options(view['blocks'], data.DEVICE_TYPES[metadata["extra"]["device_type"]])
+		add_repair_options(getattr(data.repairs, metadata["device"]["eric_id"]), view['blocks'])
 		add_divider_block(view["blocks"])
 		add_stock_level_block(view['blocks'], get_level)
 
 	elif fetching_stock_levels:
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
-		add_device_options(view['blocks'])
-		add_repair_options(view['blocks'])
+		add_device_options(view['blocks'], data.DEVICE_TYPES[metadata["extra"]["device_type"]])
+		add_repair_options(getattr(data.repairs, metadata["device"]["eric_id"]), view['blocks'])
 		add_divider_block(view["blocks"])
 		add_micro_loader(view['blocks'])
 
 	elif repair_not_found:
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
-		add_device_options(view['blocks'])
-		add_repair_options(view['blocks'])
+		add_device_options(view['blocks'], data.DEVICE_TYPES[metadata["extra"]["device_type"]])
+		add_repair_options(getattr(data.repairs, metadata["device"]["eric_id"]), view['blocks'])
 		add_divider_block(view["blocks"])
 		add_no_results_block(view['blocks'])
 
@@ -585,22 +775,26 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 			metadata['extra']['device_type'] = chosen.strip()
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
-			add_device_options(view['blocks'])
+			add_device_options(view['blocks'], data.DEVICE_TYPES[chosen])
 		elif phase == "select_stock_device":
-			metadata['extra']['device'] = chosen.strip()
+			device = getattr(data.repairs, chosen)
+			metadata["device"]["model"] = device.info["device_type"]
+			metadata["device"]["eric_id"] = device.info["eric_id"]
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
-			add_device_options(view['blocks'])
-			add_repair_options(view['blocks'])
+			add_device_options(view['blocks'], data.DEVICE_TYPES[metadata['extra']['device_type']])
+			add_repair_options(device, view['blocks'])
 		elif phase == 'select_stock_repair':
-			metadata['extra']['repair'] = chosen.strip()
+			metadata['repairs']['eric_ids'].append(chosen.strip())
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
-			add_device_options(view['blocks'])
-			add_repair_options(view['blocks'])
+			add_device_options(view['blocks'], data.DEVICE_TYPES[chosen])
+			add_repair_options(device_object=getattr(data.repairs, metadata["device"]["eric_id"]),
+			                   blocks=view['blocks'])
 		else:
 			raise Exception(f"encountered weird choice for phase in stock checker: {phase}")
 
+	view["private_metadata"] = json.dumps(metadata)
 	return view
 
 
@@ -876,7 +1070,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 		add_header("Confirmations", view['blocks'])
 
-		add_dropdown_ui(
+		add_dropdown_ui_section(
 			title="Device Type",
 			placeholder="Select a device type",
 			options=['iPhone', 'iPad', 'MacBook', 'Apple Watch', 'Other'],
@@ -892,7 +1086,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option'][
 				'value']
 
-		add_dropdown_ui(
+		add_dropdown_ui_section(
 			title="Device",
 			placeholder="Select device",
 			options=[item for item in data.MAIN_DEVICE if device_type in item],
@@ -910,14 +1104,15 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			title="Repair Type",
 			block_id="select_repair_type",
 			action_id="radio_accept_device",
-			options=config.REPAIR_TYPES,
+			options=[item for item in config.REPAIR_TYPES],
 			blocks=view['blocks']
 		)
 
 		if phase == "device":
 			raise UpdateComplete
 
-		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option']['value']
+		repair_type = body['view']['state']['values']['select_repair_type']['radio_accept_device']['selected_option'][
+			'value']
 
 		add_multiline_text_input(
 			title="Repair Notes",
@@ -946,6 +1141,7 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
+		p(view)
 		return view
 
 
@@ -963,7 +1159,8 @@ def pre_repair_info(main_item, resp_body):
 
 	metadata = helper.get_metadata(resp_body)
 	metadata['main'] = main_item.mon_id
-	metadata["extra"]["repair_type"] = repair_type
+	metadata["general"]["repair_type"] = repair_type
+	metadata["extra"]["client_repairs"] = repairs_string
 	helper.add_device_type_metadata(main_item, metadata)
 
 	basic = {
@@ -1051,10 +1248,11 @@ def repair_phase_view(main_item, body):
 	start_time = datetime.datetime.now().strftime("%X")
 
 	metadata = helper.get_metadata(body)
+	metadata["device"]["model"] = device
 
 	basic = {
 		"type": "modal",
-		"callback_id": "repair_phase",
+		"callback_id": "repair_phase_ended",
 		"private_metadata": json.dumps(metadata),
 		"title": {
 			"type": "plain_text",
@@ -1063,7 +1261,7 @@ def repair_phase_view(main_item, body):
 		},
 		"submit": {
 			"type": "plain_text",
-			"text": "Submit",
+			"text": "Finalise Repair",
 			"emoji": True
 		},
 		"close": {
@@ -1113,6 +1311,7 @@ def repair_phase_view(main_item, body):
 			{
 				"type": "input",
 				"optional": True,
+				"block_id": "repair_notes",
 				"element": {
 					"type": "plain_text_input",
 					"multiline": True,
@@ -1126,7 +1325,8 @@ def repair_phase_view(main_item, body):
 			},
 			{
 				"type": "input",
-				"dispatch_action": True,
+				"optional": False,
+				"block_id": "repair_result_select",
 				"label": {
 					"type": "plain_text",
 					"text": "Are you moving on from this repair?",
@@ -1134,6 +1334,7 @@ def repair_phase_view(main_item, body):
 				},
 				"element": {
 					"type": "static_select",
+					"action_id": "repair_result_select",
 					"placeholder": {
 						"type": "plain_text",
 						"text": "Let us know what happened",
@@ -1181,7 +1382,6 @@ def repair_phase_view(main_item, body):
 							"value": "other"
 						}
 					],
-					"action_id": "end_repair_phase"
 				}
 			},
 		]
@@ -1189,37 +1389,163 @@ def repair_phase_view(main_item, body):
 	return basic
 
 
-def initial_parts_search_box(body):
+def initial_parts_search_box(body, external_id, initial: bool, remove=False):
+	def get_base_modal():
+		search = {
+			'type': "modal",
+			"callback_id": "repairs_parts_submission",
+			"external_id": external_id,
+			"title": {
+				"type": "plain_text",
+				"text": "Parts Selection",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Proceed",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Go Back",
+				"emoji": True
+			},
+			'blocks': []
+		}
+		return search
+
+	def add_selected_parts_block(repair_name, item_id, blocks):
+
+		add_button_section(
+			title=repair_name,
+			button_text="Remove Part",
+			button_value=repair.id,
+			block_id=f"repairs_parts_remove_{item_id}",
+			action_id="repairs_parts_remove",
+			blocks=blocks
+		)
+
+	def add_parts_list(repairs_list, blocks):
+
+		for repair_info in repairs_list:
+			if repair_info.id in metadata["extra"]["selected_repairs"]:
+				continue
+			part_name = repair_info.name.replace(metadata["device"]["model"], "")
+			add_button_section(
+				title=part_name,
+				button_text="Add Part",
+				button_value=repair_info.id,
+				block_id=f"repairs_parts_select_{repair_info.id}",
+				action_id='repairs_parts_select',
+				blocks=blocks
+			)
+
+		return blocks
+
+	metadata = helper.get_metadata(body)
+	if not metadata["external_id"]:
+		metadata["external_id"] = external_id
+	group_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
+	metadata['device']['eric_id'] = group_id
+	repairs = clients.monday.system.get_boards(
+		'id',
+		'groups.items.[name, id]',
+		ids=[2477699024],
+		groups={"ids": [group_id]}
+	)[0].groups[0].items
+
+	if not initial:
+		selected_repair_id = body['actions'][0]["value"]
+		if remove:
+			metadata["extra"]["selected_repairs"].remove(selected_repair_id)
+		else:
+			metadata["extra"]["selected_repairs"].append(selected_repair_id)
+	else:
+		metadata["extra"]["notes"] = body['view']['state']['values']['repair_notes']['repair_notes']['value']
+
+	view = get_base_modal()
+	if metadata["extra"]["selected_repairs"]:
+		add_header_block(view["blocks"], "Selected Parts")
+		for repair_id in metadata["extra"]["selected_repairs"]:
+			for repair in repairs:
+				if str(repair_id) == str(repair.id):
+					name = repair.name.replace(metadata["device"]["model"], "")
+					add_selected_parts_block(name, repair.id, view["blocks"])
+		add_divider_block(view["blocks"])
+
+	add_header_block(view["blocks"], "Add Parts to Repair")
+	add_parts_list(repairs, view["blocks"])
+
+	view["private_metadata"] = json.dumps(metadata)
+
+	return view
+
+
+def sub_parts_confirmation(body):
 	metadata = helper.get_metadata(body)
 
-	search = {
-		'type': "modal",
-		"private_metadata": json.dumps(metadata),
-		"title": {
-			"type": "plain_text",
-			"text": "Parts Search",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Go Back",
-			"emoji": True
-		},
-		'blocks': [{
-			"dispatch_action": True,
-			"type": "input",
-			"element": {
-				"type": "plain_text_input",
-				"action_id": "repair_search"
-			},
-			"label": {
+	requires_confirmation = []
+	product_items = []
+	if metadata["extra"]["selected_repairs"]:
+		product_items = clients.monday.system.get_items(ids=metadata["extra"]["selected_repairs"])
+
+	for product in product_items:
+		part_ids = product.get_column_value("connect_boards8")
+		if len(part_ids) == 1:
+			metadata["parts"].append(part_ids[0])
+			metadata["extra"]["selected_repairs"].remove(part_ids[0])
+		elif len(part_ids) > 1:
+			# requires clarification (push a selection view)
+			requires_confirmation.append([product, part_ids])
+		elif len(part_ids) == 0:
+			# no parts connected to this product
+			raise Exception(f"No Parts attached to {product.name} Product")
+		else:
+			raise Exception("Mathematically Impossible Thing Happened")
+
+	if requires_confirmation:
+		view = {
+			"type": "modal",
+			"title": {
 				"type": "plain_text",
-				"text": "Enter search term:",
+				"text": "Parts Confirmation",
 				"emoji": True
-			}
-		}]
-	}
-	return search
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Go Back",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+		add_header_block(view["blocks"], "Please confirm variations:")
+
+		for product_data in requires_confirmation:
+			options = []
+			product = product_data[0]
+			part_ids = product_data[1]
+			parts = clients.monday.system.get_items('id', 'name', ids=part_ids)
+			for part in parts:
+				name = part.name
+				value = part.id
+				options.append([name, value])
+
+			add_radio_buttons_input_version(
+				title=product.name,
+				block_id="repairs_sub_parts_select",
+				options=options,
+				blocks=view["blocks"],
+				optional=False
+			)
+
+	else:
+		pass
 
 
 def parts_search_results(resp_body):
@@ -1392,6 +1718,140 @@ def continue_parts_search(resp_body):
 	basic["private_metadata"] = json.dumps(metadata)
 
 	return basic
+
+
+def display_variant_options(body, variant_dict, meta):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "variant_selection_submission",
+			"private_metadata": json.dumps(metadata),
+			"title": {
+				"type": "plain_text",
+				"text": "Variation Selection",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+		return basic
+
+	metadata = meta
+	view = get_base_modal()
+	for repair in variant_dict:
+		add_header_block(view["blocks"], repair)
+
+		add_radio_buttons_input_version(
+			title="Please select a part",
+			block_id=f"variant_selection_{variant_dict[repair]['id']}",
+			options=variant_dict[repair]['info'],
+			optional=False,
+			blocks=view['blocks'],
+			action_id=f"radio_variant_selection_{variant_dict[repair]['id']}"
+		)
+
+	return view
+
+
+def repair_completion_confirmation(body, from_variants, from_waste, external_id='', meta=None):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "repair_completion_confirmation",
+			"title": {
+				"type": "plain_text",
+				"text": "Confirming Your Work",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+
+		return basic
+
+	if meta:
+		metadata = meta
+	else:
+		metadata = helper.get_metadata(body)
+
+	if external_id:
+		metadata["external_id"] = external_id
+
+	if from_variants:
+		for repair_id in metadata["extra"]["selected_repairs"]:
+			p(f"PROCESSING REPAIR ID {repair_id}")
+			part_id = \
+				body["view"]["state"]["values"][f"variant_selection_{repair_id}"][
+					f"radio_variant_selection_{repair_id}"][
+					"selected_option"]["value"]
+			metadata["parts"].append(part_id)
+		metadata["extra"]["selected_repairs"] = []
+
+	view = get_base_modal()
+	add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
+	add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
+	add_divider_block(view['blocks'])
+	add_header_block(view["blocks"], "To resolve these faults, you have used:")
+
+
+	text_and_values = [[item.name, item.name] for item in
+	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
+	add_checkbox_section(
+		title="Please confirm",
+		options=text_and_values,
+		block_id="checkbox_parts_confirmation",
+		action_id="checkbox_parts_confirmation",
+		blocks=view['blocks'],
+		optional=False
+	)
+
+	add_divider_block(view["blocks"])
+
+	text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
+	add_dropdown_ui_input(
+		title="Were any parts damaged during the repair?",
+		placeholder='Please choose a response',
+		options=text_and_values,
+		blocks=view['blocks'],
+		block_id='select_waste_opt_in',
+		optional=False,
+		action_id='select_waste_opt_in',
+	)
+
+	add_divider_block(view["blocks"])
+
+	add_multiline_text_input(
+		title="Final Notes",
+		optional=True,
+		placeholder="If you have any final notes, put them here",
+		block_id='text_final_repair_notes',
+		action_id='text_final_repair_notes',
+		blocks=view['blocks']
+	)
+	p("Binding META =================================================")
+	p(metadata)
+	view["private_metadata"] = json.dumps(metadata)
+
+	return view
 
 
 def user_search_request(body, zenpy_results=None, research=False):
@@ -1581,6 +2041,192 @@ def user_search_request(body, zenpy_results=None, research=False):
 	# 		add_failed_user_addition(view['blocks'])
 	# 	add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
 	# 	add_divider_block(view['blocks'])
+
+	return view
+
+
+def register_wasted_parts(body, initial, remove, external_id):
+	def add_base_modal():
+		basic = {
+			"type": "modal",
+			"external_id": external_id,
+			"callback_id": "waste_parts_submission",
+			"private_metadata": json.dumps(metadata),
+			"title": {
+				"type": "plain_text",
+				"text": "Record Waste",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+	metadata["external_id"] = external_id
+	if not initial:
+		selected_id = body["actions"][0]["value"]
+		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
+		if remove:
+			del metadata['extra']['products_to_waste'][selected_id]
+		else:
+			metadata["extra"]["products_to_waste"][selected_id] = selected_name
+	view = add_base_modal()
+	if metadata["extra"]["products_to_waste"]:
+		add_header_block(view["blocks"], "To Be Wasted")
+		for repair in metadata["extra"]["products_to_waste"]:
+			add_button_section(
+				title=metadata["extra"]["products_to_waste"][repair],
+				button_text="Remove from Waste",
+				button_value=repair,
+				block_id=f"button_waste_remove_{repair}",
+				action_id="button_waste_remove",
+				blocks=view["blocks"]
+			)
+
+	add_header_block(view["blocks"], "Add Parts To Waste Record")
+
+	repairs = data.get_product_repairs(metadata["device"]["model"]).items
+	for repair in repairs:
+		if repair.id not in metadata["extra"]["products_to_waste"]:
+			add_button_section(
+				title=repair.name,
+				button_text="Add to Waste",
+				button_value=repair.id,
+				block_id=f"button_waste_select_{repair.id}",
+				action_id="button_waste_selection",
+				blocks=view["blocks"]
+			)
+
+	view["private_metadata"] = json.dumps(metadata)
+	return view
+
+
+def select_waste_variants(body):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_validation_submission",
+			"title": {
+				"type": "plain_text",
+				"text": "Confirming Wasted Items",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Proceed",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+	view = get_base_modal()
+	add_header_block(view["blocks"], "Parts Ready to Waste (if any):")
+
+	products_device = getattr(data.repairs, metadata['device']['eric_id'])
+
+	product_repairs_to_waste = []
+	for waste_id in metadata['extra']['products_to_waste']:
+		product_repairs_to_waste.append(
+			products_device.get_product_repair_by_id(waste_id)
+		)
+
+	validations = []
+
+	for product in product_repairs_to_waste:
+		if len(product.part_ids) > 1:
+			validations.append(product)
+		elif len(product.part_ids) == 1:
+			p(metadata)
+			add_context_block(view["blocks"], product.display_name)
+			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = \
+			clients.monday.system.get_items('name', ids=product.part_ids)[0].name
+		else:
+			raise Exception(f"{product.info['display_name']} does not have any Parts associated with it")
+
+	add_divider_block(view["blocks"])
+	add_header_block(view["blocks"], "Please Confirm Variants of the Following:")
+
+	for to_validate in validations:
+		options = []
+		for part_id in to_validate.part_ids:
+			part_item = clients.monday.system.get_items(ids=[part_id])[0]
+			options.append([part_item.name, part_item.id])
+		add_radio_buttons_input_version(
+			title=to_validate.display_name,
+			block_id=f'waste_validation_{to_validate.mon_id}',
+			options=options,
+			blocks=view["blocks"],
+			action_id=f'waste_validation_radio',
+			optional=False
+		)
+
+	view["private_metadata"] = json.dumps(metadata)
+
+	return view
+
+
+def waste_parts_quantity_input(body):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_quantity_submission",
+			"title": {
+				"type": "plain_text",
+				"text": "Waste Quantities",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+	radio_selections = body['view']['state']['values']
+
+	for selected in radio_selections:
+		name = radio_selections[selected]['waste_validation_radio']['selected_option']['text']['text']
+		mon_id = radio_selections[selected]['waste_validation_radio']['selected_option']['value']
+		metadata['extra']['parts_to_waste'][mon_id] = name
+
+	view = get_base_modal()
+
+	for part in metadata['extra']['parts_to_waste']:
+		add_single_text_input(
+			title=metadata['extra']['parts_to_waste'][part],
+			placeholder='How Many Parts Should Be Wasted?',
+			block_id=f'waste_quantity_{part}',
+			action_id=f'waste_quantity_text',
+			blocks=view["blocks"],
+			optional=False
+		)
 
 	return view
 

@@ -30,7 +30,6 @@ def log_catcher_decor(eric_function):
 			eric_function(webhook, logger, test)
 			logger.commit("success")
 		except MondayApiError as e:
-			logger.log("============================ MONDAY SUBMISSION ERROR ==============================")
 			for item in e.messages:
 				logger.log(item)
 			logger.summary = 'Monday Spazzed Out During Submission'
@@ -633,7 +632,6 @@ def create_monthly_invoice(webhook, logger, test=None):
 
 def search_todays_repairs(body, client):
 	# not in use
-	print("========================= SEARCHING FOR BOOKINGS =========================")
 	# triggered by SOMETHING command
 	# send loading view
 	resp = client.views_open(
@@ -714,9 +712,6 @@ def slack_user_search_results(body, client):
 	search_term = body['actions'][0]['value']
 	results = clients.zendesk.search(search_term, type='user')
 
-	p("RESULTS ======================================================================================================")
-	p(len(results))
-
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
 		hash=resp["view"]["hash"],
@@ -771,7 +766,6 @@ def check_and_create_new_user(body, client, ack):
 			view = views.failed_new_user_creation_view(email, len(results), e)
 
 	else:
-		p("USERS FOUND ===============================")
 		# user found with that email, please go back to search and enter this email
 		view = views.failed_new_user_creation_view(email, len(results))
 
@@ -782,9 +776,6 @@ def check_and_create_new_user(body, client, ack):
 
 
 def check_stock(body, client, initial=False, get_level=False):
-
-	p(body)
-
 	def get_stock_level(metadata, repair_selection):
 
 		def get_search_term_from_metadata(meta):
@@ -811,10 +802,10 @@ def check_stock(body, client, initial=False, get_level=False):
 
 		val = item.get_column_value("quantity")
 		stock_level = val.text
-		p("============================== REPAIR INFO")
 		p([repair_selection, stock_level])
 		return [repair_selection, stock_level]
 
+	meta = s_help.get_metadata(body)
 	if initial:
 		# send loading view
 		resp = client.views_open(
@@ -826,29 +817,23 @@ def check_stock(body, client, initial=False, get_level=False):
 		hash_val = resp['view']['hash']
 
 	elif get_level:
-		p("GETTING LEVEL =====================")
-		view_id = body['view']['id']
-		hash_val = body['view']['hash']
-
 		resp = client.views_update(
 			view_id=body['view']['id'],
 			hash=body['view']['hash'],
 			view=views.stock_check_flow_maker(body, fetching_stock_levels=True)
 		)
+		device = getattr(data.repairs, meta["device"]["eric_id"])
+		repair = getattr(device, body['actions'][0]['selected_option']['value'])
+		parts = clients.monday.system.get_items(ids=repair.part_ids)
+		info = []
+		for part in parts:
+			stock_level = part.get_column_value(id="quantity").value
+			info.append([part.name, stock_level])
+
+		get_level = info
 
 		meta_info = s_help.get_metadata(body)
-		chosen_repair = body['actions'][0]['selected_option']['value']
-		try:
-			repair_info = get_stock_level(metadata=meta_info, repair_selection=chosen_repair)
-		except IndexError as e:
-			resp = client.views_update(
-				view_id=resp['view']['id'],
-				hash=resp['view']['hash'],
-				view=views.stock_check_flow_maker(body, repair_not_found=True)
-			)
-			return e
 
-		get_level = repair_info
 		view_id = resp['view']['id']
 		hash_val = resp['view']['hash']
 
@@ -868,8 +853,6 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False, from_
 
 	ext_id = s_help.create_external_view_id(body, "walkin_info_view")
 	view = views.loading("Getting Walk-In Acceptance Data", external_id=ext_id)
-
-
 
 	if from_create:
 		from_create(
@@ -1029,21 +1012,21 @@ def process_walkin_submission(body, client, ack):
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
 
 
-def begin_slack_repair_process(body, client):
+def begin_slack_repair_process(body, client, ack, dev=False):
+	ack()
 	# Get active user IDs
-	# if os.environ["ENV"] == 'devlocal':  # local development, use Safan as test user
-	# 	username = 'safan'
-	# else:
-	# 	username = slack_config.USER_IDS[body['user_id']]
-
 	# DURING DEVELOPMENT WE WILL USE THE DEV GROUP AS THE SAMPLE USER
-	print("========================= BEGINNING REPAIR PROCESS =========================")
-	username = 'dev'
+	if dev:
+		username = 'dev'
+	else:
+		user_id = body['hello']
+		username = slack_config.USER_IDS[user_id]
 
-	# Show loading screen
-	info = client.views_open(
+	external_id = s_help.create_external_view_id(body, "begin_repairs")
+
+	client.views_open(
 		trigger_id=body['trigger_id'],
-		view=views.loading(f"Getting {username.capitalize()}'s next repair")
+		view=views.loading(f"Getting {username.capitalize()}'s next repair", external_id=external_id)
 	)
 
 	# Convert from Slack User to Monday User IDs, and get the relevant group
@@ -1055,30 +1038,150 @@ def begin_slack_repair_process(body, client):
 			ids=[main_group_id]
 		)[0].items[0])
 
-	resp = info.data
-
 	client.views_update(
-		view_id=resp["view"]["id"],
-		hash=resp["view"]["hash"],
+		external_id=external_id,
 		view=views.pre_repair_info(next_repair, body)
 	)
 
 
-def begin_specific_slack_repair(body, client):
-	print("========================= SPECIFIC REPAIR INFO PHASE =========================")
+def begin_specific_slack_repair(body, client, ack):
 	metadata = s_help.get_metadata(body)
+	external_id = s_help.create_external_view_id(body, "repair_phase_view")
+
+	ack(
+		response_action="update",
+		view=views.loading(
+			f"Getting Repair Data: {metadata['main']}",
+			external_id=external_id)
+	)
+
 	main_item = BaseItem(CustomLogger(), metadata['main'])
 
-	resp = client.views_open(
-		trigger_id=body['trigger_id'],
-		view=views.loading(f"Getting Repair Data: {metadata['main']}")
-	)
-
 	resp = client.views_update(
-		view_id=resp["view"]["id"],
-		hash=resp["view"]["hash"],
+		external_id=external_id,
 		view=views.repair_phase_view(main_item, body)
 	)
+
+
+def add_parts_to_repair(body, client, initial, ack, remove=False):
+	metadata = s_help.get_metadata(body)
+	external_id = metadata["external_id"]
+	if not external_id:
+		external_id = s_help.create_external_view_id(body, "repairs_parts_select")
+
+	view = views.initial_parts_search_box(body, external_id, initial, remove)
+
+	if initial:
+		ack(response_action="push", view=view)
+	else:
+		resp = client.views_update(
+			external_id=external_id,
+			view=view
+		)
+
+
+def show_variant_selections(body, client, ack):
+	external_id = s_help.create_external_view_id(body, "parts_confirmations")
+
+	ack({
+		"response_action": "update",
+		"view": views.loading("Checking Parts Validity", external_id=external_id)
+	})
+
+	meta = s_help.get_metadata(body)
+	selected_repairs = clients.monday.system.get_items('id', ids=meta["extra"]["selected_repairs"])
+	variants = {}
+	unprocessed_repair_ids = []
+
+	for repair in selected_repairs:
+		part_ids = repair.get_column_value(id="connect_boards8").value
+		if len(part_ids) == 1:
+			print("ADDING PART TP IDS")
+			print(part_ids[0])
+			meta['parts'].append(part_ids[0])
+		elif len(part_ids) > 1:
+			names_and_ids = []
+			parts = clients.monday.system.get_items(ids=part_ids)
+			for item in parts:
+				names_and_ids.append([item.name, item.id])
+			variants[repair.name] = {
+				"id": repair.id,
+				'info': names_and_ids
+			}
+			unprocessed_repair_ids.append(repair.id)
+		else:
+			raise Exception(f"No Part IDS Attached to Product {repair.name}[{repair.id}]")
+
+		meta["extra"]["selected_repairs"] = unprocessed_repair_ids
+
+	if variants:
+		view = views.display_variant_options(body, variants, meta)
+	else:
+		view = views.repair_completion_confirmation(body=body, from_variants=False, from_waste=False, meta=meta)
+
+	resp = client.views_update(
+		external_id=external_id,
+		view=view
+	)
+
+
+def show_repair_and_parts_confirmation(body, client, ack, from_variants=False, from_waste=False):
+	if from_waste:
+		meta = s_help.get_metadata(body)
+		ext_id = meta['external_id']
+		view = views.repair_completion_confirmation(body=body, from_variants=from_variants, from_waste=from_waste, meta=meta)
+		client.views_update(
+			external_id=ext_id,
+			view=view
+		)
+	else:
+		external_id = s_help.create_external_view_id(body, "repair_confirmation")
+		view = views.repair_completion_confirmation(body=body, from_variants=from_variants, from_waste=from_waste, external_id=external_id, meta=s_help.get_metadata(body))
+		ack({
+			"response_action": "update",
+			"view": view
+		})
+
+def show_waste_validations(body, client, ack):
+	external_id = s_help.create_external_view_id(body, 'waste_validations')
+	loading_view = views.loading(
+		"Searching for Variant Options",
+		external_id=external_id
+	)
+	ack({
+		"response_action": "update",
+		"view": loading_view
+	})
+
+	view = views.select_waste_variants(body)
+
+	client.views_update(
+		external_id=external_id,
+		view=view
+	)
+
+
+def confirm_waste_quantities(body, client, ack):
+	external_id = s_help.create_external_view_id(body, 'waste_quantities')
+	loading_view = views.loading(
+		"Selecting Requested Parts",
+		external_id=external_id
+	)
+	ack({
+		"response_action": "update",
+		"view": loading_view
+	})
+
+	view = views.waste_parts_quantity_input(body)
+
+	client.views_update(
+		external_id=external_id,
+		view=view
+	)
+
+
+def finalise_repair_data():
+	pass
 
 
 def begin_parts_search(body, client):
@@ -1090,8 +1193,6 @@ def begin_parts_search(body, client):
 		requested repair)
 
 	"""
-	print("========================= SEARCHING PARTS DATA (FIRST TIME) =========================")
-	p(body)
 
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],
@@ -1106,8 +1207,6 @@ def begin_parts_search(body, client):
 
 
 def display_repairs_search_results(body, client):
-	print("========================= DISPLAYING PARTS SEARCH RESULTS =========================")
-
 	resp = client.views_update(
 		view_id=body['view']['id'],
 		hash=body['view']['hash'],
@@ -1122,8 +1221,6 @@ def display_repairs_search_results(body, client):
 
 
 def continue_parts_search(body, client):
-	print("========================= SEARCHING PARTS DARA (SECONDARY TIME) =========================")
-
 	resp = client.views_update(
 		view_id=body["view"]["id"],
 		hash=body["view"]["hash"],
@@ -1158,10 +1255,20 @@ def cannot_complete_repair_no_parts(body, client):
 	)
 
 
-def process_waste_entry(body, client):
-	resp = client.views_push(
-		trigger_id=body['trigger_id'],
-		view=views.loading("We haven't developed this yet....... Nothing is loading")
+def process_waste_entry(ack, body, client, initial=False, remove=False):
+	meta = s_help.get_metadata(body)
+
+	if initial:
+		external_id = s_help.create_external_view_id(body, "add_waste_entry")
+		ack(response_action="push",
+		    view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
+	else:
+		external_id = meta["external_id"]
+		ack()
+
+	client.views_update(
+		external_id=external_id,
+		view=views.register_wasted_parts(body, initial, remove, external_id)
 	)
 
 
