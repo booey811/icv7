@@ -61,7 +61,8 @@ BOARD_MAPPING_DICT = {
 			'date36': 'deadline_date',
 			'date4': 'received_date',
 			'link1': 'ticket_url',
-			"text15": "company_name"
+			"text15": "company_name",
+			"numbers5": "repair_phase"
 		},
 		"zendesk": [
 			'status4',  # Status

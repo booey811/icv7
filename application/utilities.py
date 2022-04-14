@@ -8,9 +8,7 @@ from zenpy import Zenpy
 import settings
 
 
-def add_repair_event(main_item_or_id, event_name, event_type, summary='', actions_dict=()):
-
-	actions_status = "Not Done"
+def add_repair_event(main_item_or_id, event_name, event_type, summary='', actions_dict=(), actions_status='Not Done'):
 
 	if type(main_item_or_id) in (str, int):
 		main_item = clients.monday.system.get_items(ids=[main_item_or_id])[0]
@@ -26,7 +24,10 @@ def add_repair_event(main_item_or_id, event_name, event_type, summary='', action
 		actions_dict = 'No Actions To Perform'
 		actions_status = "No Actions Required"
 	else:
-		actions_dict = json.dumps(actions_dict)
+		if actions_dict is str:
+			pass
+		else:
+			actions_dict = json.dumps(actions_dict)
 
 	if not event_type:
 		event_type = "Not Assigned"
