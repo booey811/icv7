@@ -597,7 +597,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 	def add_device_options(blocks, devices_list):
 
 		def get_device_options():
-
 			options = []
 
 			for device in devices_list:
@@ -790,7 +789,8 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
 			add_device_options(view['blocks'], data.DEVICE_TYPES[chosen])
-			add_repair_options(device_object=getattr(data.repairs, metadata["device"]["eric_id"]), blocks=view['blocks'])
+			add_repair_options(device_object=getattr(data.repairs, metadata["device"]["eric_id"]),
+			                   blocks=view['blocks'])
 		else:
 			raise Exception(f"encountered weird choice for phase in stock checker: {phase}")
 
@@ -1763,11 +1763,10 @@ def display_variant_options(body, variant_dict, meta):
 	return view
 
 
-def repair_completion_confirmation(body, from_variants, meta):
+def repair_completion_confirmation(body, from_variants, from_waste, external_id='', meta=None):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
-			"private_metadata": json.dumps(metadata),
 			"callback_id": "repair_completion_confirmation",
 			"title": {
 				"type": "plain_text",
@@ -1789,7 +1788,13 @@ def repair_completion_confirmation(body, from_variants, meta):
 
 		return basic
 
-	metadata = meta
+	if meta:
+		metadata = meta
+	else:
+		metadata = helper.get_metadata(body)
+
+	if external_id:
+		metadata["external_id"] = external_id
 
 	if from_variants:
 		for repair_id in metadata["extra"]["selected_repairs"]:
@@ -1807,6 +1812,7 @@ def repair_completion_confirmation(body, from_variants, meta):
 	add_divider_block(view['blocks'])
 	add_header_block(view["blocks"], "To resolve these faults, you have used:")
 
+
 	text_and_values = [[item.name, item.name] for item in
 	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
 	add_checkbox_section(
@@ -1821,7 +1827,6 @@ def repair_completion_confirmation(body, from_variants, meta):
 	add_divider_block(view["blocks"])
 
 	text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
-
 	add_dropdown_ui_input(
 		title="Were any parts damaged during the repair?",
 		placeholder='Please choose a response',
@@ -1842,6 +1847,9 @@ def repair_completion_confirmation(body, from_variants, meta):
 		action_id='text_final_repair_notes',
 		blocks=view['blocks']
 	)
+	p("Binding META =================================================")
+	p(metadata)
+	view["private_metadata"] = json.dumps(metadata)
 
 	return view
 
@@ -2104,7 +2112,6 @@ def register_wasted_parts(body, initial, remove, external_id):
 
 
 def select_waste_variants(body):
-
 	def get_base_modal():
 		basic = {
 			"type": "modal",
@@ -2149,7 +2156,8 @@ def select_waste_variants(body):
 		elif len(product.part_ids) == 1:
 			p(metadata)
 			add_context_block(view["blocks"], product.display_name)
-			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = clients.monday.system.get_items('name', ids=product.part_ids)[0].name
+			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = \
+			clients.monday.system.get_items('name', ids=product.part_ids)[0].name
 		else:
 			raise Exception(f"{product.info['display_name']} does not have any Parts associated with it")
 
@@ -2176,7 +2184,6 @@ def select_waste_variants(body):
 
 
 def waste_parts_quantity_input(body):
-
 	def get_base_modal():
 		basic = {
 			"type": "modal",
