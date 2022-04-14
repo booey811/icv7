@@ -344,21 +344,6 @@ def _add_routing(app):
 			else:
 				raise Exception(f"Unknown input from Waste Submission: {waste}")
 
-		@app.view({"type": "view_closed", 'callback_id': "repair_completion_confirmation"})
-		def repair_phase_modal_closed(ack, body, logger, client):
-			logger.info("User Closed Repair Phase View")
-			metadata = s_help.get_metadata(body)
-			main_item = clients.monday.system.get_items(ids=[metadata["main"]])[0]
-			repair_phase = int(main_item.get_column_value('numbers5').value)
-			add_repair_event(
-				main_item_or_id=main_item,
-				event_name=f"Repair Phase {repair_phase}: Beginning",
-				event_type='Repair Phase Start',
-				summary="User Cancelled on 'Confirm Your Work Screen'",
-				actions_dict=f'repair_phase_{repair_phase}',
-				actions_status="No Actions Required"
-			)
-
 		@app.view("waste_parts_submission")
 		def validate_wasted_parts(ack, body, logger, client):
 			logger.info("Validating Wasted Repair Info")
