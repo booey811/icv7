@@ -11,6 +11,7 @@ from zenpy.lib.exception import APIException as zen_ex
 from moncli.api_v2.exceptions import MondayApiError
 
 import data
+import utils.tools
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
 	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
 from utils.tools import refurbs
@@ -52,6 +53,44 @@ def log_catcher_decor(eric_function):
 			raise e
 
 	return wrapper
+
+
+@log_catcher_decor
+def handle_repair_events(webhook, logger, test=None):
+
+	if test:
+		event_id = test
+	else:
+		event_id = webhook["pulseId"]
+	eric_event = BaseItem(logger, event_id)
+
+	if eric_event.actions_status.label == "No Actions Required":
+		# No Actions Required - Ignore
+		return True
+
+	event_type = eric_event.event_type.label
+	actions = json.loads(eric_event.json_actions.value)
+
+	print("PARENT ID ==================== ")
+	print(eric_event.parent_id.value)
+
+	if event_type == "Parts Consumption":
+		job = q_hi.enqueue(
+			inventory.adjust_stock_level,
+			kwargs={
+				"logger": None,
+				"part_reference": actions['inventory.adjust_stock_level'],
+				"quantity": 1,
+				"source_object": eric_event.parent_id.value
+			}
+		)
+		q_hi.enqueue(
+			utils.tools.adjust_columns_through_rq
+			args=
+		)
+
+	eric_event.actions_status.value = 'Processing'
+	eric_event.commit()
 
 
 @log_catcher_decor

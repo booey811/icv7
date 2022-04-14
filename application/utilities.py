@@ -41,7 +41,8 @@ def add_repair_event(main_item_or_id, event_name, event_type, summary='', action
 			"status1": {"label": str(event_type)},
 			"long_text": summary,
 			"long_text2": actions_dict,
-			"status0": {'label': actions_status}
+			"status0": {'label': actions_status},
+			"text": str(main_item.id)
 		}
 	)
 

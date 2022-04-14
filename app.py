@@ -41,6 +41,23 @@ def index():
 	return 'Index Route'
 
 
+@app.route("/monday/repair-events")
+def process_repair_event(test_id=None):
+	webhook = flask.request.get_data()
+	try:
+		data = verify_monday(webhook)['event']
+	except ChallengeReceived as e:
+		return e.token
+
+	if os.environ['ENV'] == 'devlocal':
+		if not test_id:
+			raise Exception('test_id is required when testing locally')
+
+	eric.handle_repair_events(None, test_id)
+
+	return ''
+
+
 # Process Stock Count
 @app.route('/monday/stock/process-count', methods=['POST'])
 def process_stock_count(test_id=None):

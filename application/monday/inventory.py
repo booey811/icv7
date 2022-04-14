@@ -72,8 +72,17 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False, fo
 	return terms
 
 
-def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quantity, source_object: BaseItem,
+def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quantity, source_object: Union[BaseItem, str, int],
                        absolute=False):
+
+	if not logger:
+		logger = application.CustomLogger()
+
+	print(source_object)
+
+	if type(source_object) in [str, int]:
+		source_object = BaseItem(logger, source_object)
+
 	logger.log('Adjusting Stock Level')
 	# Check part_reference input is valid
 	if type(part_reference) in [str, int]:

@@ -394,6 +394,19 @@ BOARD_MAPPING_DICT = {
 			"text8": "slack_user_id",
 			"text1": "mainboard_group_id"
 		}
+	},
+	'1985628314': {
+		'name': 'events',
+		'columns': {
+			'status1': 'event_type',  # color
+			'long_text': 'description',  # long-text
+			'date': 'timestamp',  # date
+			'long_text2': 'json_actions',  # long-text
+			'status0': 'actions_status',  # color
+			'connect_boards': 'related_items',  # board-relation
+			'numbers': 'repair_minutes',  # numeric,
+			"text": "parent_id",
+		}
 	}
 }
 
