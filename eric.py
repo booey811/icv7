@@ -985,6 +985,7 @@ def process_walkin_submission(body, client, ack):
 				name=name,
 				convert_eric=True
 			)
+			main = blank
 
 			data_dict["main_id"] = blank.moncli_obj.id
 
@@ -992,6 +993,9 @@ def process_walkin_submission(body, client, ack):
 			eric_ticket.add_tags(["mondayactive"])
 			eric_ticket.commit()
 			blank.add_update(intake_notes)
+
+		else:
+			main = BaseItem(cuslog, data_dict["main_id"])
 
 	elif data_dict["zendesk_id"]:
 		ticket = EricTicket(cuslog, data_dict["zendesk_id"])
@@ -1013,6 +1017,13 @@ def process_walkin_submission(body, client, ack):
 
 	else:
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
+
+	add_repair_event(
+		main_item_or_id=main.moncli_obj,
+		event_name="Received Device",
+		event_type="Device Received",
+		summary=f"Device Received\n\n{intake_notes}",
+	)
 
 
 def begin_slack_repair_process(body, client, ack, dev=False):
