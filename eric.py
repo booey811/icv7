@@ -1065,6 +1065,13 @@ def begin_specific_slack_repair(body, client, ack):
 		view=views.repair_phase_view(main_item, body)
 	)
 
+	add_repair_event(
+		main_item_or_id=metadata["main"],
+		event_name="Begin Repair Phase",
+		event_type="Repair Phase Start",
+		summary="Beginning Repair Phase"
+	)
+
 
 def add_parts_to_repair(body, client, initial, ack, remove=False):
 	metadata = s_help.get_metadata(body)
