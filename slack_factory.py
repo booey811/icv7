@@ -339,7 +339,7 @@ def _add_routing(app):
 			if waste == 'waste':
 				eric.process_waste_entry(ack, body, client, initial=True)
 			elif waste == 'no_waste':
-				eric.finalise_repair_data()
+				eric.finalise_repair_data(body)
 			else:
 				raise Exception(f"Unknown input from Waste Submission: {waste}")
 

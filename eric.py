@@ -12,7 +12,7 @@ from moncli.api_v2.exceptions import MondayApiError
 
 import data
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help
+	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from worker import conn
@@ -1183,8 +1183,31 @@ def confirm_waste_quantities(body, client, ack):
 	)
 
 
-def finalise_repair_data():
-	pass
+def finalise_repair_data(body):
+
+	p(body)
+
+	p(s_help.get_metadata(body))
+
+	metadata = s_help.get_metadata(body)
+
+	parts = clients.monday.system.get_items('name', ids=metadata["parts"])
+
+	for part in parts:
+		try:
+			current_quantity = int(part.get_column_value('quantity').value)
+		except TypeError:
+			current_quantity = 0
+		if not current_quantity:
+			current_quantity = 0
+
+		add_repair_event(
+			main_item_or_id=metadata["main"],
+			event_name=f"Consume: {part.name}",
+			event_type='Parts Consumption',
+			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
+			actions_dict={'inventory.adjust_stock_level': (part.id, 1, metadata["main"], False)}
+		)
 
 
 def begin_parts_search(body, client):
