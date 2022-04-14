@@ -1065,9 +1065,11 @@ def begin_specific_slack_repair(body, client, ack):
 		view=views.repair_phase_view(main_item, body)
 	)
 
-	repair_phase = int(main_item.repair_phase.value)
-	if not repair_phase:
-		repair_phase = 1
+	try:
+		repair_phase = int(main_item.repair_phase.value)
+	except TypeError:
+		repair_phase = 0
+	repair_phase += 1
 
 	add_repair_event(
 		main_item_or_id=main_item.moncli_obj,
@@ -1208,7 +1210,9 @@ def finalise_repair_data(body):
 	try:
 		repair_phase = int(repair_phase_col.value)
 	except TypeError:
-		repair_phase = 1
+		repair_phase = 0
+
+	repair_phase += 1
 
 	add_repair_event(
 		main_item_or_id=main,
@@ -1218,7 +1222,7 @@ def finalise_repair_data(body):
 		actions_dict=f"repair_phase_{repair_phase}"
 	)
 
-	repair_phase_col.value = repair_phase + 1
+	repair_phase_col.value = repair_phase
 	main.change_column_value(column_value=repair_phase_col)
 
 	for part in parts:
