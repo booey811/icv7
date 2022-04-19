@@ -52,9 +52,9 @@ def process_repair_event(test_id=None):
 	if os.environ['ENV'] == 'devlocal':
 		if not test_id:
 			raise Exception('test_id is required when testing locally')
-
-	eric.handle_repair_events(None, test_id)
-
+		eric.handle_repair_events(None, test_id)
+	else:
+		eric.handle_repair_events(webhook)
 	return ''
 
 
