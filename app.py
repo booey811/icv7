@@ -54,7 +54,7 @@ def process_repair_event(test_id=None):
 			raise Exception('test_id is required when testing locally')
 		eric.handle_repair_events(None, test_id)
 	else:
-		eric.handle_repair_events(webhook)
+		eric.handle_repair_events(data)
 	return ''
 
 
