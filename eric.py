@@ -85,8 +85,14 @@ def handle_repair_events(webhook, logger, test=None):
 			}
 		)
 		q_hi.enqueue(
-			utils.tools.adjust_columns_through_rq
-			args=
+			utils.tools.adjust_columns_through_rq,
+			kwargs={
+				"item_id": str(eric_event.mon_id),
+				"attributes_and_values": [
+					["actions_status", "Complete"]
+				]
+			},
+			depends_on=job
 		)
 
 	eric_event.actions_status.value = 'Processing'
