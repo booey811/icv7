@@ -41,7 +41,7 @@ def index():
 	return 'Index Route'
 
 
-@app.route("/monday/repair-events")
+@app.route("/monday/repair-events", methods=["POST"])
 def process_repair_event(test_id=None):
 	webhook = flask.request.get_data()
 	try:
