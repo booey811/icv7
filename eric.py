@@ -19,6 +19,7 @@ from application.monday import config as mon_config
 from worker import conn
 
 q_hi = rq.Queue("high", connection=conn)
+q_lo = rq.Queue("low", connection=conn)
 
 
 def log_catcher_decor(eric_function):
@@ -75,16 +76,17 @@ def handle_repair_events(webhook, logger, test=None):
 	print(eric_event.parent_id.value)
 
 	if event_type == "Parts Consumption":
-		job = q_hi.enqueue(
+		job = q_lo.enqueue(
 			inventory.adjust_stock_level,
 			kwargs={
 				"logger": None,
 				"part_reference": actions['inventory.adjust_stock_level'],
 				"quantity": 1,
 				"source_object": eric_event.parent_id.value
-			}
+			},
+			retry=rq.Retry(max=5, interval=20)
 		)
-		q_hi.enqueue(
+		q_lo.enqueue(
 			utils.tools.adjust_columns_through_rq,
 			kwargs={
 				"item_id": str(eric_event.mon_id),
@@ -92,7 +94,8 @@ def handle_repair_events(webhook, logger, test=None):
 					["actions_status", "Complete"]
 				]
 			},
-			depends_on=job
+			depends_on=job,
+			retry=rq.Retry(max=5, interval=20)
 		)
 
 	eric_event.actions_status.value = 'Processing'
