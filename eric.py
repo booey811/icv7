@@ -1194,7 +1194,7 @@ def show_variant_selections(body, client, ack):
 	if variants:
 		view = views.display_variant_options(body, variants, meta)
 	else:
-		view = views.repair_completion_confirmation(body=body, from_variants=False, from_waste=False, meta=meta)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta)
 
 	resp = client.views_update(
 		external_id=external_id,
@@ -1206,16 +1206,16 @@ def show_repair_and_parts_confirmation(body, client, ack, from_variants=False, f
 	if from_waste:
 		meta = s_help.get_metadata(body)
 		ext_id = meta['external_id']
-		view = views.repair_completion_confirmation(body=body, from_variants=from_variants, from_waste=from_waste,
-		                                            meta=meta)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
+		                                                 meta=meta)
 		client.views_update(
 			external_id=ext_id,
 			view=view
 		)
 	else:
 		external_id = s_help.create_external_view_id(body, "repair_confirmation")
-		view = views.repair_completion_confirmation(body=body, from_variants=from_variants, from_waste=from_waste,
-		                                            external_id=external_id, meta=s_help.get_metadata(body))
+		view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
+		                                                 external_id=external_id, meta=s_help.get_metadata(body))
 		ack({
 			"response_action": "update",
 			"view": view

@@ -337,6 +337,7 @@ def _add_routing(app):
 			logger.info("Repair Confirmation Submitted: Checking for Waste and Processing")
 			waste = body['view']['state']['values']['select_waste_opt_in']['select_waste_opt_in']['selected_option'][
 				'value']
+			ack()
 			if waste == 'waste':
 				eric.process_waste_entry(ack, body, client, initial=True)
 			elif waste == 'no_waste':
