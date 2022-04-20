@@ -1264,6 +1264,7 @@ def finalise_repair_data(body):
 	metadata = s_help.get_metadata(body)
 	p(metadata)
 	parts = clients.monday.system.get_items('name', ids=metadata["parts"])
+	p([item.name for item in parts])
 	main = clients.monday.system.get_items(ids=[metadata["main"]])[0]
 	repair_phase_col = main.get_column_value('numbers5')
 
