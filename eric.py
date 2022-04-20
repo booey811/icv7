@@ -72,9 +72,6 @@ def handle_repair_events(webhook, logger, test=None):
 	event_type = eric_event.event_type.label
 	actions = json.loads(eric_event.json_actions.value)
 
-	print("PARENT ID ==================== ")
-	print(eric_event.parent_id.value)
-
 	if event_type == "Parts Consumption":
 		job = q_stock.enqueue(
 			inventory.adjust_stock_level,
@@ -853,7 +850,6 @@ def check_stock(body, client, initial=False, get_level=False):
 
 		val = item.get_column_value("quantity")
 		stock_level = val.text
-		p([repair_selection, stock_level])
 		return [repair_selection, stock_level]
 
 	meta = s_help.get_metadata(body)
@@ -1173,8 +1169,6 @@ def show_variant_selections(body, client, ack):
 	for repair in selected_repairs:
 		part_ids = repair.get_column_value(id="connect_boards8").value
 		if len(part_ids) == 1:
-			print("ADDING PART TP IDS")
-			print(part_ids[0])
 			meta['parts'].append(part_ids[0])
 		elif len(part_ids) > 1:
 			names_and_ids = []
@@ -1262,9 +1256,7 @@ def confirm_waste_quantities(body, client, ack):
 
 def finalise_repair_data(body):
 	metadata = s_help.get_metadata(body)
-	p(metadata)
 	parts = clients.monday.system.get_items('name', ids=metadata["parts"])
-	p([item.name for item in parts])
 	main = clients.monday.system.get_items(ids=[metadata["main"]])[0]
 	repair_phase_col = main.get_column_value('numbers5')
 
@@ -1287,9 +1279,6 @@ def finalise_repair_data(body):
 	main.change_column_value(column_value=repair_phase_col)
 
 	for part in parts:
-		p({
-			part.name: part.id
-		})
 		try:
 			current_quantity = int(part.get_column_value('quantity').value)
 		except TypeError:

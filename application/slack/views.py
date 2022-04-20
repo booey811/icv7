@@ -1141,7 +1141,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
-		p(view)
 		return view
 
 
@@ -1798,7 +1797,6 @@ def repair_completion_confirmation_view(body, from_variants, from_waste, externa
 
 	if from_variants:
 		for repair_id in metadata["extra"]["selected_repairs"]:
-			p(f"PROCESSING REPAIR ID {repair_id}")
 			part_id = \
 				body["view"]["state"]["values"][f"variant_selection_{repair_id}"][
 					f"radio_variant_selection_{repair_id}"][
@@ -1847,8 +1845,6 @@ def repair_completion_confirmation_view(body, from_variants, from_waste, externa
 		action_id='text_final_repair_notes',
 		blocks=view['blocks']
 	)
-	p("Binding META =================================================")
-	p(metadata)
 	view["private_metadata"] = json.dumps(metadata)
 
 	return view
@@ -2154,7 +2150,6 @@ def select_waste_variants(body):
 		if len(product.part_ids) > 1:
 			validations.append(product)
 		elif len(product.part_ids) == 1:
-			p(metadata)
 			add_context_block(view["blocks"], product.display_name)
 			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = \
 			clients.monday.system.get_items('name', ids=product.part_ids)[0].name
