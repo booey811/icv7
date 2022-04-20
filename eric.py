@@ -1272,7 +1272,8 @@ def finalise_repair_data(body):
 		event_name=f"Repair Phase {repair_phase}: Ending",
 		event_type="Repair Phase End",
 		summary=f"Ending Repair Phase {repair_phase}",
-		actions_dict=f"repair_phase_{repair_phase}"
+		actions_dict=f"repair_phase_{repair_phase}",
+		actions_status="No Action Required"
 	)
 
 	repair_phase_col.value = repair_phase
