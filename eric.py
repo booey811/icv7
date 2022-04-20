@@ -1286,6 +1286,9 @@ def finalise_repair_data(body):
 	main.change_column_value(column_value=repair_phase_col)
 
 	for part in parts:
+		p({
+			part.name: part.id
+		})
 		try:
 			current_quantity = int(part.get_column_value('quantity').value)
 		except TypeError:
