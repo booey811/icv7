@@ -3,6 +3,7 @@ import datetime
 from functools import wraps
 from pprint import pprint as p
 import json
+import logging
 
 import rq
 import zenpy.lib.api_objects as zen_obj
@@ -17,6 +18,8 @@ from application import BaseItem, clients, phonecheck, inventory, CannotFindRepo
 from utils.tools import refurbs
 from application.monday import config as mon_config
 from worker import q_hi, q_stock
+
+logger = logging.getLogger()
 
 
 def log_catcher_decor(eric_function):
@@ -1259,6 +1262,7 @@ def confirm_waste_quantities(body, client, ack):
 
 def finalise_repair_data(body):
 	metadata = s_help.get_metadata(body)
+	p(metadata)
 	parts = clients.monday.system.get_items('name', ids=metadata["parts"])
 	main = clients.monday.system.get_items(ids=[metadata["main"]])[0]
 	repair_phase_col = main.get_column_value('numbers5')
