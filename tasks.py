@@ -23,8 +23,8 @@ def log_repair_issue(main_item_id, message):
 		actions_status="No Actions Required"
 	)
 
-def process_repair_phase_completion(part_ids, main_id):
 
+def process_repair_phase_completion(part_ids, main_id):
 	parts = clients.monday.system.get_items('name', ids=part_ids)
 	main = clients.monday.system.get_items(ids=[main_id])[0]
 	repair_phase_col = main.get_column_value('numbers5')
@@ -63,3 +63,16 @@ def process_repair_phase_completion(part_ids, main_id):
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
+
+
+def task_repair_event(main_id, event_name, event_type, summary, actions_dict=None, actions_status='Not Done'):
+	if actions_dict is None:
+		actions_dict = {}
+	add_repair_event(
+		main_id,
+		event_name,
+		event_type,
+		summary,
+		actions_dict,
+		actions_status
+	)

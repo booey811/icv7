@@ -1163,13 +1163,16 @@ def begin_specific_slack_repair(body, client, ack):
 		repair_phase = 0
 	repair_phase += 1
 
-	add_repair_event(
-		main_item_or_id=main_item.moncli_obj,
-		event_name=f"Repair Phase {repair_phase}: Beginning",
-		event_type="Repair Phase Start",
-		summary=f"Begin Repair Phase {repair_phase}",
-		actions_dict=f"repair_phase_{repair_phase}",
-		actions_status="No Actions Required"
+	q_lo.enqueue(
+		f=tasks.task_repair_event,
+		kwargs={
+			"main_item_or_id": main_item.moncli_obj,
+			"event_name": f"Repair Phase {repair_phase}: Beginning",
+			"event_type": "Repair Phase Start",
+			"summary": f"Begin Repair Phase {repair_phase}",
+			"actions_dict": f"repair_phase_{repair_phase}",
+			"actions_status": "No Actions Required"
+		}
 	)
 
 
@@ -1287,12 +1290,13 @@ def confirm_waste_quantities(body, client, ack):
 		"view": views.waste_parts_quantity_input(body)
 	})
 
-	# view = views.waste_parts_quantity_input(body)
-	#
-	# client.views_update(
-	# 	external_id=external_id,
-	# 	view=view
-	# )
+
+# view = views.waste_parts_quantity_input(body)
+#
+# client.views_update(
+# 	external_id=external_id,
+# 	view=view
+# )
 
 
 def finalise_repair_data_and_request_waste(body, client, ack):
@@ -1311,45 +1315,6 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 		tasks.process_repair_phase_completion,
 		args=(metadata["parts"], metadata["main"])
 	)
-
-	# parts = clients.monday.system.get_items('name', ids=metadata["parts"])
-	# main = clients.monday.system.get_items(ids=[metadata["main"]])[0]
-	# repair_phase_col = main.get_column_value('numbers5')
-	#
-	# try:
-	# 	repair_phase = int(repair_phase_col.value)
-	# except TypeError:
-	# 	repair_phase = 0
-	#
-	# repair_phase += 1
-	#
-	# add_repair_event(
-	# 	main_item_or_id=main,
-	# 	event_name=f"Repair Phase {repair_phase}: Ending",
-	# 	event_type="Repair Phase End",
-	# 	summary=f"Ending Repair Phase {repair_phase}",
-	# 	actions_dict=f"repair_phase_{repair_phase}",
-	# 	actions_status="No Actions Required"
-	# )
-	#
-	# repair_phase_col.value = repair_phase
-	# main.change_column_value(column_value=repair_phase_col)
-	#
-	# for part in parts:
-	# 	try:
-	# 		current_quantity = int(part.get_column_value('quantity').value)
-	# 	except TypeError:
-	# 		current_quantity = 0
-	# 	if not current_quantity:
-	# 		current_quantity = 0
-	#
-	# 	add_repair_event(
-	# 		main_item_or_id=main,
-	# 		event_name=f"Consume: {part.name}",
-	# 		event_type='Parts Consumption',
-	# 		summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
-	# 		actions_dict={'inventory.adjust_stock_level': part.id}
-	# 	)
 
 
 def begin_parts_search(body, client):
