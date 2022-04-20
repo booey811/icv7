@@ -79,7 +79,7 @@ def handle_repair_events(webhook, logger, test=None):
 				"logger": None,
 				"part_reference": actions['inventory.adjust_stock_level'],
 				"quantity": 1,
-				"source_object": eric_event.parent_id.value
+				"source_object": eric_event.mon_id
 			},
 			retry=rq.Retry(max=5, interval=20)
 		)
@@ -98,6 +98,38 @@ def handle_repair_events(webhook, logger, test=None):
 			depends_on=job,
 			retry=rq.Retry(max=5, interval=20)
 		)
+
+	elif event_type == "Waste Record":
+		job = q_hi.enqueue(
+			inventory.adjust_stock_level,
+			kwargs={
+				"logger": None,
+				"part_reference": actions['inventory.adjust_stock_level'][0],
+				"quantity": actions['inventory.adjust_stock_level'][1],
+				"source_object": eric_event.mon_id
+			},
+			retry=rq.Retry(max=5, interval=20)
+		)
+		while not job.result:
+			time.sleep(0.5)
+
+		job_2 = q_lo.enqueue(
+			utils.tools.adjust_columns_through_rq,
+			kwargs={
+				"item_id": str(eric_event.mon_id),
+				"attributes_and_values": [
+					["actions_status", "Complete"],
+					["related_items", [job.result, actions['inventory.adjust_stock_level'][0]]]
+				]
+			},
+			depends_on=job,
+			retry=rq.Retry(max=5, interval=20)
+		)
+
+	else:
+		eric_event.actions_status.value = "Error"
+		eric_event.commit()
+		return False
 
 	eric_event.actions_status.value = 'Processing'
 	eric_event.commit()
@@ -1401,7 +1433,6 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 
 
 def emit_waste_events(body, client, ack):
-
 	class BreakCycle(Exception):
 		def __init__(self, input_id):
 			self.input_id = input_id
@@ -1440,7 +1471,7 @@ def emit_waste_events(body, client, ack):
 							"event_type": "Waste Record",
 							"summary": f"Wasting {quantity}  x  {info[part_id]}",
 							"actions_dict": {
-								"inventory.adjust_stock": [part_id, quantity]
+								"inventory.adjust_stock_level": [part_id, quantity]
 							}
 						}
 					)

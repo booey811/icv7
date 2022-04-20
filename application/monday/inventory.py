@@ -167,6 +167,9 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
 
 	source_board = BOARD_MAPPING_DICT[eric_source_item.board_id]["name"]
 
+	print("SOURCE BOARD       ------------------------")
+	print(source_board)
+
 	eric_source_item.log(f"Creating Movement Record From: {source_board}[{eric_source_item.name}]")
 
 	if source_board == "stock_counts":
@@ -193,6 +196,21 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
 		text = f"Movements: {eric_source_item.name}"
 		mov_type = "Void"
 		mov_dir = "Void"
+	elif source_board == "events":
+		event_type = eric_source_item.event_type.label
+		parent = BaseItem(eric_source_item.logger, eric_source_item.parent_id.value)
+		if event_type == "Parts Consumption":
+			url = f"https://icorrect.monday.com/boards/1985628314/views/51003712/pulses/{eric_source_item.mon_id}"
+			text = f"Repair Consumption: {parent.name}"
+			mov_type = "iCorrect Repairs"
+			mov_dir = "Out"
+		elif event_type == "Waste Record":
+			url = f"https://icorrect.monday.com/boards/1985628314/views/51003712/pulses/{eric_source_item.mon_id}"
+			text = f"Waste Record: {parent.name}"
+			mov_type = "Damaged"
+			mov_dir = "Out"
+		else:
+			raise Exception(f"Unrecognised Event Type in _create_movement_record: {event_type}")
 	else:
 		raise Exception(
 			f"Movements Record Function Not Completed for Items from {eric_source_item.moncli_board_obj.name}")
