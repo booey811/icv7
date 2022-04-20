@@ -1150,7 +1150,11 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
 	if initial:
-		ack(response_action="push", view=view)
+		ack()
+		client.views_open(
+			trigger_id=body["trigger_id"],
+			view=view
+		)
 	else:
 		resp = client.views_update(
 			external_id=external_id,
