@@ -59,7 +59,6 @@ def log_catcher_decor(eric_function):
 
 @log_catcher_decor
 def handle_repair_events(webhook, logger, test=None):
-
 	if test:
 		event_id = test
 	else:
@@ -1264,7 +1263,6 @@ def confirm_waste_quantities(body, client, ack):
 
 
 def finalise_repair_data_and_request_waste(body, client):
-
 	metadata = s_help.get_metadata(body)
 
 	view = views.capture_waste_request(body)
@@ -1312,7 +1310,6 @@ def finalise_repair_data_and_request_waste(body, client):
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
-
 
 
 def begin_parts_search(body, client):
@@ -1405,29 +1402,49 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 
 def emit_waste_events(body, client, ack):
 
+	class BreakCycle(Exception):
+		def __init__(self, input_id):
+			self.input_id = input_id
 
 	meta = s_help.get_metadata(body)
 	info = meta["extra"]["parts_to_waste"]
 
+	vals = {}
 	for quantity_input in body["view"]["state"]["values"]:
-		input_part_id = str(quantity_input).replace("waste_quantity_", "")
-		quantity = 0
-		for part_id in info:
-			if input_part_id == part_id:
-				quantity = int(body["view"]["state"]["values"][quantity_input]["waste_quantity_text"]["value"])
-			q_lo.enqueue(
-				f=add_repair_event,
-				kwargs={
-					"main_item_or_id": meta["main"],
-					"event_name": f"Waste: {info[part_id]}",
-					"event_type": "Waste Record",
-					"summary": f"Wasting {quantity}  x  {info[part_id]}",
-					"actions_dict": {
-						"inventory.adjust_stock": [part_id, quantity]
-					}
-				}
-			)
+		vals[quantity_input] = body["view"]["state"]["values"][quantity_input]["waste_quantity_text"]["value"]
 
+	try:
+		for in_val in vals:
+			value = vals[in_val]
+			try:
+				quan = int(value)
+				if quan < 1:
+					raise BreakCycle(in_val)
+			except ValueError:
+				raise BreakCycle(in_val)
+	except BreakCycle as e:
+		error = {e.input_id: "Must Be A Number Larger Than 0"}
+		ack({"response_action": "errors", "errors": error})
+
+	else:
+		for quantity_input in body["view"]["state"]["values"]:
+			input_part_id = str(quantity_input).replace("waste_quantity_", "")
+			for part_id in info:
+				if input_part_id == part_id:
+					quantity = int(body["view"]["state"]["values"][quantity_input]["waste_quantity_text"]["value"])
+					q_lo.enqueue(
+						f=add_repair_event,
+						kwargs={
+							"main_item_or_id": meta["main"],
+							"event_name": f"Waste: {info[part_id]}",
+							"event_type": "Waste Record",
+							"summary": f"Wasting {quantity}  x  {info[part_id]}",
+							"actions_dict": {
+								"inventory.adjust_stock": [part_id, quantity]
+							}
+						}
+					)
+			ack()
 
 
 def test_user_init(body, client):
