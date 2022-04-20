@@ -16,10 +16,7 @@ from application import BaseItem, clients, phonecheck, inventory, CannotFindRepo
 	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
 from utils.tools import refurbs
 from application.monday import config as mon_config
-from worker import conn
-
-q_hi = rq.Queue("high", connection=conn)
-q_stock = rq.Queue("stock", connection=conn)
+from worker import q_hi, q_stock
 
 
 def log_catcher_decor(eric_function):

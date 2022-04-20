@@ -1,11 +1,6 @@
-from rq import Queue
-
-from worker import conn
 import application
 from .exceptions import ExternalDataImportError, NoCorporateItemFound
 from .inventory import adjust_stock_level
-
-q_hi = Queue("high", connection=conn)
 
 
 def checkout_stock_for_line_item(subitem_id, main_reference):

@@ -1,6 +1,7 @@
 import os
 
 import redis
+import rq
 from rq import Worker, Queue, Connection
 
 import settings
@@ -15,9 +16,13 @@ if os.environ["ENV"] == 'devlocal':
 else:
     conn = redis.from_url(redis_url)
 
+q_lo = Queue("low", connection=conn, default_timeout=3600)
+q_def = Queue("default", connection=conn)
+q_hi = Queue("high", connection=conn)
 
 
 if __name__ == '__main__':
     with Connection(conn):
         worker = Worker(map(Queue, listen))
         worker.work()
+q_stock = rq.Queue("stock", connection=conn)
