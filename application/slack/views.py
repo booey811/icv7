@@ -1328,7 +1328,7 @@ def repair_phase_view(main_item, body):
 				"block_id": "repair_result_select",
 				"label": {
 					"type": "plain_text",
-					"text": "Are you moving on from this repair?",
+					"text": "Have you finished?",
 					"emoji": True
 				},
 				"element": {
@@ -1343,7 +1343,7 @@ def repair_phase_view(main_item, body):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "The device has been repaired!",
+								"text": ":ok_hand:  The repair has been completed",
 								"emoji": True
 							},
 							"value": "repaired"
@@ -1351,7 +1351,7 @@ def repair_phase_view(main_item, body):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I need more information",
+								"text": ":warning:  I can't complete this repair",
 								"emoji": True
 							},
 							"value": "client"
@@ -1359,23 +1359,7 @@ def repair_phase_view(main_item, body):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I don't have the parts to complete the repair",
-								"emoji": True
-							},
-							"value": "parts"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": "A more urgent repair has been given to me",
-								"emoji": True
-							},
-							"value": "urgent"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": "I need help",
+								"text": ":wave:  I need help",
 								"emoji": True
 							},
 							"value": "other"
@@ -1824,16 +1808,16 @@ def repair_completion_confirmation_view(body, from_variants, from_waste, externa
 
 	add_divider_block(view["blocks"])
 
-	text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
-	add_dropdown_ui_input(
-		title="Were any parts damaged during the repair?",
-		placeholder='Please choose a response',
-		options=text_and_values,
-		blocks=view['blocks'],
-		block_id='select_waste_opt_in',
-		optional=False,
-		action_id='select_waste_opt_in',
-	)
+	# text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
+	# add_dropdown_ui_input(
+	# 	title="Were any parts damaged during the repair?",
+	# 	placeholder='Please choose a response',
+	# 	options=text_and_values,
+	# 	blocks=view['blocks'],
+	# 	block_id='select_waste_opt_in',
+	# 	optional=False,
+	# 	action_id='select_waste_opt_in',
+	# )
 
 	add_divider_block(view["blocks"])
 
@@ -2019,24 +2003,6 @@ def user_search_request(body, zenpy_results=None, research=False):
 
 	add_divider_block(view['blocks'])
 	add_new_user_button(view["blocks"], no_users_found=no_user_found)
-
-	# metadata = helper.get_metadata(body)
-	# if not metadata["views"]["user_search"]:
-	# 	try:
-	# 		metadata["views"]["user_search"] = body["view"]["id"]
-	# 	except KeyError:
-	# 		print("Cannot Gt View ID from Response Body")
-	#
-	# view = add_base_modal()
-	# add_search_input(view['blocks'])
-	#
-	# if initial:
-	# 	pass
-	# else:
-	# 	if failed_addition:
-	# 		add_failed_user_addition(view['blocks'])
-	# 	add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
-	# 	add_divider_block(view['blocks'])
 
 	return view
 

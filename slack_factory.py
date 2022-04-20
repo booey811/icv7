@@ -313,10 +313,6 @@ def _add_routing(app):
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client)
-			elif selected == 'parts':
-				eric.cannot_complete_repair_no_parts(body, client)
-			elif selected == 'urgent':
-				eric.handle_urgent_repair(body, client)
 			elif selected == 'other':
 				eric.handle_other_repair_issue(body, client)
 			else:
@@ -335,17 +331,10 @@ def _add_routing(app):
 		@app.view("repair_completion_confirmation")
 		def process_repair_completion_confirmation(ack, body, logger, client):
 			logger.info("Repair Confirmation Submitted: Checking for Waste and Processing")
-			waste = body['view']['state']['values']['select_waste_opt_in']['select_waste_opt_in']['selected_option'][
-				'value']
 			ack()
-			if waste == 'waste':
-				eric.process_waste_entry(ack, body, client, initial=True)
-			elif waste == 'no_waste':
-				logger.info("Calling eric.finalise_repair_data")
-				logger.debug(body)
-				eric.finalise_repair_data(body)
-			else:
-				raise Exception(f"Unknown input from Waste Submission: {waste}")
+			logger.info("Calling eric.finalise_repair_data")
+			logger.debug(body)
+			eric.finalise_repair_data(body)
 
 		@app.view("waste_parts_submission")
 		def validate_wasted_parts(ack, body, logger, client):
