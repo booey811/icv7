@@ -802,8 +802,6 @@ class ConnectBoardsValue(BaseColumnValue):
         """This column cannot be changed via the API"""
         current = self._moncli_value.value
         new = list(set(current + ids_to_add))
-        print("SETTING CONNECT BOARDS TO ========")
-        print(new)
         self._moncli_value.value = new
         self._eric.moncli_obj.change_column_value(column_value=self._moncli_value)
         return new

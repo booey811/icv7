@@ -74,7 +74,7 @@ def handle_repair_events(webhook, logger, test=None):
 	actions = json.loads(eric_event.json_actions.value)
 
 	if event_type == "Parts Consumption":
-		job = q_stock.enqueue(
+		job = q_hi.enqueue(
 			inventory.adjust_stock_level,
 			kwargs={
 				"logger": None,
