@@ -72,8 +72,17 @@ def construct_search_terms_for_parts(mainboard_item: BaseItem, generic=False, fo
 	return terms
 
 
-def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quantity, source_object: BaseItem,
+def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quantity, source_object: Union[BaseItem, str, int],
                        absolute=False):
+
+	if not logger:
+		logger = application.CustomLogger()
+
+	print(source_object)
+
+	if type(source_object) in [str, int]:
+		source_object = BaseItem(logger, source_object)
+
 	logger.log('Adjusting Stock Level')
 	# Check part_reference input is valid
 	if type(part_reference) in [str, int]:
@@ -128,7 +137,13 @@ def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quanti
 	part.commit()
 
 	logger.log('Stock Level Adjusted')
-	return new_movement_item
+
+	return_val = str(new_movement_item.id)
+
+	print(f"Returning {return_val}")
+	print(type(return_val))
+
+	return return_val
 
 
 def _create_movement_record(
@@ -151,6 +166,9 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
 	"""
 
 	source_board = BOARD_MAPPING_DICT[eric_source_item.board_id]["name"]
+
+	print("SOURCE BOARD       ------------------------")
+	print(source_board)
 
 	eric_source_item.log(f"Creating Movement Record From: {source_board}[{eric_source_item.name}]")
 
@@ -178,6 +196,21 @@ to by the resultant Movements Board Item. Also requires a Parts Item and Stock A
 		text = f"Movements: {eric_source_item.name}"
 		mov_type = "Void"
 		mov_dir = "Void"
+	elif source_board == "events":
+		event_type = eric_source_item.event_type.label
+		parent = BaseItem(eric_source_item.logger, eric_source_item.parent_id.value)
+		if event_type == "Parts Consumption":
+			url = f"https://icorrect.monday.com/boards/1985628314/views/51003712/pulses/{eric_source_item.mon_id}"
+			text = f"Repair Consumption: {parent.name}"
+			mov_type = "iCorrect Repairs"
+			mov_dir = "Out"
+		elif event_type == "Waste Record":
+			url = f"https://icorrect.monday.com/boards/1985628314/views/51003712/pulses/{eric_source_item.mon_id}"
+			text = f"Waste Record: {parent.name}"
+			mov_type = "Damaged"
+			mov_dir = "Out"
+		else:
+			raise Exception(f"Unrecognised Event Type in _create_movement_record: {event_type}")
 	else:
 		raise Exception(
 			f"Movements Record Function Not Completed for Items from {eric_source_item.moncli_board_obj.name}")

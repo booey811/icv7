@@ -1,8 +1,10 @@
 import os
 import datetime
+import time
 from functools import wraps
 from pprint import pprint as p
 import json
+import logging
 
 import rq
 import zenpy.lib.api_objects as zen_obj
@@ -11,13 +13,15 @@ from zenpy.lib.exception import APIException as zen_ex
 from moncli.api_v2.exceptions import MondayApiError
 
 import data
+import utils.tools
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help
+	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
+import tasks
 from utils.tools import refurbs
 from application.monday import config as mon_config
-from worker import conn
+from worker import q_hi, q_lo
 
-q_hi = rq.Queue("high", connection=conn)
+logger = logging.getLogger()
 
 
 def log_catcher_decor(eric_function):
@@ -52,6 +56,84 @@ def log_catcher_decor(eric_function):
 			raise e
 
 	return wrapper
+
+
+@log_catcher_decor
+def handle_repair_events(webhook, logger, test=None):
+	if test:
+		event_id = test
+	else:
+		event_id = webhook["pulseId"]
+	eric_event = BaseItem(logger, event_id)
+
+	if eric_event.actions_status.label == "No Actions Required":
+		# No Actions Required - Ignore
+		return True
+
+	event_type = eric_event.event_type.label
+	actions = json.loads(eric_event.json_actions.value)
+
+	if event_type == "Parts Consumption":
+		job = q_hi.enqueue(
+			inventory.adjust_stock_level,
+			kwargs={
+				"logger": None,
+				"part_reference": actions['inventory.adjust_stock_level'],
+				"quantity": 1,
+				"source_object": eric_event.mon_id
+			},
+			retry=rq.Retry(max=5, interval=20)
+		)
+		while not job.result:
+			time.sleep(0.5)
+
+		job_2 = q_lo.enqueue(
+			utils.tools.adjust_columns_through_rq,
+			kwargs={
+				"item_id": str(eric_event.mon_id),
+				"attributes_and_values": [
+					["actions_status", "Complete"],
+					["related_items", [job.result, actions['inventory.adjust_stock_level']]]
+				]
+			},
+			depends_on=job,
+			retry=rq.Retry(max=5, interval=20)
+		)
+
+	elif event_type == "Waste Record":
+		job = q_hi.enqueue(
+			inventory.adjust_stock_level,
+			kwargs={
+				"logger": None,
+				"part_reference": actions['inventory.adjust_stock_level'][0],
+				"quantity": actions['inventory.adjust_stock_level'][1],
+				"source_object": eric_event.mon_id
+			},
+			retry=rq.Retry(max=5, interval=20)
+		)
+		while not job.result:
+			time.sleep(0.5)
+
+		job_2 = q_lo.enqueue(
+			utils.tools.adjust_columns_through_rq,
+			kwargs={
+				"item_id": str(eric_event.mon_id),
+				"attributes_and_values": [
+					["actions_status", "Complete"],
+					["related_items", [job.result, actions['inventory.adjust_stock_level'][0]]]
+				]
+			},
+			depends_on=job,
+			retry=rq.Retry(max=5, interval=20)
+		)
+
+	else:
+		eric_event.actions_status.value = "Error"
+		eric_event.commit()
+		return False
+
+	eric_event.actions_status.value = 'Processing'
+	eric_event.commit()
 
 
 @log_catcher_decor
@@ -802,7 +884,6 @@ def check_stock(body, client, initial=False, get_level=False):
 
 		val = item.get_column_value("quantity")
 		stock_level = val.text
-		p([repair_selection, stock_level])
 		return [repair_selection, stock_level]
 
 	meta = s_help.get_metadata(body)
@@ -982,6 +1063,7 @@ def process_walkin_submission(body, client, ack):
 				name=name,
 				convert_eric=True
 			)
+			main = blank
 
 			data_dict["main_id"] = blank.moncli_obj.id
 
@@ -989,6 +1071,9 @@ def process_walkin_submission(body, client, ack):
 			eric_ticket.add_tags(["mondayactive"])
 			eric_ticket.commit()
 			blank.add_update(intake_notes)
+
+		else:
+			main = BaseItem(cuslog, data_dict["main_id"])
 
 	elif data_dict["zendesk_id"]:
 		ticket = EricTicket(cuslog, data_dict["zendesk_id"])
@@ -1010,6 +1095,13 @@ def process_walkin_submission(body, client, ack):
 
 	else:
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
+
+	add_repair_event(
+		main_item_or_id=main.moncli_obj,
+		event_name="Received Device",
+		event_type="Device Received",
+		summary=f"Device Received\n\n{intake_notes}",
+	)
 
 
 def begin_slack_repair_process(body, client, ack, dev=False):
@@ -1062,6 +1154,24 @@ def begin_specific_slack_repair(body, client, ack):
 		view=views.repair_phase_view(main_item, body)
 	)
 
+	try:
+		repair_phase = int(main_item.repair_phase.value)
+	except TypeError:
+		repair_phase = 0
+	repair_phase += 1
+
+	q_lo.enqueue(
+		f=tasks.task_repair_event,
+		kwargs={
+			"main_item_or_id": main_item.moncli_obj,
+			"event_name": f"Repair Phase {repair_phase}: Beginning",
+			"event_type": "Repair Phase Start",
+			"summary": f"Begin Repair Phase {repair_phase}",
+			"actions_dict": f"repair_phase_{repair_phase}",
+			"actions_status": "No Actions Required"
+		}
+	)
+
 
 def add_parts_to_repair(body, client, initial, ack, remove=False):
 	metadata = s_help.get_metadata(body)
@@ -1072,7 +1182,11 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
 	if initial:
-		ack(response_action="push", view=view)
+		ack()
+		client.views_open(
+			trigger_id=body["trigger_id"],
+			view=view
+		)
 	else:
 		resp = client.views_update(
 			external_id=external_id,
@@ -1096,8 +1210,6 @@ def show_variant_selections(body, client, ack):
 	for repair in selected_repairs:
 		part_ids = repair.get_column_value(id="connect_boards8").value
 		if len(part_ids) == 1:
-			print("ADDING PART TP IDS")
-			print(part_ids[0])
 			meta['parts'].append(part_ids[0])
 		elif len(part_ids) > 1:
 			names_and_ids = []
@@ -1117,7 +1229,7 @@ def show_variant_selections(body, client, ack):
 	if variants:
 		view = views.display_variant_options(body, variants, meta)
 	else:
-		view = views.repair_completion_confirmation(body=body, from_variants=False, from_waste=False, meta=meta)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta)
 
 	resp = client.views_update(
 		external_id=external_id,
@@ -1129,18 +1241,21 @@ def show_repair_and_parts_confirmation(body, client, ack, from_variants=False, f
 	if from_waste:
 		meta = s_help.get_metadata(body)
 		ext_id = meta['external_id']
-		view = views.repair_completion_confirmation(body=body, from_variants=from_variants, from_waste=from_waste, meta=meta)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
+		                                                 meta=meta)
 		client.views_update(
 			external_id=ext_id,
 			view=view
 		)
 	else:
 		external_id = s_help.create_external_view_id(body, "repair_confirmation")
-		view = views.repair_completion_confirmation(body=body, from_variants=from_variants, from_waste=from_waste, external_id=external_id, meta=s_help.get_metadata(body))
+		view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
+		                                                 external_id=external_id, meta=s_help.get_metadata(body))
 		ack({
 			"response_action": "update",
 			"view": view
 		})
+
 
 def show_waste_validations(body, client, ack):
 	external_id = s_help.create_external_view_id(body, 'waste_validations')
@@ -1162,26 +1277,41 @@ def show_waste_validations(body, client, ack):
 
 
 def confirm_waste_quantities(body, client, ack):
-	external_id = s_help.create_external_view_id(body, 'waste_quantities')
+	external_id = s_help.get_metadata(body)["external_id"]
 	loading_view = views.loading(
 		"Selecting Requested Parts",
 		external_id=external_id
 	)
 	ack({
 		"response_action": "update",
-		"view": loading_view
+		"view": views.waste_parts_quantity_input(body)
 	})
 
-	view = views.waste_parts_quantity_input(body)
 
-	client.views_update(
-		external_id=external_id,
-		view=view
+# view = views.waste_parts_quantity_input(body)
+#
+# client.views_update(
+# 	external_id=external_id,
+# 	view=view
+# )
+
+
+def finalise_repair_data_and_request_waste(body, client, ack):
+	metadata = s_help.get_metadata(body)
+
+	view = views.capture_waste_request(body)
+
+	ack({"response_action": "update", "view": view})
+
+	# client.views_open(
+	# 	trigger_id=body["trigger_id"],
+	# 	view=view
+	# )
+
+	q_hi.enqueue(
+		tasks.process_repair_phase_completion,
+		args=(metadata["parts"], metadata["main"])
 	)
-
-
-def finalise_repair_data():
-	pass
 
 
 def begin_parts_search(body, client):
@@ -1241,10 +1371,24 @@ def handle_urgent_repair(body, client):
 	)
 
 
-def handle_other_repair_issue(body, client):
-	resp = client.views_push(
+def handle_other_repair_issue(body, client, ack):
+	ack()
+
+	view = views.repair_issue_form(body)
+
+	resp = client.views_open(
 		trigger_id=body['trigger_id'],
-		view=views.loading("We haven't developed this yet....... Nothing is loading")
+		view=view
+	)
+
+
+def process_repair_issue(body, client, ack):
+	ack()
+	meta = s_help.get_metadata(body)
+	message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
+	q_hi.enqueue(
+		tasks.log_repair_issue,
+		args=(meta["main"], message)
 	)
 
 
@@ -1260,8 +1404,11 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "add_waste_entry")
-		ack(response_action="push",
-		    view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
+		ack()
+		client.views_open(
+			trigger_id=body["trigger_id"],
+			view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta)
+		)
 	else:
 		external_id = meta["external_id"]
 		ack()
@@ -1270,6 +1417,52 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 		external_id=external_id,
 		view=views.register_wasted_parts(body, initial, remove, external_id)
 	)
+
+
+def emit_waste_events(body, client, ack):
+	class BreakCycle(Exception):
+		def __init__(self, input_id):
+			self.input_id = input_id
+
+	meta = s_help.get_metadata(body)
+	info = meta["extra"]["parts_to_waste"]
+
+	vals = {}
+	for quantity_input in body["view"]["state"]["values"]:
+		vals[quantity_input] = body["view"]["state"]["values"][quantity_input]["waste_quantity_text"]["value"]
+
+	try:
+		for in_val in vals:
+			value = vals[in_val]
+			try:
+				quan = int(value)
+				if quan < 1:
+					raise BreakCycle(in_val)
+			except ValueError:
+				raise BreakCycle(in_val)
+	except BreakCycle as e:
+		error = {e.input_id: "Must Be A Number Larger Than 0"}
+		ack({"response_action": "errors", "errors": error})
+
+	else:
+		for quantity_input in body["view"]["state"]["values"]:
+			input_part_id = str(quantity_input).replace("waste_quantity_", "")
+			for part_id in info:
+				if input_part_id == part_id:
+					quantity = int(body["view"]["state"]["values"][quantity_input]["waste_quantity_text"]["value"])
+					q_lo.enqueue(
+						f=add_repair_event,
+						kwargs={
+							"main_item_or_id": meta["main"],
+							"event_name": f"Waste: {info[part_id]}",
+							"event_type": "Waste Record",
+							"summary": f"Wasting {quantity}  x  {info[part_id]}",
+							"actions_dict": {
+								"inventory.adjust_stock_level": [part_id, quantity]
+							}
+						}
+					)
+			ack()
 
 
 def test_user_init(body, client):

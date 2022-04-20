@@ -2,17 +2,11 @@ import logging
 import os
 import json
 
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
-from flask import Flask, request
-
 import flask
-from rq import Queue
 
-import application.monday.config
-from worker import conn
+from worker import q_lo, q_def, q_hi
 
-from application import create_app, verify_monday, ChallengeReceived, inventory
+from application import create_app, verify_monday, ChallengeReceived
 import eric
 from utils import exec as utils_exec
 from slack_factory import create_slack_app
@@ -20,10 +14,6 @@ from slack_factory import create_slack_app
 # Setup
 logging.basicConfig(level=logging.DEBUG)
 
-# RQ Connections
-q_lo = Queue("low", connection=conn, default_timeout=3600)
-q_def = Queue("default", connection=conn)
-q_hi = Queue("high", connection=conn)
 
 # ===================================== SLACK APP =====================================
 # Slack App in Socket Mode, or not if SLACK is OFF
@@ -39,6 +29,23 @@ app = create_app()
 @app.route('/', methods=['GET'])
 def index():
 	return 'Index Route'
+
+
+@app.route("/monday/repair-events", methods=["POST"])
+def process_repair_event(test_id=None):
+	webhook = flask.request.get_data()
+	try:
+		data = verify_monday(webhook)['event']
+	except ChallengeReceived as e:
+		return e.token
+
+	if os.environ['ENV'] == 'devlocal':
+		if not test_id:
+			raise Exception('test_id is required when testing locally')
+		eric.handle_repair_events(None, test_id)
+	else:
+		eric.handle_repair_events(data)
+	return ''
 
 
 # Process Stock Count

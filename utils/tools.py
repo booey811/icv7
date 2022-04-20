@@ -283,14 +283,23 @@ def generate_column_id_list(board_id):
 
     print(result)
 
+
 def settings_list(board_id, column):
-
     item = BaseItem(CustomLogger(), board_id=board_id)
-
     settings = getattr(item, column).settings
-
     p(settings)
-
     return True
+
+
+def adjust_columns_through_rq(item_id, attributes_and_values):
+
+    item = BaseItem(CustomLogger(), item_id)
+
+    for adjustment in attributes_and_values:
+        attri = getattr(item, adjustment[0])
+        attri.value = adjustment[1]
+
+    item.commit()
+
 
 refurbs = RefurbishedDevicesHelper()

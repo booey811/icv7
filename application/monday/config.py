@@ -61,7 +61,8 @@ BOARD_MAPPING_DICT = {
 			'date36': 'deadline_date',
 			'date4': 'received_date',
 			'link1': 'ticket_url',
-			"text15": "company_name"
+			"text15": "company_name",
+			"numbers5": "repair_phase"
 		},
 		"zendesk": [
 			'status4',  # Status
@@ -392,6 +393,20 @@ BOARD_MAPPING_DICT = {
 			"text": "mon_user_id",
 			"text8": "slack_user_id",
 			"text1": "mainboard_group_id"
+		}
+	},
+	'1985628314': {
+		'name': 'events',
+		'columns': {
+			'status1': 'event_type',  # color
+			'long_text': 'description',  # long-text
+			'date': 'timestamp',  # date
+			'long_text2': 'json_actions',  # long-text
+			'status0': 'actions_status',  # color
+			'connect_boards': 'related_items',  # board-relation
+			'numbers': 'repair_minutes',  # numeric,
+			"text": "parent_id",  # text
+			"text0": "rq_job_id"  # text
 		}
 	}
 }

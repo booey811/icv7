@@ -2,6 +2,7 @@ import os
 import time
 
 import eric
+from application import add_repair_event, s_help, clients
 from pprint import pprint as p
 
 from slack_bolt import App
@@ -311,15 +312,16 @@ def _add_routing(app):
 			if selected == 'repaired':
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
-				eric.handle_other_repair_issue(body, client)
-			elif selected == 'parts':
-				eric.cannot_complete_repair_no_parts(body, client)
-			elif selected == 'urgent':
-				eric.handle_urgent_repair(body, client)
+				eric.handle_other_repair_issue(body, client, ack)
 			elif selected == 'other':
-				eric.handle_other_repair_issue(body, client)
+				eric.handle_other_repair_issue(body, client, ack)
 			else:
 				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
+
+		@app.view("repair_issue_submit")
+		def process_repair_issue(body, client, ack, logger):
+			logger.info("Logging Repair Issue")
+			eric.process_repair_issue(body, client, ack)
 
 		@app.view("repairs_parts_submission")
 		def validate_submitted_parts_selection(ack, body, logger, client):
@@ -334,14 +336,14 @@ def _add_routing(app):
 		@app.view("repair_completion_confirmation")
 		def process_repair_completion_confirmation(ack, body, logger, client):
 			logger.info("Repair Confirmation Submitted: Checking for Waste and Processing")
-			waste = body['view']['state']['values']['select_waste_opt_in']['select_waste_opt_in']['selected_option'][
-				'value']
-			if waste == 'waste':
-				eric.process_waste_entry(ack, body, client, initial=True)
-			elif waste == 'no_waste':
-				eric.finalise_repair_data()
-			else:
-				raise Exception(f"Unknown input from Waste Submission: {waste}")
+			logger.info("Calling eric.finalise_repair_data")
+			logger.debug(body)
+			eric.finalise_repair_data_and_request_waste(body, client, ack)
+
+		@app.view("waste_opt_in")
+		def validate_wasted_parts(ack, body, logger, client):
+			logger.info("Validating Wasted Repair Info")
+			eric.process_waste_entry(ack, body, client, initial=True)
 
 		@app.view("waste_parts_submission")
 		def validate_wasted_parts(ack, body, logger, client):
@@ -355,8 +357,9 @@ def _add_routing(app):
 
 		@app.view("waste_quantity_submission")
 		def capture_waste_item_data(ack, body, client, logger):
-			logger.info("Adding Waste Data to Metadata")
-			eric.show_repair_and_parts_confirmation(body, client, ack, from_waste=True)
+			logger.info("Emitting Waste Events")
+			ack()
+			eric.emit_waste_events(body, client, ack)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
