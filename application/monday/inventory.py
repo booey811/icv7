@@ -137,7 +137,13 @@ def adjust_stock_level(logger, part_reference: Union[str, int, BaseItem], quanti
 	part.commit()
 
 	logger.log('Stock Level Adjusted')
-	return new_movement_item
+
+	return_val = str(new_movement_item.id)
+
+	print(f"Returning {return_val}")
+	print(type(return_val))
+
+	return return_val
 
 
 def _create_movement_record(

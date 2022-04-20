@@ -1,5 +1,6 @@
 import os
 import datetime
+import time
 from functools import wraps
 from pprint import pprint as p
 import json
@@ -17,7 +18,7 @@ from application import BaseItem, clients, phonecheck, inventory, CannotFindRepo
 	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
 from utils.tools import refurbs
 from application.monday import config as mon_config
-from worker import q_hi, q_stock
+from worker import q_hi, q_stock, q_lo
 
 logger = logging.getLogger()
 
@@ -83,12 +84,16 @@ def handle_repair_events(webhook, logger, test=None):
 			},
 			retry=rq.Retry(max=5, interval=20)
 		)
-		q_hi.enqueue(
+		while not job.result:
+			time.sleep(0.5)
+
+		job_2 = q_lo.enqueue(
 			utils.tools.adjust_columns_through_rq,
 			kwargs={
 				"item_id": str(eric_event.mon_id),
 				"attributes_and_values": [
-					["actions_status", "Complete"]
+					["actions_status", "Complete"],
+					["related_items", [job.result, actions['inventory.adjust_stock_level']]]
 				]
 			},
 			depends_on=job,

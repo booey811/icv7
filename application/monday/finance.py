@@ -18,7 +18,7 @@ def checkout_stock_for_line_item(subitem_id, main_reference):
 	part = application.BaseItem(logger, line.parts_id.value)
 
 	consumption = line.quantity_used.value
-	new_movement = adjust_stock_level(logger, part, consumption, main)
+	new_movement_id = adjust_stock_level(logger, part, consumption, main)
 	line.sale_price.value = part.sale_price.value
 	line.supply_price.value = part.supply_price.value
 	line.parts_url.value = [
@@ -26,10 +26,10 @@ def checkout_stock_for_line_item(subitem_id, main_reference):
 		f"{part.name}"
 	]
 	line.movement_url.value = [
-		f"https://icorrect.monday.com/boards/989490856/pulses/{new_movement.id}",
-		f"{new_movement.name}"
+		f"https://icorrect.monday.com/boards/989490856/pulses/{new_movement_id}",
+		f"{part.name}"
 	]
-	line.movement_id.value = new_movement.id
+	line.movement_id.value = new_movement_id
 
 	if part.function.label == "Admin":
 		line.eod_status.label = "Admin"

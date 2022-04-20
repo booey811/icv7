@@ -405,7 +405,8 @@ BOARD_MAPPING_DICT = {
 			'status0': 'actions_status',  # color
 			'connect_boards': 'related_items',  # board-relation
 			'numbers': 'repair_minutes',  # numeric,
-			"text": "parent_id",
+			"text": "parent_id",  # text
+			"text0": "rq_job_id"  # text
 		}
 	}
 }
