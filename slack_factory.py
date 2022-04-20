@@ -336,10 +336,9 @@ def _add_routing(app):
 		@app.view("repair_completion_confirmation")
 		def process_repair_completion_confirmation(ack, body, logger, client):
 			logger.info("Repair Confirmation Submitted: Checking for Waste and Processing")
-			ack()
 			logger.info("Calling eric.finalise_repair_data")
 			logger.debug(body)
-			eric.finalise_repair_data_and_request_waste(body, client)
+			eric.finalise_repair_data_and_request_waste(body, client, ack)
 
 		@app.view("waste_opt_in")
 		def validate_wasted_parts(ack, body, logger, client):
