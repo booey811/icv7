@@ -10,6 +10,8 @@ import settings
 
 def add_repair_event(main_item_or_id, event_name, event_type, summary='', actions_dict=(), actions_status='Not Done'):
 
+	print(f"ADD REPAIR EVENT CALLED - actions_dict = {actions_dict}")
+
 	if type(main_item_or_id) in (str, int):
 		main_item = clients.monday.system.get_items(ids=[main_item_or_id])[0]
 	elif type(main_item_or_id) is Item:
