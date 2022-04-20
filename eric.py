@@ -16,9 +16,10 @@ import data
 import utils.tools
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
 	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
+import tasks
 from utils.tools import refurbs
 from application.monday import config as mon_config
-from worker import q_hi, q_stock, q_lo
+from worker import q_hi, q_lo
 
 logger = logging.getLogger()
 
@@ -1401,10 +1402,24 @@ def handle_urgent_repair(body, client):
 	)
 
 
-def handle_other_repair_issue(body, client):
-	resp = client.views_push(
+def handle_other_repair_issue(body, client, ack):
+	ack()
+
+	view = views.repair_issue_form(body)
+
+	resp = client.views_open(
 		trigger_id=body['trigger_id'],
-		view=views.loading("We haven't developed this yet....... Nothing is loading")
+		view=view
+	)
+
+
+def process_repair_issue(body, client, ack):
+	ack()
+	meta = s_help.get_metadata(body)
+	message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
+	q_hi.enqueue(
+		tasks.log_repair_issue,
+		args=(meta["main"], message)
 	)
 
 
@@ -1420,8 +1435,11 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "add_waste_entry")
-		ack(response_action="push",
-		    view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta))
+		ack()
+		client.views_open(
+			trigger_id=body["trigger_id"],
+			view=views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta)
+		)
 	else:
 		external_id = meta["external_id"]
 		ack()

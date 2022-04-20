@@ -1372,6 +1372,50 @@ def repair_phase_view(main_item, body):
 	return basic
 
 
+def repair_issue_form(body):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"private_metadata": json.dumps(metadata),
+			"callback_id": "repair_issue_submit",
+			"title": {
+				"type": "plain_text",
+				"text": "Repair Issue Logger",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+
+	view = get_base_modal()
+
+	add_multiline_text_input(
+		title="Please explain your issue",
+		placeholder="Does the client need a further repair? Is the passcode wrong?!",
+		block_id="text_issue",
+		action_id='text_issue_action',
+		blocks=view["blocks"]
+	)
+	return view
+
+
+
+
+
 def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 	def get_base_modal():
 		search = {

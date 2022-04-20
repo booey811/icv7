@@ -312,11 +312,16 @@ def _add_routing(app):
 			if selected == 'repaired':
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
-				eric.handle_other_repair_issue(body, client)
+				eric.handle_other_repair_issue(body, client, ack)
 			elif selected == 'other':
-				eric.handle_other_repair_issue(body, client)
+				eric.handle_other_repair_issue(body, client, ack)
 			else:
 				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
+
+		@app.view("repair_issue_submit")
+		def process_repair_issue(body, client, ack, logger):
+			logger.info("Logging Repair Issue")
+			eric.process_repair_issue(body, client, ack)
 
 		@app.view("repairs_parts_submission")
 		def validate_submitted_parts_selection(ack, body, logger, client):
@@ -341,7 +346,6 @@ def _add_routing(app):
 			logger.info("Validating Wasted Repair Info")
 			eric.process_waste_entry(ack, body, client, initial=True)
 
-
 		@app.view("waste_parts_submission")
 		def validate_wasted_parts(ack, body, logger, client):
 			logger.info("Validating Wasted Repair Info")
@@ -357,7 +361,6 @@ def _add_routing(app):
 			logger.info("Emitting Waste Events")
 			ack()
 			eric.emit_waste_events(body, client, ack)
-
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
