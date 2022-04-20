@@ -334,7 +334,13 @@ def _add_routing(app):
 			ack()
 			logger.info("Calling eric.finalise_repair_data")
 			logger.debug(body)
-			eric.finalise_repair_data(body)
+			eric.finalise_repair_data_and_request_waste(body, client)
+
+		@app.view("waste_opt_in")
+		def validate_wasted_parts(ack, body, logger, client):
+			logger.info("Validating Wasted Repair Info")
+			eric.process_waste_entry(ack, body, client, initial=True)
+
 
 		@app.view("waste_parts_submission")
 		def validate_wasted_parts(ack, body, logger, client):
@@ -348,8 +354,10 @@ def _add_routing(app):
 
 		@app.view("waste_quantity_submission")
 		def capture_waste_item_data(ack, body, client, logger):
-			logger.info("Adding Waste Data to Metadata")
-			eric.show_repair_and_parts_confirmation(body, client, ack, from_waste=True)
+			logger.info("Emitting Waste Events")
+			ack()
+			eric.emit_waste_events(body, client, ack)
+
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")

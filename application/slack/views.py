@@ -1794,7 +1794,6 @@ def repair_completion_confirmation_view(body, from_variants, from_waste, externa
 	add_divider_block(view['blocks'])
 	add_header_block(view["blocks"], "To resolve these faults, you have used:")
 
-
 	text_and_values = [[item.name, item.name] for item in
 	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
 	add_checkbox_section(
@@ -2007,6 +2006,45 @@ def user_search_request(body, zenpy_results=None, research=False):
 	return view
 
 
+def capture_waste_request(body):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_opt_in",
+			"private_metadata": json.dumps(helper.get_metadata(body)),
+			"title": {
+				"type": "plain_text",
+				"text": "My App",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	view = get_base_modal()
+	options = [["No Parts To Waste", "no_waste"], ["I've Damaged Stock", "waste"]]
+	add_dropdown_ui_input(
+		title="Do You Need to Record Waste?",
+		placeholder="It's OK if you do!",
+		options=options,
+		blocks=view["blocks"],
+		block_id="waste_opt_in",
+		optional=False,
+		action_id="waste_opt_in_action"
+	)
+	return view
+
+
 def register_wasted_parts(body, initial, remove, external_id):
 	def add_base_modal():
 		basic = {
@@ -2118,7 +2156,7 @@ def select_waste_variants(body):
 		elif len(product.part_ids) == 1:
 			add_context_block(view["blocks"], product.display_name)
 			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = \
-			clients.monday.system.get_items('name', ids=product.part_ids)[0].name
+				clients.monday.system.get_items('name', ids=product.part_ids)[0].name
 		else:
 			raise Exception(f"{product.info['display_name']} does not have any Parts associated with it")
 
@@ -2188,6 +2226,8 @@ def waste_parts_quantity_input(body):
 			blocks=view["blocks"],
 			optional=False
 		)
+
+	view["private_metadata"] = json.dumps(metadata)
 
 	return view
 

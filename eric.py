@@ -1263,8 +1263,17 @@ def confirm_waste_quantities(body, client, ack):
 	)
 
 
-def finalise_repair_data(body):
+def finalise_repair_data_and_request_waste(body, client):
+
 	metadata = s_help.get_metadata(body)
+
+	view = views.capture_waste_request(body)
+
+	client.views_open(
+		trigger_id=body["trigger_id"],
+		view=view
+	)
+
 	parts = clients.monday.system.get_items('name', ids=metadata["parts"])
 	main = clients.monday.system.get_items(ids=[metadata["main"]])[0]
 	repair_phase_col = main.get_column_value('numbers5')
@@ -1303,6 +1312,7 @@ def finalise_repair_data(body):
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
+
 
 
 def begin_parts_search(body, client):
@@ -1391,6 +1401,33 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 		external_id=external_id,
 		view=views.register_wasted_parts(body, initial, remove, external_id)
 	)
+
+
+def emit_waste_events(body, client, ack):
+
+
+	meta = s_help.get_metadata(body)
+	info = meta["extra"]["parts_to_waste"]
+
+	for quantity_input in body["view"]["state"]["values"]:
+		input_part_id = str(quantity_input).replace("waste_quantity_", "")
+		quantity = 0
+		for part_id in info:
+			if input_part_id == part_id:
+				quantity = int(body["view"]["state"]["values"][quantity_input]["waste_quantity_text"]["value"])
+			q_lo.enqueue(
+				f=add_repair_event,
+				kwargs={
+					"main_item_or_id": meta["main"],
+					"event_name": f"Waste: {info[part_id]}",
+					"event_type": "Waste Record",
+					"summary": f"Wasting {quantity}  x  {info[part_id]}",
+					"actions_dict": {
+						"inventory.adjust_stock": [part_id, quantity]
+					}
+				}
+			)
+
 
 
 def test_user_init(body, client):
