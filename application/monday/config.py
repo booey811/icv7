@@ -251,6 +251,32 @@ BOARD_MAPPING_DICT = {
 			"text": "email"
 		}
 	},
+	'1031579094': {
+		'name': 'stuart_data',
+		'columns': {
+			'stuart_job_id': 'stuart_job_id',  # text
+			'booking_time6': 'booking_time',  # hour
+			'collection_time4': 'collection_time',  # hour
+			'delivery_time': 'delivery_time',  # hour
+			'cost__ex_vat_': 'cost_inc',  # numeric
+			'vat': 'vat',  # numeric
+			'collection_postcode5': 'collection_postcode',  # text
+			'delivery_postcode': 'delivery_postcode',  # text
+			'distance': 'distance',  # numeric
+			'assignment_code': 'assignment_code',  # text
+			'estimated_time__mins_': 'estimated_time_mins',  # numeric
+			'date': 'date',  # date
+			'booking____delivery': 'booking_delivery',  # formula
+			'booking____collection': 'booking_collection',  # formula
+			'collection____delivery': 'collection_delivery',  # formula
+			'tracking_url': 'tracking_url',  # link
+			'creation_log': 'creation_log',  # pulse-log
+			'formula2': 'pp_mile',  # formula
+			'status': 'status',  # color
+			'text6': 'mainboard_id',  # text
+			'status_19': 'historical_data',  # color
+		}
+	},
 	"2126488977": {
 		"name": "refurb_phones",
 		"columns": {

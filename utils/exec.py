@@ -1,13 +1,70 @@
 import os
+from datetime import datetime, timedelta
 
 from rq import Queue
 
-from application import BaseItem, zen_help, inventory, HardLog, CustomLogger, clients
+from application import BaseItem, zen_help, inventory, HardLog, CustomLogger, clients, couriers
 from application.monday.config import STANDARD_REPAIR_OPTIONS, REPAIR_COLOURS
 from worker import conn
-from eric import log_catcher_decor
 
 q_stock = Queue("stock", connection=conn)
+
+
+def collate_stuart_historical_data():
+	def iterate_through_devices(items):
+
+		def update_monday_entry(item):
+			pass
+
+		for item in items:
+			eric = BaseItem(CustomLogger(), item.id)
+			job_id = eric.stuart_job_id.value
+			if not job_id:
+				print(f"Ignoring Entry - No JOB ID https://icorrect.monday.com/boards/1031579094/pulses/{job_id}")
+				item.historical_data.label = "NO JOB ID"
+				item.commit()
+				continue
+			job_data = couriers.get_job_data(job_id)
+			try:
+				picked_at = job_data["deliveries"][0]["picked_at"][:-10]
+				delivered_at = job_data["deliveries"][0]["delivered_at"][:-10]
+			except TypeError as e:
+				eric.status.label = "Cancelled"
+				eric.historical_data.label = "Done"
+				continue
+
+			delivery_dt = datetime.strptime(delivered_at, "%Y-%m-%dT%H:%M:%S") - timedelta(hours=1)
+			collection_dt = datetime.strptime(picked_at, "%Y-%m-%dT%H:%M:%S") - timedelta(hours=1)
+
+			duration = collection_dt - delivery_dt
+
+			duration_seconds = duration.total_seconds()
+
+			if duration_seconds <= 0:
+				collection = collection_dt
+				delivery = delivery_dt
+			else:
+				collection = delivery_dt
+				delivery = collection_dt
+
+			eric.collection_time.value = collection.strftime("%H%M")
+			eric.delivery_time.value = delivery.strftime("%H%M")
+
+			eric.commit()
+
+			eric.historical_data.label = "Done"
+			eric.commit()
+
+	stuart_board = clients.monday.system.get_boards('id', ids=[1031579094])[0]
+
+	col_val = stuart_board.get_column_value("status_19")
+	col_val.label = "Need"
+
+	mon_items = stuart_board.get_items_by_column_values(column_value=col_val, limit=20)
+	if not mon_items:
+		raise Exception("Did Not Get Any Items from Search")
+
+	iterate_through_devices(mon_items)
 
 
 def sync_zendesk_fields():
