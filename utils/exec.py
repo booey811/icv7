@@ -1,5 +1,7 @@
 import os
 from datetime import datetime, timedelta
+import time
+from pprint import pprint as p
 
 from rq import Queue
 
@@ -12,10 +14,6 @@ q_stock = Queue("stock", connection=conn)
 
 def collate_stuart_historical_data():
 	def iterate_through_devices(items):
-
-		def update_monday_entry(item):
-			pass
-
 		for item in items:
 			eric = BaseItem(CustomLogger(), item.id)
 			job_id = eric.stuart_job_id.value
@@ -29,8 +27,16 @@ def collate_stuart_historical_data():
 				picked_at = job_data["deliveries"][0]["picked_at"][:-10]
 				delivered_at = job_data["deliveries"][0]["delivered_at"][:-10]
 			except TypeError as e:
-				eric.status.label = "Cancelled"
+				if job_data["status"] == 'delivered':
+					eric.status.label = "Complete"
+				else:
+					eric.status.label = "Cancelled"
 				eric.historical_data.label = "Done"
+				eric.commit()
+				continue
+			except KeyError as e:
+				eric.historical_data.label = "Data Too Old"
+				eric.commit()
 				continue
 
 			delivery_dt = datetime.strptime(delivered_at, "%Y-%m-%dT%H:%M:%S") - timedelta(hours=1)
@@ -60,11 +66,17 @@ def collate_stuart_historical_data():
 	col_val = stuart_board.get_column_value("status_19")
 	col_val.label = "Need"
 
-	mon_items = stuart_board.get_items_by_column_values(column_value=col_val, limit=20)
+	mon_items = stuart_board.get_items_by_column_values(column_value=col_val, limit=30)
 	if not mon_items:
 		raise Exception("Did Not Get Any Items from Search")
 
-	iterate_through_devices(mon_items)
+	while len(mon_items) != 0:
+		iterate_through_devices(mon_items)
+		time.sleep(5)
+		print("GETTING NEW ITEM SET ========================== ")
+		col_val.label = "Need"
+		mon_items = stuart_board.get_items_by_column_values(column_value=col_val, limit=30)
+		print(len(mon_items))
 
 
 def sync_zendesk_fields():
