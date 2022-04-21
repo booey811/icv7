@@ -1372,12 +1372,11 @@ def repair_phase_view(main_item, body):
 	return basic
 
 
-def repair_issue_form(body):
+def repair_issue_form(body, more_info=False):
 
 	def get_base_modal():
 		basic = {
 			"type": "modal",
-			"private_metadata": json.dumps(metadata),
 			"callback_id": "repair_issue_submit",
 			"title": {
 				"type": "plain_text",
@@ -1400,20 +1399,44 @@ def repair_issue_form(body):
 
 	metadata = helper.get_metadata(body)
 
-
 	view = get_base_modal()
 
-	add_multiline_text_input(
-		title="Please explain your issue",
-		placeholder="Does the client need a further repair? Is the passcode wrong?!",
-		block_id="text_issue",
-		action_id='text_issue_action',
-		blocks=view["blocks"]
+	options = [
+		["Device Needs To Be Charged", 'charge'],
+		["I Don't Have The Required Parts", "parts"],
+		["I Don't Have The Correct Passcode", "passcode"],
+		["Other", "other"]
+	]
+
+	add_dropdown_ui_input(
+		title="Please Select An Option That Best Describes the Issue",
+		placeholder="Your Choice!",
+		options=options,
+		blocks=view["blocks"],
+		block_id="dropdown_repair_issue_selector",
+		optional=False,
+		action_id="dropdown_repair_issue_selector_action",
+		dispatch_action=True
 	)
+
+	if more_info:
+		add_multiline_text_input(
+			title="Please explain your issue",
+			placeholder="Does the client need a further repair? Is the passcode wrong?!",
+			block_id="text_issue",
+			action_id='text_issue_action',
+			blocks=view["blocks"]
+		)
+
+	if metadata["external_id"]:
+		view["external_id"] = metadata["external_id"]
+	else:
+		view["external_id"] = helper.create_external_view_id(body, "repair_issue_submit")
+
+	metadata["external_id"] = view["external_id"]
+
+	view["private_metadata"] = json.dumps(metadata)
 	return view
-
-
-
 
 
 def initial_parts_search_box(body, external_id, initial: bool, remove=False):

@@ -7,9 +7,7 @@ from rq import Queue
 
 from application import BaseItem, zen_help, inventory, HardLog, CustomLogger, clients, couriers
 from application.monday.config import STANDARD_REPAIR_OPTIONS, REPAIR_COLOURS
-from worker import conn
-
-q_stock = Queue("stock", connection=conn)
+from worker import q_stock
 
 
 def collate_stuart_historical_data():

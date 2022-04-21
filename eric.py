@@ -1161,9 +1161,9 @@ def begin_specific_slack_repair(body, client, ack):
 	repair_phase += 1
 
 	q_lo.enqueue(
-		f=tasks.task_repair_event,
+		f=add_repair_event,
 		kwargs={
-			"main_item_or_id": main_item.moncli_obj,
+			"main_item_or_id": main_item.mon_id,
 			"event_name": f"Repair Phase {repair_phase}: Beginning",
 			"event_type": "Repair Phase Start",
 			"summary": f"Begin Repair Phase {repair_phase}",
@@ -1288,14 +1288,6 @@ def confirm_waste_quantities(body, client, ack):
 	})
 
 
-# view = views.waste_parts_quantity_input(body)
-#
-# client.views_update(
-# 	external_id=external_id,
-# 	view=view
-# )
-
-
 def finalise_repair_data_and_request_waste(body, client, ack):
 	metadata = s_help.get_metadata(body)
 
@@ -1371,25 +1363,40 @@ def handle_urgent_repair(body, client):
 	)
 
 
-def handle_other_repair_issue(body, client, ack):
-	ack()
+def handle_other_repair_issue(body, client, ack, initial=False):
+	meta = s_help.get_metadata(body)
+	external_id = meta["external_id"]
 
-	view = views.repair_issue_form(body)
+	if initial:
+		p("INITITLA =-=-=-=-==-=-=-=--=-=-=")
+		ack()
+		resp = client.views_open(
+			trigger_id=body['trigger_id'],
+			view=views.repair_issue_form(body, more_info=False)
+		)
+	else:
+		p("Not Initial -=-=-==-=-=-=-=-==-=-=-=-=-=")
+		ack()
 
-	resp = client.views_open(
-		trigger_id=body['trigger_id'],
-		view=view
-	)
+		resp = client.views_update(
+			external_id=external_id,
+			view=views.repair_issue_form(body, more_info=True)
+		)
 
 
-def process_repair_issue(body, client, ack):
+def process_repair_issue(body, client, ack, standard=False):
 	ack()
 	meta = s_help.get_metadata(body)
-	message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
+	if not standard:
+		message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
+	else:
+		message = body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"]["selected_option"]["text"]
+
 	q_hi.enqueue(
 		tasks.log_repair_issue,
 		args=(meta["main"], message)
 	)
+
 
 
 def cannot_complete_repair_no_parts(body, client):
