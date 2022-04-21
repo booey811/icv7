@@ -798,10 +798,13 @@ class ConnectBoardsValue(BaseColumnValue):
         return self._value
 
     @value.setter
-    def value(self, value: Union[str, int]):
+    def value(self, ids_to_add: list):
         """This column cannot be changed via the API"""
-
-        raise Exception('Not Yet Developed - ConnectBoardsValue.value.setter')
+        current = self._moncli_value.value
+        new = list(set(current + ids_to_add))
+        self._moncli_value.value = new
+        self._eric.moncli_obj.change_column_value(column_value=self._moncli_value)
+        return new
 
 
 class ReadOnlyColumn(BaseColumnValue):

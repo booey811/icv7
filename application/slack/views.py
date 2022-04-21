@@ -1141,7 +1141,6 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 	except UpdateComplete as e:
 		view["private_metadata"] = json.dumps(metadata)
-		p(view)
 		return view
 
 
@@ -1329,7 +1328,7 @@ def repair_phase_view(main_item, body):
 				"block_id": "repair_result_select",
 				"label": {
 					"type": "plain_text",
-					"text": "Are you moving on from this repair?",
+					"text": "Have you finished?",
 					"emoji": True
 				},
 				"element": {
@@ -1344,7 +1343,7 @@ def repair_phase_view(main_item, body):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "The device has been repaired!",
+								"text": ":ok_hand:  The repair has been completed",
 								"emoji": True
 							},
 							"value": "repaired"
@@ -1352,7 +1351,7 @@ def repair_phase_view(main_item, body):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I need more information",
+								"text": ":warning:  I can't complete this repair",
 								"emoji": True
 							},
 							"value": "client"
@@ -1360,23 +1359,7 @@ def repair_phase_view(main_item, body):
 						{
 							"text": {
 								"type": "plain_text",
-								"text": "I don't have the parts to complete the repair",
-								"emoji": True
-							},
-							"value": "parts"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": "A more urgent repair has been given to me",
-								"emoji": True
-							},
-							"value": "urgent"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": "I need help",
+								"text": ":wave:  I need help",
 								"emoji": True
 							},
 							"value": "other"
@@ -1387,6 +1370,50 @@ def repair_phase_view(main_item, body):
 		]
 	}
 	return basic
+
+
+def repair_issue_form(body):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"private_metadata": json.dumps(metadata),
+			"callback_id": "repair_issue_submit",
+			"title": {
+				"type": "plain_text",
+				"text": "Repair Issue Logger",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	metadata = helper.get_metadata(body)
+
+
+	view = get_base_modal()
+
+	add_multiline_text_input(
+		title="Please explain your issue",
+		placeholder="Does the client need a further repair? Is the passcode wrong?!",
+		block_id="text_issue",
+		action_id='text_issue_action',
+		blocks=view["blocks"]
+	)
+	return view
+
+
+
 
 
 def initial_parts_search_box(body, external_id, initial: bool, remove=False):
@@ -1763,7 +1790,7 @@ def display_variant_options(body, variant_dict, meta):
 	return view
 
 
-def repair_completion_confirmation(body, from_variants, from_waste, external_id='', meta=None):
+def repair_completion_confirmation_view(body, from_variants, from_waste, external_id='', meta=None):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
@@ -1798,7 +1825,6 @@ def repair_completion_confirmation(body, from_variants, from_waste, external_id=
 
 	if from_variants:
 		for repair_id in metadata["extra"]["selected_repairs"]:
-			p(f"PROCESSING REPAIR ID {repair_id}")
 			part_id = \
 				body["view"]["state"]["values"][f"variant_selection_{repair_id}"][
 					f"radio_variant_selection_{repair_id}"][
@@ -1811,7 +1837,6 @@ def repair_completion_confirmation(body, from_variants, from_waste, external_id=
 	add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
 	add_divider_block(view['blocks'])
 	add_header_block(view["blocks"], "To resolve these faults, you have used:")
-
 
 	text_and_values = [[item.name, item.name] for item in
 	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
@@ -1826,16 +1851,16 @@ def repair_completion_confirmation(body, from_variants, from_waste, external_id=
 
 	add_divider_block(view["blocks"])
 
-	text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
-	add_dropdown_ui_input(
-		title="Were any parts damaged during the repair?",
-		placeholder='Please choose a response',
-		options=text_and_values,
-		blocks=view['blocks'],
-		block_id='select_waste_opt_in',
-		optional=False,
-		action_id='select_waste_opt_in',
-	)
+	# text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
+	# add_dropdown_ui_input(
+	# 	title="Were any parts damaged during the repair?",
+	# 	placeholder='Please choose a response',
+	# 	options=text_and_values,
+	# 	blocks=view['blocks'],
+	# 	block_id='select_waste_opt_in',
+	# 	optional=False,
+	# 	action_id='select_waste_opt_in',
+	# )
 
 	add_divider_block(view["blocks"])
 
@@ -1847,8 +1872,6 @@ def repair_completion_confirmation(body, from_variants, from_waste, external_id=
 		action_id='text_final_repair_notes',
 		blocks=view['blocks']
 	)
-	p("Binding META =================================================")
-	p(metadata)
 	view["private_metadata"] = json.dumps(metadata)
 
 	return view
@@ -2024,24 +2047,45 @@ def user_search_request(body, zenpy_results=None, research=False):
 	add_divider_block(view['blocks'])
 	add_new_user_button(view["blocks"], no_users_found=no_user_found)
 
-	# metadata = helper.get_metadata(body)
-	# if not metadata["views"]["user_search"]:
-	# 	try:
-	# 		metadata["views"]["user_search"] = body["view"]["id"]
-	# 	except KeyError:
-	# 		print("Cannot Gt View ID from Response Body")
-	#
-	# view = add_base_modal()
-	# add_search_input(view['blocks'])
-	#
-	# if initial:
-	# 	pass
-	# else:
-	# 	if failed_addition:
-	# 		add_failed_user_addition(view['blocks'])
-	# 	add_results_block(view['blocks'], zenpy_search_object=zenpy_results)
-	# 	add_divider_block(view['blocks'])
+	return view
 
+
+def capture_waste_request(body):
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"callback_id": "waste_opt_in",
+			"private_metadata": json.dumps(helper.get_metadata(body)),
+			"title": {
+				"type": "plain_text",
+				"text": "My App",
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	view = get_base_modal()
+	options = [["No Parts To Waste", "no_waste"], ["I've Damaged Stock", "waste"]]
+	add_dropdown_ui_input(
+		title="Do You Need to Record Waste?",
+		placeholder="It's OK if you do!",
+		options=options,
+		blocks=view["blocks"],
+		block_id="waste_opt_in",
+		optional=False,
+		action_id="waste_opt_in_action"
+	)
 	return view
 
 
@@ -2154,10 +2198,9 @@ def select_waste_variants(body):
 		if len(product.part_ids) > 1:
 			validations.append(product)
 		elif len(product.part_ids) == 1:
-			p(metadata)
 			add_context_block(view["blocks"], product.display_name)
 			metadata['extra']['parts_to_waste'][str(product.part_ids[0])] = \
-			clients.monday.system.get_items('name', ids=product.part_ids)[0].name
+				clients.monday.system.get_items('name', ids=product.part_ids)[0].name
 		else:
 			raise Exception(f"{product.info['display_name']} does not have any Parts associated with it")
 
@@ -2227,6 +2270,8 @@ def waste_parts_quantity_input(body):
 			blocks=view["blocks"],
 			optional=False
 		)
+
+	view["private_metadata"] = json.dumps(metadata)
 
 	return view
 
