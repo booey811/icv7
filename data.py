@@ -738,8 +738,6 @@ class RepairOptionsObject:
 
 _PRODUCT_BOARD = clients.monday.system.get_boards(
 	'id',
-	'groups.[id, title, items]',
-	'groups.items.[id, name]',
 	ids=[2477699024])[0]
 
 MAIN_DEVICE = TwoWayDict(_MAIN_DEVICE)
