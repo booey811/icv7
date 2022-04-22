@@ -1156,9 +1156,16 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 			ids=[main_group_id]
 		)[0].items[0])
 
+	if not next_repair.device.ids:
+		view = views.error(
+			f"{next_repair.name}[{next_repair.mon_id}] Has No Device Assigned To It - Please let Gabe Know and Try Again"
+		)
+	else:
+		views.pre_repair_info(next_repair, body)
+
 	client.views_update(
 		external_id=external_id,
-		view=views.pre_repair_info(next_repair, body)
+		view=view
 	)
 
 
