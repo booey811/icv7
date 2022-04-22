@@ -1253,6 +1253,7 @@ def repair_phase_view(main_item, body):
 		"type": "modal",
 		"callback_id": "repair_phase_ended",
 		"private_metadata": json.dumps(metadata),
+		"notify_on_close": True,
 		"title": {
 			"type": "plain_text",
 			"text": "Repairing",
@@ -1378,6 +1379,7 @@ def repair_issue_form(body, more_info=False):
 		basic = {
 			"type": "modal",
 			"callback_id": "repair_issue_submit",
+			"notify_on_close": True,
 			"title": {
 				"type": "plain_text",
 				"text": "Repair Issue Logger",
@@ -1445,6 +1447,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 			'type': "modal",
 			"callback_id": "repairs_parts_submission",
 			"external_id": external_id,
+			"notify_on_close": True,
 			"title": {
 				"type": "plain_text",
 				"text": "Parts Selection",
@@ -1496,13 +1499,6 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 		metadata["external_id"] = external_id
 	data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
 	metadata['device']['eric_id'] = data_repairs_id
-
-	# repairs = clients.monday.system.get_boards(
-	# 	'id',
-	# 	'groups.items.[name, id]',
-	# 	ids=[2477699024],  # Products & Pricing Board ID
-	# 	groups={"ids": [group_id]}
-	# )[0].groups[0].items
 
 	device_repairs = getattr(data.repairs, data_repairs_id)
 
@@ -1779,6 +1775,7 @@ def display_variant_options(body, variant_dict, meta):
 			"type": "modal",
 			"callback_id": "variant_selection_submission",
 			"private_metadata": json.dumps(metadata),
+			"notify_on_close": True,
 			"title": {
 				"type": "plain_text",
 				"text": "Variation Selection",
@@ -1820,6 +1817,7 @@ def repair_completion_confirmation_view(body, from_variants, from_waste, externa
 	def get_base_modal():
 		basic = {
 			"type": "modal",
+			"notify_on_close": True,
 			"callback_id": "repair_completion_confirmation",
 			"title": {
 				"type": "plain_text",
@@ -2081,6 +2079,7 @@ def capture_waste_request(body):
 		basic = {
 			"type": "modal",
 			"callback_id": "waste_opt_in",
+			"notify_on_close": True,
 			"private_metadata": json.dumps(helper.get_metadata(body)),
 			"title": {
 				"type": "plain_text",
@@ -2121,6 +2120,7 @@ def register_wasted_parts(body, initial, remove, external_id):
 			"type": "modal",
 			"external_id": external_id,
 			"callback_id": "waste_parts_submission",
+			"notify_on_close": True,
 			"private_metadata": json.dumps(metadata),
 			"title": {
 				"type": "plain_text",
@@ -2191,6 +2191,7 @@ def select_waste_variants(body):
 		basic = {
 			"type": "modal",
 			"callback_id": "waste_validation_submission",
+			"notify_on_close": True,
 			"title": {
 				"type": "plain_text",
 				"text": "Confirming Wasted Items",
@@ -2262,6 +2263,7 @@ def waste_parts_quantity_input(body):
 		basic = {
 			"type": "modal",
 			"callback_id": "waste_quantity_submission",
+			"notify_on_close": True,
 			"title": {
 				"type": "plain_text",
 				"text": "Waste Quantities",

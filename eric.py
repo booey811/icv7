@@ -19,7 +19,7 @@ from application import BaseItem, clients, phonecheck, inventory, CannotFindRepo
 import tasks
 from utils.tools import refurbs
 from application.monday import config as mon_config
-from worker import q_hi, q_lo
+from worker import q_hi, q_lo, q_def
 
 logger = logging.getLogger()
 
@@ -1196,6 +1196,17 @@ def begin_specific_slack_repair(body, client, ack):
 			"actions_status": "No Actions Required"
 		}
 	)
+
+
+def abort_repair_phase(body):
+	meta = s_help.get_metadata(body)
+
+	# q_def.enqueue(
+	# 	add_repair_event,
+	# 	(
+	#
+	# 	)
+	# )
 
 
 def add_parts_to_repair(body, client, initial, ack, remove=False):
