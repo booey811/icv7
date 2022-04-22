@@ -1200,7 +1200,6 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	)
 
 
-
 def show_variant_selections(body, client, ack):
 	external_id = s_help.create_external_view_id(body, "parts_confirmations")
 

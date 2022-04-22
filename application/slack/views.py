@@ -2143,14 +2143,20 @@ def register_wasted_parts(body, initial, remove, external_id):
 
 	metadata = helper.get_metadata(body)
 	metadata["external_id"] = external_id
+
+	device_repairs_obj = getattr(data.repairs, metadata["device"]["eric_id"])
+	repairs_info = device_repairs_obj.get_slack_repair_options_data()
+
 	if not initial:
 		selected_id = body["actions"][0]["value"]
-		selected_name = clients.monday.system.get_items('name', ids=[selected_id])[0].name
+		selected_name = device_repairs_obj.get_product_repair_by_id(selected_id).display_name
 		if remove:
 			del metadata['extra']['products_to_waste'][selected_id]
 		else:
 			metadata["extra"]["products_to_waste"][selected_id] = selected_name
+
 	view = add_base_modal()
+
 	if metadata["extra"]["products_to_waste"]:
 		add_header_block(view["blocks"], "To Be Wasted")
 		for repair in metadata["extra"]["products_to_waste"]:
@@ -2165,14 +2171,13 @@ def register_wasted_parts(body, initial, remove, external_id):
 
 	add_header_block(view["blocks"], "Add Parts To Waste Record")
 
-	repairs = data.get_product_repairs(metadata["device"]["model"]).items
-	for repair in repairs:
-		if repair.id not in metadata["extra"]["products_to_waste"]:
+	for repair in repairs_info:
+		if repair['mon_id'] not in metadata["extra"]["products_to_waste"]:
 			add_button_section(
-				title=repair.name,
+				title=repair["name"],
 				button_text="Add to Waste",
-				button_value=repair.id,
-				block_id=f"button_waste_select_{repair.id}",
+				button_value=repair["mon_id"],
+				block_id=f"button_waste_select_{repair['mon_id']}",
 				action_id="button_waste_selection",
 				blocks=view["blocks"]
 			)
