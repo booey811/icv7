@@ -1245,7 +1245,8 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	# push loading view (first boot for this process is slow)
 
 	loading_view = views.loading(
-		"Getting Repairs Options (This Can Take Quite a While the First Time You Do It)",
+		"Getting Repair Options (This Can Take Quite a While the First Time You Do It After An Update (30-40 seconds "
+		"for iPhones))",
 		external_id=external_id,
 		metadata=metadata
 	)
@@ -1299,6 +1300,8 @@ def show_variant_selections(body, client, ack):
 		view = views.display_variant_options(body, variants, meta)
 	else:
 		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta)
+
+	p(view)
 
 	resp = client.views_update(
 		external_id=external_id,
