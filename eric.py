@@ -158,6 +158,7 @@ def handle_repair_events(webhook, logger, test=None):
 
 	eric_event.actions_status.value = 'Processing'
 	eric_event.commit()
+	return True
 
 
 @log_catcher_decor
@@ -1212,7 +1213,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	)
 
 	ack({
-		"response_action": "update",
+		"response_action": "push",
 		"view": loading_view
 	})
 
