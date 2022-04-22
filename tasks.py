@@ -7,6 +7,7 @@ def log_repair_issue(main_item_id, message):
 	item.add_update(message_fr)
 	item.moncli_obj.move_to_group("new_group6580")
 	item.repair_status.label = "Client Contact"
+	item.repair_phase.value = int(item.repair_phase.value) + 1
 	item.commit()
 	add_repair_event(
 		item.mon_id,
