@@ -360,7 +360,15 @@ def _add_routing(app):
 		@app.view("waste_opt_in")
 		def validate_wasted_parts(ack, body, logger, client):
 			logger.info("Validating Wasted Repair Info")
-			eric.process_waste_entry(ack, body, client, initial=True)
+
+			selected = body["view"]["state"]["values"]["waste_opt_in"]["waste_opt_in_action"]["selected_option"]["value"]
+
+			if selected == "waste":
+				eric.process_waste_entry(ack, body, client, initial=True)
+			elif selected == "no_waste":
+				ack({"response_action": "clear"})
+			else:
+				raise Exception(f"slack waste_opt_in received unknown response selection: {selected}")
 
 		@app.view("waste_parts_submission")
 		def validate_wasted_parts(ack, body, logger, client):
