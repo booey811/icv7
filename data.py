@@ -1,3 +1,5 @@
+import os
+
 from application import clients
 
 _MAIN_REPAIRS = {
@@ -622,10 +624,10 @@ class TwoWayDict(dict):
 
 
 class RepairsObject:
-	def __init__(self, repair_item, eric_id):
+	def __init__(self, repair_item, repair_obj_id):
 
 		self.item = repair_item
-		self.eric_id = eric_id
+		self.repair_obj_id = repair_obj_id
 		self.display_name = repair_item.name
 		self.mon_id = repair_item.id
 		self._part_ids = []
@@ -674,16 +676,23 @@ class DeviceRepairsObject:
 		self._repairs = []
 
 		for repair in self.info['group'].items:
-			eric_id = repair.name.replace(device_group.title, '').strip().replace(' ', '_').lower()
-			setattr(self, eric_id, RepairsObject(repair, eric_id))
-			self._repairs.append(getattr(self, eric_id))
+			device_repairs_obj_id = repair.name.replace(device_group.title, '').strip().replace(' ', '_').lower()
+			setattr(self, device_repairs_obj_id, RepairsObject(repair, device_repairs_obj_id))
+			self._repairs.append(getattr(self, device_repairs_obj_id))
+
+		if os.environ["ENV"] != "devlocal":
+			get_device_type_data_for_slack()
 
 	def get_slack_repair_options_data(self):
 		data = []
 		for repair in self._repairs:
-			name = repair.display_name
-			eric_id = repair.eric_id
-			data.append([name, eric_id])
+			data.append({
+				"name": repair.display_name,
+				"repair_obj_id": repair.repair_obj_id,
+				"mon_id": repair.mon_id,
+				"part_ids":  repair.part_ids,
+				"item": repair.item
+			})
 		return data
 
 	def get_product_repair_by_id(self, monday_id):
@@ -722,9 +731,9 @@ class RepairOptionsObject:
 
 				group.archive('id')
 
-			group_eric_id = group.title.replace(' ', '_').lower()
+			repair_obj_id = group.title.replace(' ', '_').lower()
 
-			setattr(self, group_eric_id, DeviceRepairsObject(group, group_eric_id))
+			setattr(self, repair_obj_id, DeviceRepairsObject(group, repair_obj_id))
 
 
 _PRODUCT_BOARD = clients.monday.system.get_boards(

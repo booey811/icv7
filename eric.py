@@ -1179,19 +1179,26 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 	if not external_id:
 		external_id = s_help.create_external_view_id(body, "repairs_parts_select")
 
+	# push loading view (first boot for this process is slow)
+
+	loading_view = views.loading(
+		"Getting Repairs Options (This Can Take Quite a While the First Time You Do It)",
+		external_id=external_id,
+		metadata=metadata
+	)
+
+	ack({
+		"response_action": "update",
+		"view": loading_view
+	})
+
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
-	if initial:
-		ack()
-		client.views_open(
-			trigger_id=body["trigger_id"],
-			view=view
-		)
-	else:
-		resp = client.views_update(
-			external_id=external_id,
-			view=view
-		)
+	resp = client.views_update(
+		external_id=external_id,
+		view=view
+	)
+
 
 
 def show_variant_selections(body, client, ack):

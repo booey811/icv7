@@ -657,10 +657,10 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 				options.append({
 					"text": {
 						"type": "plain_text",
-						"text": repair[0],
+						"text": repair["name"],
 						"emoji": True
 					},
-					"value": repair[1]
+					"value": repair["repair_obj_id"]
 				})
 			return options
 
@@ -1464,28 +1464,27 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 		}
 		return search
 
-	def add_selected_parts_block(repair_name, item_id, blocks):
+	def add_selected_parts_block(repair_data, blocks):
 
 		add_button_section(
-			title=repair_name,
+			title=repair_data["name"],
 			button_text="Remove Part",
-			button_value=repair.id,
-			block_id=f"repairs_parts_remove_{item_id}",
+			button_value=repair_data["mon_id"],
+			block_id=f"repairs_parts_remove_{repair_data['mon_id']}",
 			action_id="repairs_parts_remove",
 			blocks=blocks
 		)
 
-	def add_parts_list(repairs_list, blocks):
-
-		for repair_info in repairs_list:
-			if repair_info.id in metadata["extra"]["selected_repairs"]:
+	def add_parts_list(repairs_data, blocks):
+		for repair in repairs_data:
+			if repair["mon_id"] in metadata["extra"]["selected_repairs"]:
 				continue
-			part_name = repair_info.name.replace(metadata["device"]["model"], "")
+			part_name = repair["name"].replace(metadata["device"]["model"], "")
 			add_button_section(
 				title=part_name,
 				button_text="Add Part",
-				button_value=repair_info.id,
-				block_id=f"repairs_parts_select_{repair_info.id}",
+				button_value=repair["mon_id"],
+				block_id=f"repairs_parts_select_{repair['mon_id']}",
 				action_id='repairs_parts_select',
 				blocks=blocks
 			)
@@ -1495,14 +1494,17 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 	metadata = helper.get_metadata(body)
 	if not metadata["external_id"]:
 		metadata["external_id"] = external_id
-	group_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
-	metadata['device']['eric_id'] = group_id
-	repairs = clients.monday.system.get_boards(
-		'id',
-		'groups.items.[name, id]',
-		ids=[2477699024],  # Products & Pricing Board ID
-		groups={"ids": [group_id]}
-	)[0].groups[0].items
+	data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
+	metadata['device']['eric_id'] = data_repairs_id
+
+	# repairs = clients.monday.system.get_boards(
+	# 	'id',
+	# 	'groups.items.[name, id]',
+	# 	ids=[2477699024],  # Products & Pricing Board ID
+	# 	groups={"ids": [group_id]}
+	# )[0].groups[0].items
+
+	device_repairs = getattr(data.repairs, data_repairs_id)
 
 	if not initial:
 		selected_repair_id = body['actions'][0]["value"]
@@ -1515,16 +1517,17 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 
 	view = get_base_modal()
 	if metadata["extra"]["selected_repairs"]:
+
 		add_header_block(view["blocks"], "Selected Parts")
 		for repair_id in metadata["extra"]["selected_repairs"]:
-			for repair in repairs:
-				if str(repair_id) == str(repair.id):
-					name = repair.name.replace(metadata["device"]["model"], "")
-					add_selected_parts_block(name, repair.id, view["blocks"])
+			for repair_info in device_repairs.get_slack_repair_options_data():
+				if str(repair_id) == repair_info["mon_id"]:
+					name = repair_info["name"].replace(metadata["device"]["model"], "")
+					add_selected_parts_block(repair_info, view["blocks"])
 		add_divider_block(view["blocks"])
 
 	add_header_block(view["blocks"], "Add Parts to Repair")
-	add_parts_list(repairs, view["blocks"])
+	add_parts_list(device_repairs.get_slack_repair_options_data(), view["blocks"])
 
 	view["private_metadata"] = json.dumps(metadata)
 
