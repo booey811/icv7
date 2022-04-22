@@ -127,6 +127,30 @@ def handle_repair_events(webhook, logger, test=None):
 			retry=rq.Retry(max=5, interval=20)
 		)
 
+	elif event_type == "Repair Issue":
+		main_item = BaseItem(eric_event.logger, eric_event.parent_id.value)
+		main_item.moncli_obj.move_to_group("new_group6580")
+		main_item.repair_status.label = "Client Contact"
+		q_lo.enqueue(
+			utils.tools.adjust_columns_through_rq,
+			kwargs={
+				"item_id": str(eric_event.mon_id),
+				"attributes_and_values": [
+					["actions_status", "Complete"],
+				]
+			},
+			retry=rq.Retry(max=5, interval=20)
+		)
+		q_lo.enqueue(
+			utils.tools.adjust_columns_through_rq,
+			kwargs={
+				"item_id": main_item.mon_id,
+				"attributes_and_values": [
+					["repair_status", "Client Contact"]
+				]
+			}
+		)
+
 	else:
 		eric_event.actions_status.value = "Error"
 		eric_event.commit()
