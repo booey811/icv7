@@ -1202,13 +1202,21 @@ def begin_specific_slack_repair(body, client, ack):
 
 def abort_repair_phase(body):
 	meta = s_help.get_metadata(body)
-
-	# q_def.enqueue(
-	# 	add_repair_event,
-	# 	(
-	#
-	# 	)
-	# )
+	q_def.enqueue(
+		add_repair_event,
+		kwargs={
+			"main_item_or_id": meta["main"],
+			"timestamp": get_timestamp(),
+			"event_name": "Repair Phase Aborted",
+			"event_type": "Aborted Process",
+			"summary": "User Exited the Repair Process",
+			"actions_status": "No Actions Required"
+		}
+	)
+	q_def.enqueue(
+		tasks.process_repair_phase_completion,
+		args=([], meta["main"], get_timestamp())
+	)
 
 
 def add_parts_to_repair(body, client, initial, ack, remove=False):
@@ -1346,7 +1354,7 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 
 	q_hi.enqueue(
 		tasks.process_repair_phase_completion,
-		args=(metadata["parts"], metadata["main"])
+		args=(metadata["parts"], metadata["main"], get_timestamp())
 	)
 
 

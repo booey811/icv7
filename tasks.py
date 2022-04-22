@@ -28,8 +28,11 @@ def log_repair_issue(main_item_id, message):
 	)
 
 
-def process_repair_phase_completion(part_ids, main_id):
-	parts = clients.monday.system.get_items('name', ids=part_ids)
+def process_repair_phase_completion(part_ids, main_id, timestamp):
+	if part_ids:
+		parts = clients.monday.system.get_items('name', ids=part_ids)
+	else:
+		parts = []
 	main = clients.monday.system.get_items(ids=[main_id])[0]
 	repair_phase_col = main.get_column_value('numbers5')
 
@@ -44,7 +47,7 @@ def process_repair_phase_completion(part_ids, main_id):
 		main_item_or_id=main,
 		event_name=f"Repair Phase {repair_phase}: Ending",
 		event_type="Repair Phase End",
-		timestamp=get_timestamp(),
+		timestamp=timestamp,
 		summary=f"Ending Repair Phase {repair_phase}",
 		actions_dict=f"repair_phase_{repair_phase}",
 		actions_status="No Actions Required"
@@ -65,7 +68,7 @@ def process_repair_phase_completion(part_ids, main_id):
 			main_item_or_id=main,
 			event_name=f"Consume: {part.name}",
 			event_type='Parts Consumption',
-			timestamp=get_timestamp(),
+			timestamp=timestamp,
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
