@@ -1372,22 +1372,29 @@ def handle_urgent_repair(body, client):
 def handle_other_repair_issue(body, client, ack, initial=False):
 	meta = s_help.get_metadata(body)
 	external_id = meta["external_id"]
+	if not external_id:
+		external_id = s_help.create_external_view_id(body, "handle_repair_issue")
+
+	loading_view = views.loading(
+		"This Screen Is Just For Improving Stability :)",
+		external_id=external_id,
+		metadata=meta
+	)
+
+	ack({
+		"response_action": "push",
+		"view": loading_view
+	})
 
 	if initial:
-		p("INITITLA =-=-=-=-==-=-=-=--=-=-=")
-		ack()
-		resp = client.views_open(
-			trigger_id=body['trigger_id'],
-			view=views.repair_issue_form(body, more_info=False)
-		)
+		more_info = False
 	else:
-		p("Not Initial -=-=-==-=-=-=-=-==-=-=-=-=-=")
-		ack()
+		more_info = True
 
-		resp = client.views_update(
-			external_id=external_id,
-			view=views.repair_issue_form(body, more_info=True)
-		)
+	resp = client.views_update(
+		external_id=external_id,
+		view=views.repair_issue_form(body, more_info=more_info)
+	)
 
 
 def process_repair_issue(body, client, ack, standard=False):

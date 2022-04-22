@@ -165,7 +165,6 @@ def _add_routing(app):
 		# Repair Issue Submit Routes
 		@app.action("dropdown_repair_issue_selector_action")
 		def handle_repair_issue_selection(ack, body, logger, client):
-			ack()
 			p(body)
 
 			selected = body["actions"][0]["selected_option"]["value"]
