@@ -1364,14 +1364,9 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 
 	ack({"response_action": "update", "view": view})
 
-	# client.views_open(
-	# 	trigger_id=body["trigger_id"],
-	# 	view=view
-	# )
-
 	q_hi.enqueue(
 		tasks.process_repair_phase_completion,
-		args=(metadata["parts"], metadata["main"], get_timestamp())
+		args=(metadata["parts"], metadata["main"], get_timestamp(), True)
 	)
 
 
@@ -1544,7 +1539,7 @@ def emit_waste_events(body, client, ack):
 							}
 						}
 					)
-			ack()
+			ack({"response_action": "clear"})
 
 
 def test_user_init(body, client):

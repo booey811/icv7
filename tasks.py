@@ -28,16 +28,15 @@ def log_repair_issue(main_item_id, message):
 	)
 
 
-def process_repair_phase_completion(part_ids, main_id, timestamp):
+def process_repair_phase_completion(part_ids, main_id, timestamp, repaired=False):
 	if part_ids:
 		parts = clients.monday.system.get_items('name', ids=part_ids)
 	else:
 		parts = []
-	main = clients.monday.system.get_items(ids=[main_id])[0]
-	repair_phase_col = main.get_column_value('numbers5')
+	main = BaseItem(CustomLogger(), main_id)
 
 	try:
-		repair_phase = int(repair_phase_col.value)
+		repair_phase = int(main.repair_phase.value)
 	except TypeError:
 		repair_phase = 0
 
@@ -53,8 +52,7 @@ def process_repair_phase_completion(part_ids, main_id, timestamp):
 		actions_status="No Actions Required"
 	)
 
-	repair_phase_col.value = repair_phase
-	main.change_column_value(column_value=repair_phase_col)
+	main.repair_phase.value = repair_phase
 
 	for part in parts:
 		try:
@@ -72,6 +70,12 @@ def process_repair_phase_completion(part_ids, main_id, timestamp):
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
+
+	if repaired:
+		main.repairs.value = []
+		main.repair_status.label = "Repaired"
+
+	main.commit()
 
 
 def task_repair_event(main_id, event_name, event_type, timestamp, summary, actions_dict=None, actions_status='Not Done'):
