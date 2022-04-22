@@ -1369,27 +1369,25 @@ def handle_urgent_repair(body, client):
 	)
 
 
-def handle_other_repair_issue(body, client, ack, initial=False):
+def handle_other_repair_issue(body, client, ack, initial=False, more_info=False):
 	meta = s_help.get_metadata(body)
 	external_id = meta["external_id"]
 	if not external_id:
 		external_id = s_help.create_external_view_id(body, "handle_repair_issue")
 
-	loading_view = views.loading(
-		"This Screen Is Just For Improving Stability :)",
-		external_id=external_id,
-		metadata=meta
-	)
-
-	ack({
-		"response_action": "push",
-		"view": loading_view
-	})
-
 	if initial:
-		more_info = False
+		loading_view = views.loading(
+			"This Screen Is Just For Improving Stability :)",
+			external_id=external_id,
+			metadata=meta
+		)
+
+		ack({
+			"response_action": "push",
+			"view": loading_view
+		})
 	else:
-		more_info = True
+		ack()
 
 	resp = client.views_update(
 		external_id=external_id,
@@ -1398,12 +1396,12 @@ def handle_other_repair_issue(body, client, ack, initial=False):
 
 
 def process_repair_issue(body, client, ack, standard=False):
-	ack()
 	meta = s_help.get_metadata(body)
+	p(body)
 	if not standard:
 		message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
 	else:
-		message = body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"]["selected_option"]["text"]
+		message = body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"]["selected_option"]["text"]["text"]
 
 	q_hi.enqueue(
 		tasks.log_repair_issue,

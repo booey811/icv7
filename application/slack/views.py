@@ -1403,8 +1403,8 @@ def repair_issue_form(body, more_info=False):
 
 	options = [
 		["Device Needs To Be Charged", 'charge'],
-		["I Don't Have The Required Parts", "parts"],
-		["I Don't Have The Correct Passcode", "passcode"],
+		["I Do Not Have The Required Parts", "parts"],
+		["I Do Not Have The Correct Passcode", "passcode"],
 		["Other", "other"]
 	]
 

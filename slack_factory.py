@@ -165,14 +165,12 @@ def _add_routing(app):
 		# Repair Issue Submit Routes
 		@app.action("dropdown_repair_issue_selector_action")
 		def handle_repair_issue_selection(ack, body, logger, client):
-			p(body)
-
 			selected = body["actions"][0]["selected_option"]["value"]
 
 			if selected in ["charge", "parts", "passcode"]:
-				eric.process_repair_issue(body, client, ack, standard=selected)
+				eric.handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 			elif selected == "other":
-				eric.handle_other_repair_issue(body, client, ack, initial=False)
+				eric.handle_other_repair_issue(body, client, ack, initial=False, more_info=True)
 			else:
 				raise Exception(
 					f"Slack dropdown_repair_issue_selector_action listener got unepexpected selected value: {selected}"
@@ -328,16 +326,17 @@ def _add_routing(app):
 			if selected == 'repaired':
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
-				eric.handle_other_repair_issue(body, client, ack, initial=True)
+				eric.handle_other_repair_issue(body, client, ack, initial=True, more_info=False)
 			elif selected == 'other':
-				eric.handle_other_repair_issue(body, client, ack, initial=True)
+				eric.handle_other_repair_issue(body, client, ack, initial=True, more_info=False)
 			else:
 				raise Exception(f"Unexpected Value from Static Select Actions End Repair Phase: {selected}")
 
 		@app.view("repair_issue_submit")
 		def process_repair_issue(body, client, ack, logger):
 			logger.info("Logging Repair Issue")
-			eric.process_repair_issue(body, client, ack)
+			selected = body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"]["selected_option"]["value"]
+			eric.process_repair_issue(body, client, ack, standard=selected)
 
 		@app.view("repairs_parts_submission")
 		def validate_submitted_parts_selection(ack, body, logger, client):
