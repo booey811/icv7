@@ -1858,7 +1858,10 @@ def repair_completion_confirmation_view(body, from_variants, from_waste, externa
 
 	view = get_base_modal()
 	add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
-	add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
+	if not metadata["extra"]["client_repairs"]:
+		add_context_block(view["blocks"], "No repairs explicitly requested")
+	else:
+		add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
 	add_divider_block(view['blocks'])
 	add_header_block(view["blocks"], "To resolve these faults, you have used:")
 

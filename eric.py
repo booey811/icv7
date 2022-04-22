@@ -1301,6 +1301,8 @@ def show_variant_selections(body, client, ack):
 	else:
 		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta)
 
+	p(view)
+
 	resp = client.views_update(
 		external_id=external_id,
 		view=view
