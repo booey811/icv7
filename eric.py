@@ -1398,7 +1398,6 @@ def process_repair_issue(body, client, ack, standard=False):
 	)
 
 
-
 def cannot_complete_repair_no_parts(body, client):
 	resp = client.views_push(
 		trigger_id=body['trigger_id'],

@@ -1500,7 +1500,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 	repairs = clients.monday.system.get_boards(
 		'id',
 		'groups.items.[name, id]',
-		ids=[2477699024],
+		ids=[2477699024],  # Products & Pricing Board ID
 		groups={"ids": [group_id]}
 	)[0].groups[0].items
 
