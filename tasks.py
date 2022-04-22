@@ -1,4 +1,4 @@
-from application import BaseItem, CustomLogger, add_repair_event, clients
+from application import BaseItem, CustomLogger, add_repair_event, clients, get_timestamp
 
 
 def log_repair_issue(main_item_id, message):
@@ -11,6 +11,7 @@ def log_repair_issue(main_item_id, message):
 		item.mon_id,
 		"Repair Issue Data",
 		"Repair Issue",
+		get_timestamp(),
 		summary=message,
 		actions_dict={
 			"move_item": "client_services",
@@ -21,6 +22,7 @@ def log_repair_issue(main_item_id, message):
 		item.mon_id,
 		f"Repair Phase {int(item.repair_phase.value)}: Ending",
 		"Repair Phase End",
+		get_timestamp(),
 		f"Ending Repair Phase {int(item.repair_phase.value)}",
 		actions_status="No Actions Required"
 	)
@@ -42,6 +44,7 @@ def process_repair_phase_completion(part_ids, main_id):
 		main_item_or_id=main,
 		event_name=f"Repair Phase {repair_phase}: Ending",
 		event_type="Repair Phase End",
+		timestamp=get_timestamp(),
 		summary=f"Ending Repair Phase {repair_phase}",
 		actions_dict=f"repair_phase_{repair_phase}",
 		actions_status="No Actions Required"
@@ -62,18 +65,20 @@ def process_repair_phase_completion(part_ids, main_id):
 			main_item_or_id=main,
 			event_name=f"Consume: {part.name}",
 			event_type='Parts Consumption',
+			timestamp=get_timestamp(),
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
 
 
-def task_repair_event(main_id, event_name, event_type, summary, actions_dict=None, actions_status='Not Done'):
+def task_repair_event(main_id, event_name, event_type, timestamp, summary, actions_dict=None, actions_status='Not Done'):
 	if actions_dict is None:
 		actions_dict = {}
 	add_repair_event(
 		main_id,
 		event_name,
 		event_type,
+		timestamp,
 		summary,
 		actions_dict,
 		actions_status

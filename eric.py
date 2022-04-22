@@ -15,7 +15,7 @@ from moncli.api_v2.exceptions import MondayApiError
 import data
 import utils.tools
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event
+	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event, get_timestamp
 import tasks
 from utils.tools import refurbs
 from application.monday import config as mon_config
@@ -1123,6 +1123,7 @@ def process_walkin_submission(body, client, ack):
 
 	add_repair_event(
 		main_item_or_id=main.moncli_obj,
+		timestamp=get_timestamp(),
 		event_name="Received Device",
 		event_type="Device Received",
 		summary=f"Device Received\n\n{intake_notes}",
@@ -1189,6 +1190,7 @@ def begin_specific_slack_repair(body, client, ack):
 		f=add_repair_event,
 		kwargs={
 			"main_item_or_id": main_item.mon_id,
+			"timestamp": get_timestamp(),
 			"event_name": f"Repair Phase {repair_phase}: Beginning",
 			"event_type": "Repair Phase Start",
 			"summary": f"Begin Repair Phase {repair_phase}",
@@ -1508,6 +1510,7 @@ def emit_waste_events(body, client, ack):
 						f=add_repair_event,
 						kwargs={
 							"main_item_or_id": meta["main"],
+							"timestamp": get_timestamp(),
 							"event_name": f"Waste: {info[part_id]}",
 							"event_type": "Waste Record",
 							"summary": f"Wasting {quantity}  x  {info[part_id]}",

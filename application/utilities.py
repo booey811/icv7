@@ -8,8 +8,12 @@ from zenpy import Zenpy
 import settings
 
 
-def add_repair_event(main_item_or_id, event_name, event_type, summary='', actions_dict=(), actions_status='Not Done'):
+def get_timestamp():
+	return datetime.now(timezone.utc).strftime("%Y-%m-%d %X")
 
+
+def add_repair_event(main_item_or_id, event_name, event_type, timestamp, summary='', actions_dict=(),
+                     actions_status='Not Done'):
 	if type(main_item_or_id) in (str, int):
 		main_item = clients.monday.system.get_items(ids=[main_item_or_id])[0]
 	elif type(main_item_or_id) is Item:
@@ -32,12 +36,10 @@ def add_repair_event(main_item_or_id, event_name, event_type, summary='', action
 	if not event_type:
 		event_type = "Not Assigned"
 
-	timestamp_val = datetime.now(timezone.utc).strftime("%Y-%m-%d %X")
-
 	main_item.create_subitem(
 		item_name=event_name,
 		column_values={
-			"date": timestamp_val,
+			"date": timestamp,
 			"status1": {"label": str(event_type)},
 			"long_text": summary,
 			"long_text2": actions_dict,
