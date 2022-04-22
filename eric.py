@@ -88,10 +88,10 @@ def handle_repair_events(webhook, logger, test=None):
 			time.sleep(0.5)
 
 		job_2 = q_lo.enqueue(
-			utils.tools.adjust_columns_through_rq,
+			tasks.rq_item_adjustment,
 			kwargs={
 				"item_id": str(eric_event.mon_id),
-				"attributes_and_values": [
+				"columns": [
 					["actions_status", "Complete"],
 					["related_items", [job.result, actions['inventory.adjust_stock_level']]]
 				]
@@ -115,10 +115,10 @@ def handle_repair_events(webhook, logger, test=None):
 			time.sleep(0.5)
 
 		job_2 = q_lo.enqueue(
-			utils.tools.adjust_columns_through_rq,
+			tasks.rq_item_adjustment,
 			kwargs={
 				"item_id": str(eric_event.mon_id),
-				"attributes_and_values": [
+				"columns": [
 					["actions_status", "Complete"],
 					["related_items", [job.result, actions['inventory.adjust_stock_level'][0]]]
 				]
@@ -132,20 +132,20 @@ def handle_repair_events(webhook, logger, test=None):
 		main_item.moncli_obj.move_to_group("new_group6580")
 		main_item.repair_status.label = "Client Contact"
 		q_lo.enqueue(
-			utils.tools.adjust_columns_through_rq,
+			tasks.rq_item_adjustment,
 			kwargs={
 				"item_id": str(eric_event.mon_id),
-				"attributes_and_values": [
+				"columns": [
 					["actions_status", "Complete"],
 				]
 			},
 			retry=rq.Retry(max=5, interval=20)
 		)
 		q_lo.enqueue(
-			utils.tools.adjust_columns_through_rq,
+			tasks.rq_item_adjustment,
 			kwargs={
 				"item_id": main_item.mon_id,
-				"attributes_and_values": [
+				"columns": [
 					["repair_status", "Client Contact"]
 				]
 			}
@@ -1161,7 +1161,7 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 			f"{next_repair.name}[{next_repair.mon_id}] Has No Device Assigned To It - Please let Gabe Know and Try Again"
 		)
 	else:
-		views.pre_repair_info(next_repair, body)
+		view = views.pre_repair_info(next_repair, body)
 
 	client.views_update(
 		external_id=external_id,
@@ -1192,6 +1192,16 @@ def begin_specific_slack_repair(body, client, ack):
 	except TypeError:
 		repair_phase = 0
 	repair_phase += 1
+
+	q_hi.enqueue(
+		tasks.rq_item_adjustment,
+		kwargs={
+			"item_id": main_item.mon_id,
+			"columns": [
+				["repair_status", "Under Repair"]
+			]
+		}
+	)
 
 	q_lo.enqueue(
 		f=add_repair_event,

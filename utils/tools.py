@@ -1,7 +1,6 @@
 from pprint import pprint as p
 
 from application import BaseItem, EricTicket, clients, phonecheck, CustomLogger
-from application.monday import mappings
 
 
 def sync_fields_from_monday_new(main_board_item: BaseItem = None, eric_ticket=None):
@@ -263,7 +262,6 @@ class SyncErrorNoZendeskID(Exception):
 
 def generate_column_id_list(board_id):
     """Takes a Board ID and spits out a List of Column IDs vs Title"""
-    from pprint import pprint
 
     board = clients.monday.system.get_board_by_id(board_id)
 
@@ -289,17 +287,6 @@ def settings_list(board_id, column):
     settings = getattr(item, column).settings
     p(settings)
     return True
-
-
-def adjust_columns_through_rq(item_id, attributes_and_values):
-
-    item = BaseItem(CustomLogger(), item_id)
-
-    for adjustment in attributes_and_values:
-        attri = getattr(item, adjustment[0])
-        attri.value = adjustment[1]
-
-    item.commit()
 
 
 refurbs = RefurbishedDevicesHelper()

@@ -86,3 +86,17 @@ def task_repair_event(main_id, event_name, event_type, timestamp, summary, actio
 		actions_dict,
 		actions_status
 	)
+
+
+def rq_item_adjustment(item_id, columns=(), move_item=''):
+
+	item = BaseItem(CustomLogger(), item_id)
+
+	for adjustment in columns:
+		attri = getattr(item, adjustment[0])
+		attri.value = adjustment[1]
+
+	if move_item:
+		item.moncli_obj.move_to_group(group_id=move_item)
+
+	item.commit()
