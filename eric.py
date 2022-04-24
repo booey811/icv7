@@ -1482,15 +1482,12 @@ def cannot_complete_repair_no_parts(body, client):
 
 def process_waste_entry(ack, body, client, initial=False, remove=False):
 	meta = s_help.get_metadata(body)
-	external_id = meta["external_id"]
-	if not external_id:
-		external_id = s_help.create_external_view_id(body, "register_wasted_parts")
+	external_id = s_help.create_external_view_id(body, "register_wasted_parts")
 
-	ack({
+	resp = ack({
 		"response_action": "update",
 		"view": views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta)
 	})
-
 
 	client.views_update(
 		external_id=external_id,
