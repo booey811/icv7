@@ -2124,7 +2124,6 @@ def register_wasted_parts(body, initial, remove, external_id):
 			"external_id": external_id,
 			"callback_id": "waste_parts_submission",
 			"notify_on_close": True,
-			"private_metadata": json.dumps(metadata),
 			"title": {
 				"type": "plain_text",
 				"text": "Record Waste",
