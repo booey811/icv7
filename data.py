@@ -680,9 +680,6 @@ class DeviceRepairsObject:
 			setattr(self, device_repairs_obj_id, RepairsObject(repair, device_repairs_obj_id))
 			self._repairs.append(getattr(self, device_repairs_obj_id))
 
-		if os.environ["ENV"] != "devlocal":
-			self.get_slack_repair_options_data()
-
 	def get_slack_repair_options_data(self):
 		data = []
 		for repair in self._repairs:

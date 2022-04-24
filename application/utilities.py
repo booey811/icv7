@@ -5,8 +5,8 @@ import json
 from moncli.entities import MondayClient, Item
 from zenpy import Zenpy
 
-import settings
 
+import settings
 
 def get_timestamp():
 	return datetime.now(timezone.utc).strftime("%Y-%m-%d %X")
@@ -19,7 +19,10 @@ def add_repair_event(main_item_or_id, event_name, event_type, timestamp, summary
 	elif type(main_item_or_id) is Item:
 		main_item = main_item_or_id
 	else:
-		raise Exception(f"Cannot Add Repair Event: MainItem or ID was given as {str(main_item_or_id)}")
+		try:
+			main_item = clients.monday.system.get_items(ids=[main_item_or_id.mon_id])[0]
+		except AttributeError:
+			raise Exception(f"Cannot Add Repair Event: MainItem or ID was given as {str(main_item_or_id)}")
 
 	if not summary:
 		summary = "Not Provided"
