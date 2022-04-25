@@ -6,6 +6,7 @@ def log_repair_issue(main_item_id, message):
 	message_fr = f"******* REPAIR ISSUE RAISED *******\n\nTechnician Notes:\n{message}"
 	item.add_update(message_fr)
 	item.repair_phase.value = int(item.repair_phase.value) + 1
+	item.repair_status.label = "Client Contact"
 	item.commit()
 	add_repair_event(
 		item.mon_id,
@@ -18,6 +19,7 @@ def log_repair_issue(main_item_id, message):
 			"notify": "client_services"
 		}
 	)
+	item.moncli_obj.move_to_group("new_group6580")
 	add_repair_event(
 		item.mon_id,
 		f"Repair Phase {int(item.repair_phase.value)}: Ending",
@@ -28,7 +30,7 @@ def log_repair_issue(main_item_id, message):
 	)
 
 
-def process_repair_phase_completion(part_ids, main_id, timestamp, repaired=False):
+def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"):
 	if part_ids:
 		parts = clients.monday.system.get_items('name', ids=part_ids)
 	else:
@@ -71,9 +73,13 @@ def process_repair_phase_completion(part_ids, main_id, timestamp, repaired=False
 			actions_dict={'inventory.adjust_stock_level': part.id}
 		)
 
-	if repaired:
+	if status == "complete":
 		main.repairs.value = []
 		main.repair_status.label = "Repaired"
+	elif status == "pause":
+		main.repair_status.label = "Repair Paused"
+	else:
+		raise Exception(f"Invalid Status for Repair Phase Completion: {status}")
 
 	main.commit()
 

@@ -1243,7 +1243,7 @@ def abort_repair_phase(body):
 	)
 	q_def.enqueue(
 		tasks.process_repair_phase_completion,
-		args=([], meta["main"], get_timestamp())
+		args=([], meta["main"], get_timestamp(), 'pause')
 	)
 
 
@@ -1269,15 +1269,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 		view = views.error(f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and Products' Board\n\nPlease Let Seb & Gabe know.")
 		q_lo.enqueue(
 			tasks.process_repair_phase_completion,
-			args=([], metadata["main"], get_timestamp())
-		)
-		q_hi.enqueue(
-			tasks.rq_item_adjustment,
-			args=(
-				metadata["main"],
-				[['repair_status', "Repair Paused"]],
-				"new_group6580"
-			)
+			args=([], metadata["main"], get_timestamp(), "pause")
 		)
 	resp = client.views_update(
 		external_id=external_id,
@@ -1330,8 +1322,7 @@ def show_variant_selections(body, client, ack):
 def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
 	external_id = body["view"]["external_id"]
 
-	view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
-	                                                 external_id=external_id, meta=s_help.get_metadata(body))
+	view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, external_id=external_id, meta=s_help.get_metadata(body))
 	ack({
 		"response_action": "update",
 		"view": view
@@ -1375,7 +1366,7 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 
 	q_hi.enqueue(
 		tasks.process_repair_phase_completion,
-		args=(metadata["parts"], metadata["main"], get_timestamp(), True)
+		args=(metadata["parts"], metadata["main"], get_timestamp(), "complete")
 	)
 
 

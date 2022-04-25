@@ -1814,7 +1814,7 @@ def display_variant_options(body, variant_dict, meta):
 	return view
 
 
-def repair_completion_confirmation_view(body, from_variants, from_waste, external_id='', meta=None):
+def repair_completion_confirmation_view(body, from_variants, external_id='', meta=None):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
