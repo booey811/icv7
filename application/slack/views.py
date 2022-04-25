@@ -1214,7 +1214,6 @@ def pre_repair_info(main_item, resp_body):
 		view = error(f"A Repair Has Been Submitted with an Unknown Repair Type: {repair_type}\nPlease let Gabe know")
 
 	view["private_metadata"] = json.dumps(metadata)
-	p(view)
 	return view
 
 
