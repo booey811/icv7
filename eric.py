@@ -1149,12 +1149,19 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 
 	# Convert from Slack User to Monday User IDs, and get the relevant group
 	main_group_id = mon_config.MAINBOARD_GROUP_IDS[username]
-	next_repair = BaseItem(
-		CustomLogger(),
-		clients.monday.system.get_boards(ids=[349212843])[0].get_groups(
-			'items.[id, name]',
-			ids=[main_group_id]
-		)[0].items[0])
+	try:
+		next_repair = BaseItem(
+			CustomLogger(),
+			clients.monday.system.get_boards(ids=[349212843])[0].get_groups(
+				'items.[id, name]',
+				ids=[main_group_id]
+			)[0].items[0])
+	except IndexError:
+		client.views_update(
+			external_id=external_id,
+			view=views.error("There are no Repairs in Your Group, Please Ask Your Manager to Assign Some Repairs")
+		)
+		raise Exception(f"Cannot Begin Repairs: No Repairs Assigned to Technician's Group: {username}")
 
 	if not next_repair.device.ids:
 		view = views.error(
@@ -1433,27 +1440,28 @@ def handle_urgent_repair(body, client):
 
 def handle_other_repair_issue(body, client, ack, initial=False, more_info=False):
 	meta = s_help.get_metadata(body)
-	external_id = meta["external_id"]
-	if not external_id:
-		external_id = s_help.create_external_view_id(body, "handle_repair_issue")
 
 	if initial:
+		external_id = s_help.create_external_view_id(body, "handle_other_repair_issue")
+		p(f"INITIAL ================= {external_id}")
 		loading_view = views.loading(
 			"This Screen Is Just For Improving Stability :)",
 			external_id=external_id,
 			metadata=meta
 		)
-
 		ack({
 			"response_action": "push",
 			"view": loading_view
 		})
+
 	else:
 		ack()
+		external_id = meta["external_id"]
+		p(f"OTHEr ================= {external_id}")
 
 	resp = client.views_update(
 		external_id=external_id,
-		view=views.repair_issue_form(body, more_info=more_info)
+		view=views.repair_issue_form(body, more_info=more_info, external_id=external_id)
 	)
 
 
@@ -1486,11 +1494,13 @@ def cannot_complete_repair_no_parts(body, client):
 def process_waste_entry(ack, body, client, initial=False, remove=False):
 	meta = s_help.get_metadata(body)
 	ext_id = meta["external_id"]
+	p(f"EXT ID READ  ===================== {ext_id}")
 	if initial:
 		external_id = s_help.create_external_view_id(body, "register_wasted_parts")
+		p(f"EXT ID SET  ===================== {ext_id}")
 		resp = ack({
 			"response_action": "update",
-			"view": views.loading("Fetching Wastable Options", metadata=meta)
+			"view": views.loading("Fetching Wastable Options", metadata=meta, external_id=ext_id)
 		})
 	else:
 		ext_id = meta["external_id"]

@@ -1375,7 +1375,7 @@ def repair_phase_view(main_item, body, external_id):
 	return basic
 
 
-def repair_issue_form(body, more_info=False):
+def repair_issue_form(body, more_info=False, external_id=False):
 
 	def get_base_modal():
 		basic = {
@@ -1432,12 +1432,9 @@ def repair_issue_form(body, more_info=False):
 			blocks=view["blocks"]
 		)
 
-	if metadata["external_id"]:
-		view["external_id"] = metadata["external_id"]
-	else:
-		view["external_id"] = helper.create_external_view_id(body, "repair_issue_submit")
-
-	metadata["external_id"] = view["external_id"]
+	if external_id:
+		view["external_id"] = external_id
+		metadata["external_id"] = external_id
 
 	view["private_metadata"] = json.dumps(metadata)
 	return view
