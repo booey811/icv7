@@ -1484,13 +1484,14 @@ def process_waste_entry(ack, body, client, initial=False, remove=False):
 	meta = s_help.get_metadata(body)
 	if initial:
 		external_id = s_help.create_external_view_id(body, "register_wasted_parts")
-
+		print(f"FIRST TIME SETTING: {external_id}")
 		resp = ack({
 			"response_action": "update",
 			"view": views.loading("Fetching Wastable Options", external_id=external_id, metadata=meta)
 		})
 	else:
 		external_id = meta["external_id"]
+		print(f"SECOND TIME GETTING: {external_id}")
 
 	client.views_update(
 		external_id=external_id,
