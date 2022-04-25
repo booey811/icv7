@@ -2262,10 +2262,11 @@ def select_waste_variants(body):
 	return view
 
 
-def waste_parts_quantity_input(body):
+def waste_parts_quantity_input(body, external_id):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
+			"external_id": external_id,
 			"callback_id": "waste_quantity_submission",
 			"notify_on_close": True,
 			"title": {

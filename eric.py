@@ -1139,7 +1139,6 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 	if dev:
 		username = 'dev'
 	else:
-		p(body)
 		user_id = body['user_id']
 		username = slack_config.USER_IDS[user_id]
 
@@ -1256,13 +1255,13 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "add_parts_to_repair")
-		temp_load = views.loading("TEMP LOAD SCREEN FROM ERIC", external_id=external_id, metadata=metadata)
+		temp_load = views.loading(f"Getting Parts Data (This can take 30-40 seconds after an update is released!", external_id=external_id, metadata=metadata)
 		ack({
 			"response_action": "push",
 			"view": temp_load
 		})
 	else:
-		external_id = metadata["external_id"]
+		external_id = body["view"]["external_id"]
 
 	try:
 		view = views.initial_parts_search_box(body, external_id, initial, remove)
@@ -1287,8 +1286,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 
 
 def show_variant_selections(body, client, ack):
-	external_id = s_help.create_external_view_id(body, "parts_confirmations")
-
+	external_id = body["view"]["external_id"]
 	ack({
 		"response_action": "update",
 		"view": views.loading("Checking Parts Validity", external_id=external_id, metadata=s_help.get_metadata(body))
@@ -1321,9 +1319,7 @@ def show_variant_selections(body, client, ack):
 	if variants:
 		view = views.display_variant_options(body, variants, meta)
 	else:
-		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta)
-
-	p(view)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta, external_id=external_id)
 
 	resp = client.views_update(
 		external_id=external_id,
@@ -1331,28 +1327,19 @@ def show_variant_selections(body, client, ack):
 	)
 
 
-def show_repair_and_parts_confirmation(body, client, ack, from_variants=False, from_waste=False):
-	if from_waste:
-		meta = s_help.get_metadata(body)
-		ext_id = meta['external_id']
-		view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
-		                                                 meta=meta)
-		client.views_update(
-			external_id=ext_id,
-			view=view
-		)
-	else:
-		external_id = s_help.create_external_view_id(body, "repair_confirmation")
-		view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
-		                                                 external_id=external_id, meta=s_help.get_metadata(body))
-		ack({
-			"response_action": "update",
-			"view": view
-		})
+def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
+	external_id = body["view"]["external_id"]
+
+	view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, from_waste=from_waste,
+	                                                 external_id=external_id, meta=s_help.get_metadata(body))
+	ack({
+		"response_action": "update",
+		"view": view
+	})
 
 
 def show_waste_validations(body, client, ack):
-	external_id = s_help.create_external_view_id(body, 'waste_validations')
+	external_id = body["view"]["external_id"]
 	loading_view = views.loading(
 		"Searching for Variant Options",
 		external_id=external_id
@@ -1371,14 +1358,10 @@ def show_waste_validations(body, client, ack):
 
 
 def confirm_waste_quantities(body, client, ack):
-	external_id = s_help.get_metadata(body)["external_id"]
-	loading_view = views.loading(
-		"Selecting Requested Parts",
-		external_id=external_id
-	)
+	external_id = body["view"]["external_id"]
 	ack({
 		"response_action": "update",
-		"view": views.waste_parts_quantity_input(body)
+		"view": views.waste_parts_quantity_input(body, external_id)
 	})
 
 
