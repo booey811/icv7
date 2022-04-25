@@ -1067,6 +1067,7 @@ def process_walkin_submission(body, client, ack):
 
 			blank.device.add(data_dict["device_str"])
 			blank.repair_type.label = data_dict["repair_type_str"]
+			blank.repair_status.label = "Received"
 			blank.service.label = "Walk-In"
 			blank.zendesk_id.value = data_dict["zendesk_id"]
 			blank.ticket_url.value = [
@@ -1101,6 +1102,7 @@ def process_walkin_submission(body, client, ack):
 
 		else:
 			main = BaseItem(cuslog, data_dict["main_id"])
+			main.repair_status.label = "Received"
 
 	elif data_dict["zendesk_id"]:
 		ticket = EricTicket(cuslog, data_dict["zendesk_id"])
@@ -1112,6 +1114,7 @@ def process_walkin_submission(body, client, ack):
 		main = BaseItem(cuslog, data_dict["main_id"])
 		main.device.replace(data_dict["device_str"])
 		main.repair_type.label = data_dict["repair_type_str"]
+		main.repair_status.label = "Received"
 		if data_dict["pc"]:
 			main.passcode.value = data_dict["pc"]
 		main.commit()
