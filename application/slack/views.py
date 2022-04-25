@@ -125,7 +125,7 @@ def add_dropdown_ui_input(title, placeholder, options, blocks, block_id, optiona
 	return blocks
 
 
-def add_multiline_text_input(title, placeholder, block_id, action_id, blocks, optional=False):
+def add_multiline_text_input(title, placeholder, block_id, blocks, action_id='', optional=False):
 	basic = {
 		"type": "input",
 		"optional": optional,
@@ -133,7 +133,6 @@ def add_multiline_text_input(title, placeholder, block_id, action_id, blocks, op
 		"element": {
 			"type": "plain_text_input",
 			"multiline": True,
-			"action_id": action_id,
 			"placeholder": {
 				"type": "plain_text",
 				"text": placeholder
@@ -145,6 +144,9 @@ def add_multiline_text_input(title, placeholder, block_id, action_id, blocks, op
 			"emoji": True
 		}
 	}
+
+	if action_id:
+		basic["element"]["action_id"] = action_id
 
 	blocks.append(basic)
 	return blocks
@@ -307,6 +309,16 @@ def add_checkbox_section(title, options: list, block_id, action_id, blocks, opti
 
 	blocks.append(basic)
 	return blocks
+
+
+def add_markdown_block(blocks, text):
+	blocks.append(		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": text
+			}
+		})
 
 
 def add_book_new_repair_button(blocks):
@@ -1238,18 +1250,79 @@ def pre_repair_info(main_item, resp_body):
 
 
 def repair_phase_view(main_item, body, external_id):
+
+	def get_base_modal(title):
+		basic = {
+			"type": "modal",
+			"callback_id": "repair_phase_ended",
+			"external_id": external_id,
+			"notify_on_close": True,
+			"title": {
+				"type": "plain_text",
+				"text": title,
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Finalise Repair",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+
 	item_id = main_item.mon_id
+
 	try:
 		device = main_item.device.labels[0]
 	except IndexError:
-		device = "Unconfirmed"
+		device = "Unconfirmed Device (this is bad)"
 	repair_type = main_item.repair_type.label
-	repairs_string = ", ".join(main_item.repairs.labels)
 	start_time = datetime.datetime.now().strftime("%X")
+	pc = main_item.passcode.value
+	if not pc:
+		pc = "No Access Granted :white_frowning_face:"
 
 	metadata = helper.get_metadata(body)
 	metadata["device"]["model"] = device
-	metadata["external_id"] = external_id
+
+	view = get_base_modal(f"{main_item.name}")
+
+	add_header_block(view['blocks'], f"{device}  |  {repair_type}")
+	add_divider_block(view["blocks"])
+	add_markdown_block(view["blocks"], _get_repairs_string(main_item))
+	add_context_block(view["blocks"], pc)
+	add_divider_block(view["blocks"])
+	add_multiline_text_input(
+		title="Repair Notes",
+		placeholder="Anything to add?",
+		block_id="repair_notes",
+		blocks=view["blocks"],
+		optional=True,
+		action_id="repair_notes"
+	)
+	add_dropdown_ui_input(
+		title="Have you finished?",
+		placeholder="Let us know what happened",
+		options=[
+			[":ok_hand:  The repair has been completed", "repaired"],
+			[":warning:  I can't complete this repair", "client"],
+			[":wave:  I need help", "other"]
+		],
+		block_id="repair_result_select",
+		blocks=view["blocks"],
+		optional=False,
+		action_id="repair_result_select"
+	)
+	view["private_metadata"] = json.dumps(metadata)
+	p(view)
+	return view
 
 	basic = {
 		"type": "modal",
@@ -1495,6 +1568,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 		return blocks
 	metadata = helper.get_metadata(body)
 	metadata["external_id"] = external_id
+	p(body)
 	try:
 		data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
 	except KeyError:
