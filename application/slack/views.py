@@ -1158,6 +1158,30 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 
 def pre_repair_info(main_item, resp_body):
+
+	def get_base_modal(title):
+		basic = {
+			"type": "modal",
+			"callback_id": "pre_repair_info",
+			"title": {
+				"type": "plain_text",
+				"text": title,
+				"emoji": True
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Begin Repair",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
 	item_id = main_item.mon_id
 	client_name = main_item.name
 	repair_type = main_item.repair_type.label
@@ -1166,8 +1190,8 @@ def pre_repair_info(main_item, resp_body):
 	except IndexError:
 		device_label = "Unconfirmed"
 	repairs_string = ", ".join(main_item.repairs.labels)
-	received_date = _convert_monday_time_to_string(main_item.received_date)
-	deadline = _convert_monday_time_to_string(main_item.deadline_date)
+	if not repairs_string:
+		repairs_string = 'No Repairs Requested'
 
 	metadata = helper.get_metadata(resp_body)
 	metadata['main'] = main_item.mon_id
@@ -1175,78 +1199,23 @@ def pre_repair_info(main_item, resp_body):
 	metadata["extra"]["client_repairs"] = repairs_string
 	helper.add_device_type_metadata(main_item, metadata)
 
-	basic = {
-		"type": "modal",
-		"callback_id": "pre_repair_info",
-		"title": {
-			"type": "plain_text",
-			"text": f"Repair: {item_id}",
-			"emoji": True
-		},
-		"submit": {
-			"type": "plain_text",
-			"text": "Begin Repair",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Cancel",
-			"emoji": True
-		},
-		"private_metadata": json.dumps(metadata),
-		"blocks": [
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": f"{client_name} | {repair_type}",
-					"emoji": True
-				}
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "plain_text",
-						"text": f"Device: {device_label}",
-						"emoji": True
-					}
-				]
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "plain_text",
-						"text": f"Requested Repairs: {_get_repairs_string(main_item)}",
-						"emoji": True
-					}
-				]
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "plain_text",
-						"text": f"Received: {received_date}",
-						"emoji": True
-					}
-				]
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "plain_text",
-						"text": f"Deadline: {deadline}",
-						"emoji": True
-					}
-				]
-			},
-		]
-	}
+	view = get_base_modal(main_item.name)
+	add_header_block(view['blocks'], f"{device_label}  |  {repair_type}")
 
-	return basic
+	if repair_type == "Repair":
+		add_markdown_block(view["blocks"], "Repairs Requested:")
+		add_context_block(view["blocks"], repairs_string)
+		add_divider_block(view["blocks"])
+		add_markdown_block(view["blocks"], ":thumbsup:  Please complete the requested repairs")
+	elif repair_type == "Diagnostic":
+		add_markdown_block(view["blocks"], ":nerd_face:  Please diagnose the device, paying attention to the following parts:")
+		add_context_block(view["blocks"], repairs_string)
+	else:
+		view = error(f"A Repair Has Been Submitted with an Unknown Repair Type: {repair_type}\nPlease let Gabe know")
+
+	view["private_metadata"] = json.dumps(metadata)
+	p(view)
+	return view
 
 
 def repair_phase_view(main_item, body, external_id):
@@ -1321,132 +1290,7 @@ def repair_phase_view(main_item, body, external_id):
 		action_id="repair_result_select"
 	)
 	view["private_metadata"] = json.dumps(metadata)
-	p(view)
 	return view
-
-	basic = {
-		"type": "modal",
-		"callback_id": "repair_phase_ended",
-		"private_metadata": json.dumps(metadata),
-		"external_id": external_id,
-		"notify_on_close": True,
-		"title": {
-			"type": "plain_text",
-			"text": "Repairing",
-			"emoji": True
-		},
-		"submit": {
-			"type": "plain_text",
-			"text": "Finalise Repair",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Cancel",
-			"emoji": True
-		},
-		"blocks": [
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": f"Repair: {item_id} | {device} | {repair_type}",
-					"emoji": True
-				}
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "plain_text",
-						"text": f"Repair Run Started: {start_time}",
-						"emoji": True
-					}
-				]
-			},
-			{
-				"type": "section",
-				"text": {
-					"type": "mrkdwn",
-					"text": "The client has requested the following repairs:"
-				}
-			},
-			{
-				"type": "context",
-				"elements": [
-					{
-						"type": "plain_text",
-						"text": f"{_get_repairs_string(main_item)}",
-						"emoji": True
-					}
-				]
-			},
-			{
-				"type": "divider"
-			},
-			{
-				"type": "input",
-				"optional": True,
-				"block_id": "repair_notes",
-				"element": {
-					"type": "plain_text_input",
-					"multiline": True,
-					"action_id": "repair_notes"
-				},
-				"label": {
-					"type": "plain_text",
-					"text": "Repair Notes",
-					"emoji": True
-				}
-			},
-			{
-				"type": "input",
-				"optional": False,
-				"block_id": "repair_result_select",
-				"label": {
-					"type": "plain_text",
-					"text": "Have you finished?",
-					"emoji": True
-				},
-				"element": {
-					"type": "static_select",
-					"action_id": "repair_result_select",
-					"placeholder": {
-						"type": "plain_text",
-						"text": "Let us know what happened",
-						"emoji": True
-					},
-					"options": [
-						{
-							"text": {
-								"type": "plain_text",
-								"text": ":ok_hand:  The repair has been completed",
-								"emoji": True
-							},
-							"value": "repaired"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": ":warning:  I can't complete this repair",
-								"emoji": True
-							},
-							"value": "client"
-						},
-						{
-							"text": {
-								"type": "plain_text",
-								"text": ":wave:  I need help",
-								"emoji": True
-							},
-							"value": "other"
-						}
-					],
-				}
-			},
-		]
-	}
-	return basic
 
 
 def repair_issue_form(body, more_info=False, external_id=False):

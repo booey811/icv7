@@ -1314,7 +1314,7 @@ def show_variant_selections(body, client, ack):
 	if variants:
 		view = views.display_variant_options(body, variants, meta)
 	else:
-		view = views.repair_completion_confirmation_view(body=body, from_variants=False, from_waste=False, meta=meta, external_id=external_id)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=False, meta=meta, external_id=external_id)
 
 	resp = client.views_update(
 		external_id=external_id,
