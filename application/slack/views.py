@@ -1492,7 +1492,6 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 			)
 
 		return blocks
-
 	metadata = helper.get_metadata(body)
 	metadata["external_id"] = external_id
 	data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
