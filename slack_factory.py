@@ -388,6 +388,12 @@ def _add_routing(app):
 
 		# view closed routes
 
+		@app.view("error_report")
+		@app.view_closed("error_report")
+		def close_error_screen(ack):
+			ack({"repsonse_action": "clear"})
+
+
 		# repair phase abort
 		@app.view_closed("repair_phase_ended")
 		@app.view_closed("repair_issue_submit")

@@ -21,6 +21,8 @@ from utils.tools import refurbs
 from application.monday import config as mon_config
 from worker import q_hi, q_lo, q_def
 
+from application.slack import exceptions as slack_ex
+
 logger = logging.getLogger()
 
 
@@ -1250,12 +1252,10 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 
 	metadata = s_help.get_metadata(body)
 
-
 	# push loading view (first boot for this process is slow)
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "add_parts_to_repair")
-		p(f"EXTERNAL BEing Set ==================================== {external_id}")
 		temp_load = views.loading("TEMP LOAD SCREEN FROM ERIC", external_id=external_id, metadata=metadata)
 		ack({
 			"response_action": "push",
@@ -1263,10 +1263,23 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 		})
 	else:
 		external_id = metadata["external_id"]
-		p(f"EXTERNAL ==================================== {external_id}")
 
-	view = views.initial_parts_search_box(body, external_id, initial, remove)
-
+	try:
+		view = views.initial_parts_search_box(body, external_id, initial, remove)
+	except slack_ex.DeviceProductNotFound as e:
+		view = views.error(f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and Products' Board\n\nPlease Let Seb & Gabe know.")
+		q_lo.enqueue(
+			tasks.process_repair_phase_completion,
+			args=([], metadata["main"], get_timestamp())
+		)
+		q_hi.enqueue(
+			tasks.rq_item_adjustment,
+			args=(
+				metadata["main"],
+				[['repair_status', "Repair Paused"]],
+				"new_group6580"
+			)
+		)
 	resp = client.views_update(
 		external_id=external_id,
 		view=view

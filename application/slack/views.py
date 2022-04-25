@@ -430,6 +430,7 @@ def loading(footnotes='', external_id=False, metadata=None):
 def error(footnotes=''):
 	view = {
 		"type": "modal",
+		"callback_id": "error_report",
 		"title": {
 			"type": "plain_text",
 			"text": "Error Reporting",
@@ -1494,7 +1495,10 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 		return blocks
 	metadata = helper.get_metadata(body)
 	metadata["external_id"] = external_id
-	data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
+	try:
+		data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
+	except KeyError:
+		raise exceptions.DeviceProductNotFound(metadata["device"]["model"])
 	metadata['device']['eric_id'] = data_repairs_id
 
 	device_repairs = getattr(data.repairs, data_repairs_id)

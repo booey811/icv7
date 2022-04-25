@@ -49,7 +49,7 @@ class BaseItem(BaseItemStructure):
                 self.log(f'Instantiate BaseItem from moncli.Item Object: {item_id_or_mon_item.id}')
                 self.moncli_obj = item_id_or_mon_item
             else:
-                raise Exception('BaseItem supplied with item_id_or_object that is not str, int, or moncli.Item')
+                raise Exception(f'BaseItem supplied with item_id_or_object that is not str, int, or moncli.Item: {str(item_id_or_mon_item)} ({type(item_id_or_mon_item)})')
 
             # Set derived basic info
             self.mon_id = str(self.moncli_obj.id)

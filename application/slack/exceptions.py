@@ -20,3 +20,12 @@ class CannotGetChannel(Exception):
 class ProductGroupNameError(Exception):
 	def __init__(self, device: str):
 		self.error_message = f"Could not find group with title: {device}"
+
+
+class DeviceProductNotFound(Exception):
+	def __init__(self, dict_key):
+
+		self.device = dict_key
+
+
+		print(f"A Produt Group has not been made for {dict_key}")
