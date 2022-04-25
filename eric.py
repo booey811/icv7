@@ -1242,10 +1242,12 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 
 	metadata = s_help.get_metadata(body)
 
+
 	# push loading view (first boot for this process is slow)
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "add_parts_to_repair")
+		p(f"EXTERNAL BEing Set ==================================== {external_id}")
 		temp_load = views.loading("TEMP LOAD SCREEN FROM ERIC", external_id=external_id, metadata=metadata)
 		ack({
 			"response_action": "push",
@@ -1253,6 +1255,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 		})
 	else:
 		external_id = metadata["external_id"]
+		p(f"EXTERNAL ==================================== {external_id}")
 
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
