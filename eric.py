@@ -1441,7 +1441,6 @@ def handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 
 	if initial:
 		external_id = s_help.create_external_view_id(body, "handle_other_repair_issue")
-		p(f"INITIAL ================= {external_id}")
 		loading_view = views.loading(
 			"This Screen Is Just For Improving Stability :)",
 			external_id=external_id,
@@ -1454,8 +1453,7 @@ def handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 
 	else:
 		ack()
-		external_id = meta["external_id"]
-		p(f"OTHEr ================= {external_id}")
+		external_id = body["view"]["external_id"]
 
 	resp = client.views_update(
 		external_id=external_id,
