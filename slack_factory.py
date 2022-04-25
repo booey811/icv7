@@ -256,6 +256,7 @@ def _add_routing(app):
 		@app.action("repairs_parts_remove")
 		def remove_parts_from_repair(ack, body, logger, client):
 			logger.info("Removing Part from Repair")
+			ack()
 			eric.add_parts_to_repair(body, client, ack=ack, initial=False, remove=True)
 
 		@app.action("button_waste_selection")
@@ -312,20 +313,19 @@ def _add_routing(app):
 			eric.process_walkin_submission(body, client, ack)
 
 		@app.view("repair_phase_ended")
-		def end_repair_phase(ack, body, logger, client):
+		def end_repair_phase(ack, body, logger, client, respond):
 			logger.info("Response to Repair Phase Complete")
 
 			selected = \
 				body['view']['state']['values']['repair_result_select']['repair_result_select']['selected_option'][
 					'value']
 
-			print(f"============= selected: {selected}")
-
 			if not selected:
 				raise Exception(
 					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
 
 			if selected == 'repaired':
+				# eric.begin_parts_attachment(ack, body, client)
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client, ack, initial=True, more_info=False)
@@ -399,6 +399,8 @@ def _add_routing(app):
 		@app.view_closed("waste_quantity_submission")
 		@app.view_closed("waste_opt_in")
 		def abort_repair_phase(ack, body, logger, client):
+			p("================================= VIEW CLOSED ===================================")
+			p(body)
 			if body["is_cleared"]:
 				logger.info("User Closed a Repair Phase Modal")
 				ack({

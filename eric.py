@@ -1241,22 +1241,18 @@ def abort_repair_phase(body):
 def add_parts_to_repair(body, client, initial, ack, remove=False):
 
 	metadata = s_help.get_metadata(body)
-	external_id = metadata["external_id"]
 
-	ack()
+	# push loading view (first boot for this process is slow)
 
 	if initial:
-		# push loading view (first boot for this process is slow)
-		loading_view = views.loading(
-			"Getting Repair Options (This Can Take Quite a While the First Time You Do It After An Update (30-40 seconds "
-			"for iPhones))",
-			external_id=external_id,
-			metadata=metadata
-		)
-		resp = client.views_open(
-			trigger_id=body["trigger_id"],
-			view=loading_view
-		)
+		external_id = s_help.create_external_view_id(body, "add_parts_to_repair")
+		temp_load = views.loading("TEMP LOAD SCREEN FROM ERIC", external_id=external_id, metadata=metadata)
+		ack({
+			"response_action": "push",
+			"view": temp_load
+		})
+	else:
+		external_id = metadata["external_id"]
 
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 
@@ -1271,7 +1267,7 @@ def show_variant_selections(body, client, ack):
 
 	ack({
 		"response_action": "update",
-		"view": views.loading("Checking Parts Validity", external_id=external_id)
+		"view": views.loading("Checking Parts Validity", external_id=external_id, metadata=s_help.get_metadata(body))
 	})
 
 	meta = s_help.get_metadata(body)
@@ -1463,7 +1459,9 @@ def process_repair_issue(body, client, ack, standard=False):
 	if not standard:
 		message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
 	else:
-		message = body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"]["selected_option"]["text"]["text"]
+		message = \
+		body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"][
+			"selected_option"]["text"]["text"]
 
 	ack({
 		"response_action": "clear"
