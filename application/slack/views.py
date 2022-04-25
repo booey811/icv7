@@ -2078,11 +2078,12 @@ def user_search_request(body, zenpy_results=None, research=False):
 	return view
 
 
-def capture_waste_request(body):
+def capture_waste_request(body, external_id):
 	def get_base_modal():
 		basic = {
 			"type": "modal",
 			"callback_id": "waste_opt_in",
+			"external_id": external_id,
 			"notify_on_close": True,
 			"private_metadata": json.dumps(helper.get_metadata(body)),
 			"title": {

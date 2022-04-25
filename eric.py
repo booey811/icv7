@@ -1384,8 +1384,9 @@ def confirm_waste_quantities(body, client, ack):
 
 def finalise_repair_data_and_request_waste(body, client, ack):
 	metadata = s_help.get_metadata(body)
+	external_id = s_help.create_external_view_id(body, "waste_data_capture")
 
-	view = views.capture_waste_request(body)
+	view = views.capture_waste_request(body, external_id)
 
 	ack({"response_action": "update", "view": view})
 
@@ -1507,17 +1508,14 @@ def cannot_complete_repair_no_parts(body, client):
 
 def process_waste_entry(ack, body, client, initial=False, remove=False):
 	meta = s_help.get_metadata(body)
-	ext_id = meta["external_id"]
+	ext_id = body['view']['external_id']
 	p(f"EXT ID READ  ===================== {ext_id}")
 	if initial:
-		external_id = s_help.create_external_view_id(body, "register_wasted_parts")
 		p(f"EXT ID SET  ===================== {ext_id}")
 		resp = ack({
 			"response_action": "update",
 			"view": views.loading("Fetching Wastable Options", metadata=meta, external_id=ext_id)
 		})
-	else:
-		ext_id = meta["external_id"]
 
 	client.views_update(
 		external_id=ext_id,
