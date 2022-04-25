@@ -1177,14 +1177,16 @@ def begin_specific_slack_repair(body, client, ack):
 		response_action="update",
 		view=views.loading(
 			f"Getting Repair Data: {metadata['main']}",
-			external_id=external_id)
+			external_id=external_id,
+			metadata=metadata
+		)
 	)
 
 	main_item = BaseItem(CustomLogger(), metadata['main'])
 
 	resp = client.views_update(
 		external_id=external_id,
-		view=views.repair_phase_view(main_item, body)
+		view=views.repair_phase_view(main_item, body, external_id)
 	)
 
 	try:
@@ -1237,24 +1239,24 @@ def abort_repair_phase(body):
 
 
 def add_parts_to_repair(body, client, initial, ack, remove=False):
+
 	metadata = s_help.get_metadata(body)
 	external_id = metadata["external_id"]
-	if not external_id:
-		external_id = s_help.create_external_view_id(body, "repairs_parts_select")
 
-	# push loading view (first boot for this process is slow)
+	ack()
 
-	loading_view = views.loading(
-		"Getting Repair Options (This Can Take Quite a While the First Time You Do It After An Update (30-40 seconds "
-		"for iPhones))",
-		external_id=external_id,
-		metadata=metadata
-	)
-
-	ack({
-		"response_action": "push",
-		"view": loading_view
-	})
+	if initial:
+		# push loading view (first boot for this process is slow)
+		loading_view = views.loading(
+			"Getting Repair Options (This Can Take Quite a While the First Time You Do It After An Update (30-40 seconds "
+			"for iPhones))",
+			external_id=external_id,
+			metadata=metadata
+		)
+		resp = client.views_open(
+			trigger_id=body["trigger_id"],
+			view=loading_view
+		)
 
 	view = views.initial_parts_search_box(body, external_id, initial, remove)
 

@@ -1236,7 +1236,7 @@ def pre_repair_info(main_item, resp_body):
 	return basic
 
 
-def repair_phase_view(main_item, body):
+def repair_phase_view(main_item, body, external_id):
 	item_id = main_item.mon_id
 	try:
 		device = main_item.device.labels[0]
@@ -1248,11 +1248,13 @@ def repair_phase_view(main_item, body):
 
 	metadata = helper.get_metadata(body)
 	metadata["device"]["model"] = device
+	metadata["external_id"] = external_id
 
 	basic = {
 		"type": "modal",
 		"callback_id": "repair_phase_ended",
 		"private_metadata": json.dumps(metadata),
+		"external_id": external_id,
 		"notify_on_close": True,
 		"title": {
 			"type": "plain_text",
@@ -1495,8 +1497,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 		return blocks
 
 	metadata = helper.get_metadata(body)
-	if not metadata["external_id"]:
-		metadata["external_id"] = external_id
+	metadata["external_id"] = external_id
 	data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
 	metadata['device']['eric_id'] = data_repairs_id
 

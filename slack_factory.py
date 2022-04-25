@@ -235,12 +235,12 @@ def _add_routing(app):
 
 			eric.display_repairs_search_results(body, client)
 
-		@app.action("select_part")
-		def add_part_to_repair(ack, body, logger, client):
-			logger.info("Adding Part to Repair")
-			ack()
-
-			eric.continue_parts_search(body, client)
+		# @app.action("select_part")
+		# def add_part_to_repair(ack, body, logger, client):
+		# 	logger.info("Adding Part to Repair")
+		# 	ack()
+		#
+		# 	eric.continue_parts_search(body, client)
 
 		@app.action("parts_selection")
 		def validate_repair_selection(ack, body, logger, client):
@@ -318,6 +318,8 @@ def _add_routing(app):
 			selected = \
 				body['view']['state']['values']['repair_result_select']['repair_result_select']['selected_option'][
 					'value']
+
+			print(f"============= selected: {selected}")
 
 			if not selected:
 				raise Exception(
