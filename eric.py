@@ -1137,7 +1137,8 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 	if dev:
 		username = 'dev'
 	else:
-		user_id = body['hello']
+		p(body)
+		user_id = body['user_id']
 		username = slack_config.USER_IDS[user_id]
 
 	external_id = s_help.create_external_view_id(body, "begin_repairs")
