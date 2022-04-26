@@ -1160,6 +1160,8 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 def pre_repair_info(main_item, resp_body):
 
 	def get_base_modal(title):
+		if len(title) > 20:
+			title = title[:20]
 		basic = {
 			"type": "modal",
 			"callback_id": "pre_repair_info",
@@ -1218,6 +1220,8 @@ def pre_repair_info(main_item, resp_body):
 def repair_phase_view(main_item, body, external_id):
 
 	def get_base_modal(title):
+		if len(title) > 20:
+			title = title[:20]
 		basic = {
 			"type": "modal",
 			"callback_id": "repair_phase_ended",
@@ -1254,6 +1258,9 @@ def repair_phase_view(main_item, body, external_id):
 	pc = main_item.passcode.value
 	if not pc:
 		pc = "No Access Granted :white_frowning_face:"
+	intake_notes = main_item.intake_notes.value
+	if not intake_notes:
+		intake_notes = ":sob:  None Taken"
 
 	metadata = helper.get_metadata(body)
 	metadata["device"]["model"] = device
@@ -1264,6 +1271,9 @@ def repair_phase_view(main_item, body, external_id):
 	add_divider_block(view["blocks"])
 	add_markdown_block(view["blocks"], _get_repairs_string(main_item))
 	add_context_block(view["blocks"], pc)
+	add_divider_block(view["blocks"])
+	add_header_block(view["blocks"], "Client Notes:")
+	add_markdown_block(view['blocks'], intake_notes)
 	add_divider_block(view["blocks"])
 	add_multiline_text_input(
 		title="Repair Notes",

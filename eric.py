@@ -1462,14 +1462,18 @@ def handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 	)
 
 
-def process_repair_issue(body, client, ack, standard=False):
+def process_repair_issue(body, client, ack):
+
 	meta = s_help.get_metadata(body)
-	if not standard:
-		message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
-	else:
-		message = \
+
+	selected = \
 		body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"][
 			"selected_option"]["text"]["text"]
+
+	if selected == "Other":
+		message = body['view']['state']['values']["text_issue"]["text_issue_action"]["value"]
+	else:
+		message = selected
 
 	ack({
 		"response_action": "clear"

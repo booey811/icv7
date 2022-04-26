@@ -329,8 +329,7 @@ def _add_routing(app):
 		@app.view("repair_issue_submit")
 		def process_repair_issue(body, client, ack, logger):
 			logger.info("Logging Repair Issue")
-			selected = body["view"]["state"]["values"]["dropdown_repair_issue_selector"]["dropdown_repair_issue_selector_action"]["selected_option"]["value"]
-			eric.process_repair_issue(body, client, ack, standard=selected)
+			eric.process_repair_issue(body, client, ack)
 
 		@app.view("repairs_parts_submission")
 		def validate_submitted_parts_selection(ack, body, logger, client):

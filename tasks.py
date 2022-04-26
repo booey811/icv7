@@ -5,9 +5,6 @@ def log_repair_issue(main_item_id, message):
 	item = BaseItem(CustomLogger(), main_item_id)
 	message_fr = f"******* REPAIR ISSUE RAISED *******\n\nTechnician Notes:\n{message}"
 	item.add_update(message_fr)
-	item.repair_phase.value = int(item.repair_phase.value) + 1
-	item.repair_status.label = "Client Contact"
-	item.commit()
 	add_repair_event(
 		item.mon_id,
 		"Repair Issue Data",
@@ -20,14 +17,7 @@ def log_repair_issue(main_item_id, message):
 		}
 	)
 	item.moncli_obj.move_to_group("new_group6580")
-	add_repair_event(
-		item.mon_id,
-		f"Repair Phase {int(item.repair_phase.value)}: Ending",
-		"Repair Phase End",
-		get_timestamp(),
-		f"Ending Repair Phase {int(item.repair_phase.value)}",
-		actions_status="No Actions Required"
-	)
+	process_repair_phase_completion([], item.mon_id, get_timestamp(), status="client")
 
 
 def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"):
@@ -78,6 +68,8 @@ def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"
 		main.repair_status.label = "Repaired"
 	elif status == "pause":
 		main.repair_status.label = "Repair Paused"
+	elif status == "client":
+		main.repair_status.label = "Client Contact"
 	else:
 		raise Exception(f"Invalid Status for Repair Phase Completion: {status}")
 
