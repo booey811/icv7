@@ -374,7 +374,7 @@ def _add_routing(app):
 		@app.view("waste_quantity_submission")
 		def capture_waste_item_data(ack, body, client, logger):
 			logger.info("Emitting Waste Events")
-			ack()
+			ack(response_action="clear")
 			eric.emit_waste_events(body, client, ack)
 
 		# view closed routes
@@ -382,8 +382,7 @@ def _add_routing(app):
 		@app.view("error_report")
 		@app.view_closed("error_report")
 		def close_error_screen(ack):
-			ack({"repsonse_action": "clear"})
-
+			ack({"response_action": "clear"})
 
 		# repair phase abort
 		@app.view_closed("repair_phase_ended")
@@ -397,7 +396,6 @@ def _add_routing(app):
 		@app.view_closed("waste_opt_in")
 		def abort_repair_phase(ack, body, logger, client):
 			p("================================= VIEW CLOSED ===================================")
-			p(body)
 			if body["is_cleared"]:
 				logger.info("User Closed a Repair Phase Modal")
 				ack({

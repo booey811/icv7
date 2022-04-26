@@ -2193,6 +2193,7 @@ def waste_parts_quantity_input(body, external_id):
 			"type": "modal",
 			"external_id": external_id,
 			"callback_id": "waste_quantity_submission",
+			"clear_on_close": True,
 			"notify_on_close": True,
 			"title": {
 				"type": "plain_text",

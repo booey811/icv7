@@ -1495,9 +1495,7 @@ def cannot_complete_repair_no_parts(body, client):
 def process_waste_entry(ack, body, client, initial=False, remove=False):
 	meta = s_help.get_metadata(body)
 	ext_id = body['view']['external_id']
-	p(f"EXT ID READ  ===================== {ext_id}")
 	if initial:
-		p(f"EXT ID SET  ===================== {ext_id}")
 		resp = ack({
 			"response_action": "update",
 			"view": views.loading("Fetching Wastable Options", metadata=meta, external_id=ext_id)
@@ -1530,6 +1528,7 @@ def emit_waste_events(body, client, ack):
 					raise BreakCycle(in_val)
 			except ValueError:
 				raise BreakCycle(in_val)
+
 	except BreakCycle as e:
 		error = {e.input_id: "Must Be A Number Larger Than 0"}
 		ack({"response_action": "errors", "errors": error})
@@ -1553,7 +1552,8 @@ def emit_waste_events(body, client, ack):
 							}
 						}
 					)
-			ack({"response_action": "clear"})
+		ack()
+	ack()
 
 
 def test_user_init(body, client):
