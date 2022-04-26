@@ -1555,8 +1555,8 @@ def emit_waste_events(body, client, ack):
 							}
 						}
 					)
-		ack()
-	ack()
+		ack({"response_action": "clear"})
+	ack({"response_action": "clear"})
 
 
 def test_user_init(body, client):

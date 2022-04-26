@@ -373,7 +373,6 @@ def _add_routing(app):
 		@app.view("waste_quantity_submission")
 		def capture_waste_item_data(ack, body, client, logger):
 			logger.info("Emitting Waste Events")
-			ack(response_action="clear")
 			eric.emit_waste_events(body, client, ack)
 
 		# view closed routes
