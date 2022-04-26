@@ -1182,8 +1182,6 @@ def pre_repair_info(main_item, resp_body):
 		}
 		return basic
 
-	item_id = main_item.mon_id
-	client_name = main_item.name
 	repair_type = main_item.repair_type.label
 	try:
 		device_label = main_item.device.labels[0]

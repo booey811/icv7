@@ -98,7 +98,7 @@ def task_repair_event(main_id, event_name, event_type, timestamp, summary, actio
 	)
 
 
-def rq_item_adjustment(item_id, columns=(), move_item=''):
+def rq_item_adjustment(item_id, columns=(), move_item='', update=''):
 
 	item = BaseItem(CustomLogger(), item_id)
 
@@ -108,5 +108,8 @@ def rq_item_adjustment(item_id, columns=(), move_item=''):
 
 	if move_item:
 		item.moncli_obj.move_to_group(group_id=move_item)
+
+	if update:
+		item.add_update(message_body=update)
 
 	item.commit()

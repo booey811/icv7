@@ -1025,6 +1025,7 @@ def process_walkin_submission(body, client, ack):
 	# port to Monday
 	data_dict = s_help.convert_walkin_submission_to_dict(body)
 	intake_notes = f"INTAKE NOTES\n\n{data_dict['notes']}"
+	raise Exception("HERE develop updates adding in tasks")
 	ticket = None
 
 	cuslog = CustomLogger()

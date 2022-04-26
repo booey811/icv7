@@ -288,7 +288,6 @@ def _add_routing(app):
 			errors = {}
 			repair_type = body["view"]["state"]["values"]['text_pc']["text_accept_pc"]["value"]
 			pc = body["view"]["state"]["values"]['text_pc']["text_accept_pc"]["value"]
-			p(body)
 			if not pc and repair_type == "Diagnostic":
 				errors["text_accept_pc"] = "Passcodes are required for Diagnostics"
 
