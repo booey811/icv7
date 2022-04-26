@@ -1024,11 +1024,12 @@ def process_walkin_submission(body, client, ack):
 
 	# port to Monday
 	data_dict = s_help.convert_walkin_submission_to_dict(body)
-	intake_notes = f"INTAKE NOTES\n\n{data_dict['notes']}"
-	raise Exception("HERE develop updates adding in tasks")
+	intake_notes = data_dict['notes']
+
 	ticket = None
 
 	cuslog = CustomLogger()
+	columns = [["intake_notes", intake_notes]]
 
 	if not data_dict["zendesk_id"]:
 		# create ticket & add to monday
@@ -1099,7 +1100,6 @@ def process_walkin_submission(body, client, ack):
 			eric_ticket.fields.main_id.adjust(str(blank.moncli_obj.id))
 			eric_ticket.add_tags(["mondayactive"])
 			eric_ticket.commit()
-			blank.add_update(intake_notes)
 
 		else:
 			main = BaseItem(cuslog, data_dict["main_id"])
@@ -1120,12 +1120,18 @@ def process_walkin_submission(body, client, ack):
 			main.passcode.value = data_dict["pc"]
 		main.commit()
 
-		main.add_update(
-			intake_notes
-		)
-
 	else:
 		raise Exception("Unexpected Exception in Walk-In Processing Route")
+
+	q_def.enqueue(
+		tasks.rq_item_adjustment,
+		kwargs={
+			"item_id": main.mon_id,
+			"update": f"INTAKE NOTES\n\n{intake_notes}",
+			"columns": columns
+		}
+
+	)
 
 	add_repair_event(
 		main_item_or_id=main.moncli_obj,
