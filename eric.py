@@ -1456,9 +1456,12 @@ def handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 		ack()
 		external_id = body["view"]["external_id"]
 
+	view = views.repair_issue_form(body, more_info=more_info)
+	view["external_id"] = external_id
+
 	resp = client.views_update(
 		external_id=external_id,
-		view=views.repair_issue_form(body, more_info=more_info, external_id=external_id)
+		view=view
 	)
 
 

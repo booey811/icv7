@@ -140,7 +140,6 @@ def _add_routing(app):
 			eric.check_stock(body, client, initial=True)
 
 		# =========== Action Block Submissions
-		# Working Theory: Should be responded to with 'Push'
 
 		# Stock Checking Routes
 
