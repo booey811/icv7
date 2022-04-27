@@ -440,49 +440,6 @@ def loading(footnotes='', external_id=False, metadata=None):
 
 
 
-
-def error(footnotes=''):
-	view = {
-		"type": "modal",
-		"callback_id": "error_report",
-		"title": {
-			"type": "plain_text",
-			"text": "Error Reporting",
-			"emoji": True
-		},
-		"close": {
-			"type": "plain_text",
-			"text": "Cancel",
-			"emoji": True
-		},
-		"blocks": [
-			{
-				"type": "header",
-				"text": {
-					"type": "plain_text",
-					"text": "Uh Oh, We Ran Into A Problem",
-					"emoji": True
-				}
-			}
-		]
-	}
-
-	if footnotes:
-		secondary = {
-			"type": "context",
-			"elements": [
-				{
-					"type": "mrkdwn",
-					"text": footnotes
-				}
-			]
-		}
-		# noinspection PyTypeChecker
-		view['blocks'].append(secondary)
-
-	return view
-
-
 def success(footnotes=''):
 	view = {
 		"type": "modal",
