@@ -15,7 +15,8 @@ from moncli.api_v2.exceptions import MondayApiError
 import data
 import utils.tools
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event, get_timestamp, slack_ex
+	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event, get_timestamp, \
+	slack_ex
 import tasks
 from utils.tools import refurbs
 from application.monday import config as mon_config
@@ -62,7 +63,6 @@ def log_catcher_decor(eric_function):
 
 @log_catcher_decor
 def handle_repair_events(webhook, logger, test=None):
-
 	if test:
 		event_id = test
 	else:
@@ -97,9 +97,9 @@ def handle_repair_events(webhook, logger, test=None):
 			time.sleep(0.5)
 
 		columns += [
-					["actions_status", "Complete"],
-					["related_items", [job.result, actions['inventory.adjust_stock_level']]]
-				]
+			["actions_status", "Complete"],
+			["related_items", [job.result, actions['inventory.adjust_stock_level']]]
+		]
 
 		job_2 = q_lo.enqueue(
 			tasks.rq_item_adjustment,
@@ -126,9 +126,9 @@ def handle_repair_events(webhook, logger, test=None):
 			time.sleep(0.5)
 
 		columns += [
-					["actions_status", "Complete"],
-					["related_items", [job.result, actions['inventory.adjust_stock_level'][0]]]
-				]
+			["actions_status", "Complete"],
+			["related_items", [job.result, actions['inventory.adjust_stock_level'][0]]]
+		]
 
 		job_2 = q_lo.enqueue(
 			tasks.rq_item_adjustment,
@@ -1261,7 +1261,6 @@ def abort_repair_phase(body):
 
 
 def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
-
 	metadata = s_help.get_metadata(body)
 
 	# push loading view (first boot for this process is slow)
@@ -1276,7 +1275,8 @@ def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
 				})
 				return
 		external_id = s_help.create_external_view_id(body, "add_parts_to_repair")
-		temp_load = views.loading(f"Getting Parts Data (This can take 30-40 seconds after an update is released!", external_id=external_id, metadata=metadata)
+		temp_load = views.loading(f"Getting Parts Data (This can take 30-40 seconds after an update is released!",
+		                          external_id=external_id, metadata=metadata)
 		ack({
 			"response_action": "push",
 			"view": temp_load
@@ -1287,11 +1287,34 @@ def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
 	try:
 		view = views.initial_parts_search_box(body, external_id, initial, remove, diag=diag)
 	except slack_ex.DeviceProductNotFound as e:
-		view = views.error(f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and Products' Board\n\nPlease Let Seb & Gabe know.")
-		q_lo.enqueue(
-			tasks.process_repair_phase_completion,
-			args=([], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "pause")
-		)
+		try:
+			if body['view']['state']['values']['repair_notes']['repair_notes']['value']:
+				notes = body['view']['state']['values']['repair_notes']['repair_notes']['value']
+				metadata["notes"] = notes
+				message = \
+					f"***** CANNOT USE SLACK TO COMPLETE THIS REPAIR\nPlease add the device to the Prices and " \
+					f"Products Board ASAP *****\n\nTECHNICIAN NOTES:\n{notes} "
+				q_lo.enqueue(
+					tasks.rq_item_adjustment,
+					kwarg={
+						"item_id": metadata["main"],
+						"update": message
+					}
+				)
+			q_lo.enqueue(
+				tasks.process_repair_phase_completion,
+				args=(
+					[], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]),
+					"pause")
+			)
+			raise slack_ex.SlackUserError(
+				client,
+				f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and "
+				f"Products' Board\n\nPlease Let Seb & Gabe know.",
+				[f"https://icorrect.monday.com/boards/349212843/pulses/{metadata['main']}"]
+			)
+		except slack_ex.SlackUserError as e:
+			view = e.view
 	resp = client.views_update(
 		external_id=external_id,
 		view=view
@@ -1332,7 +1355,8 @@ def show_variant_selections(body, client, ack):
 	if variants:
 		view = views.display_variant_options(body, variants, meta)
 	else:
-		view = views.repair_completion_confirmation_view(body=body, from_variants=False, meta=meta, external_id=external_id)
+		view = views.repair_completion_confirmation_view(body=body, from_variants=False, meta=meta,
+		                                                 external_id=external_id)
 
 	resp = client.views_update(
 		external_id=external_id,
@@ -1343,7 +1367,8 @@ def show_variant_selections(body, client, ack):
 def show_repair_and_parts_confirmation(body, client, ack, from_variants=False):
 	external_id = body["view"]["external_id"]
 
-	view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, external_id=external_id, meta=s_help.get_metadata(body))
+	view = views.repair_completion_confirmation_view(body=body, from_variants=from_variants, external_id=external_id,
+	                                                 meta=s_help.get_metadata(body))
 	ack({
 		"response_action": "update",
 		"view": view
@@ -1390,9 +1415,15 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 	ack({"response_action": "update", "view": view})
 
 	if metadata["general"]["repair_type"] == "Repair":
-		args = (metadata["parts"], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "complete")
+		args = (
+			metadata["parts"], metadata["main"], metadata, get_timestamp(),
+			slack_config.get_username(body["user"]["id"]),
+			"complete")
 	elif metadata["general"]["repair_type"] == "Diagnostic":
-		args = (metadata["parts"], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "diagnostic")
+		args = (
+			metadata["parts"], metadata["main"], metadata, get_timestamp(),
+			slack_config.get_username(body["user"]["id"]),
+			"diagnostic")
 	else:
 		raise Exception(f"Unrecognised Repair Type {metadata['general']['repair_type']}")
 
@@ -1453,7 +1484,6 @@ def continue_parts_search(body, client):
 
 
 def handle_urgent_repair(body, client, ack):
-
 	meta = s_help.get_metadata(body)
 
 	# close modal
@@ -1519,7 +1549,6 @@ def handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 
 
 def process_repair_issue(body, client, ack):
-
 	meta = s_help.get_metadata(body)
 
 	selected = \

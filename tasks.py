@@ -45,6 +45,18 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 
 	repair_phase += 1
 
+	if metadata["notes"]:
+		add_repair_event(
+			main_item_or_id=main,
+			event_name=f"Technician Notes",
+			event_type="Tech Note",
+			timestamp=timestamp,
+			summary=metadata["notes"],
+			actions_dict=f"repair_phase_{repair_phase}",
+			actions_status="No Actions Required",
+			username=username
+		)
+
 	add_repair_event(
 		main_item_or_id=main,
 		event_name=f"Repair Phase {repair_phase}: Ending",
