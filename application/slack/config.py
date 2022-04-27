@@ -100,4 +100,9 @@ class TwoWayDict(dict):
 			self[item] = dictionary[item]
 
 
-
+def get_username(user_id):
+	try:
+		name = USER_IDS[user_id]
+	except KeyError:
+		name = "systems"
+	return name

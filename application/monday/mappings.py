@@ -3,7 +3,7 @@ from typing import Union
 import json
 
 import moncli.entities
-from moncli.column_value import simple, complex, readonly
+from moncli.column_value import simple, complex, readonly, Person
 
 from .config import BOARD_MAPPING_DICT
 from application.monday import exceptions
@@ -769,6 +769,11 @@ class SubItemsValue(BaseColumnValue):
         # Convert input to list
         if type(to_set) is not list:
             to_set = [to_set]
+
+        for p_id in to_set:
+            self._moncli_value.value.append(Person(p_id))
+
+        self._eric.moncli_obj.change_column_value(column_value=self._moncli_value)
 
         # Subitems column cannot be changed
         raise Exception('Not Yet Developed - SubItemsValue.value.setter')

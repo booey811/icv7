@@ -746,6 +746,7 @@ MAIN_REPAIR_TYPE = TwoWayDict(_MAIN_REPAIR_TYPE)
 DEVICE_TYPE = TwoWayDict(_DEVICE_TYPE)
 MAIN_CLIENT = TwoWayDict(_MAIN_CLIENT)
 PRODUCT_GROUPS = _get_product_groups()
+BLOCKS_BOARD = clients.monday.system.get_board_by_id("2593044634")
 
 DEVICE_TYPES = {
 	'iPhone': [],

@@ -3,18 +3,29 @@ from datetime import datetime, timezone
 import json
 
 from moncli.entities import MondayClient, Item
+from moncli.column_value import Person
 from zenpy import Zenpy
 
-
+import data
 import settings
+from .monday.config import USER_IDS
 
 
 def get_timestamp():
 	return datetime.now(timezone.utc).strftime("%Y-%m-%d %X")
 
 
-def add_repair_event(main_item_or_id, event_name, event_type, timestamp, summary='', actions_dict=(),
-                     actions_status='Not Done'):
+def add_repair_event(
+		main_item_or_id,
+		event_name,
+		event_type,
+		timestamp,
+		summary='',
+		actions_dict=(),
+		actions_status='Not Done',
+		username=''
+):
+
 	if type(main_item_or_id) in (str, int):
 		main_item = clients.monday.system.get_items(ids=[main_item_or_id])[0]
 	elif type(main_item_or_id) is Item:
@@ -40,7 +51,7 @@ def add_repair_event(main_item_or_id, event_name, event_type, timestamp, summary
 	if not event_type:
 		event_type = "Not Assigned"
 
-	main_item.create_subitem(
+	sub = main_item.create_subitem(
 		item_name=event_name,
 		column_values={
 			"date": timestamp,
@@ -51,6 +62,31 @@ def add_repair_event(main_item_or_id, event_name, event_type, timestamp, summary
 			"text": str(main_item.id)
 		}
 	)
+
+	# set user
+	if not username:
+		username = "systems"
+	mon_user_id = USER_IDS[username]
+	people_val = sub.get_column_value(id="people")
+	people_val.value.append(Person(mon_user_id))
+
+	# add to brick chain
+	board = data.BLOCKS_BOARD
+	block_item = board.add_item(
+		event_name.name
+	)
+	connect_val = sub.get_column_value(id="connect_boards9")
+	connect_val.value = [block_item.id]
+
+	sub.change_multiple_column_values(column_values=[people_val, connect_val])
+
+
+# def add_to_brick_chain(event_id):
+# 	event = BaseItem(CustomLogger(), event_id)
+# 	blank_brick = BaseItem(event.logger, board_id=2593044634)
+# 	new_item = blank_brick.new_item(event.name)
+# 	event.bricks_link.value = [new_item.id]
+
 
 
 def create_monday_client(user: str = 'system') -> MondayClient:

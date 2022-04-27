@@ -1,7 +1,8 @@
 from application import BaseItem, CustomLogger, add_repair_event, clients, get_timestamp
+import data
 
 
-def log_repair_issue(main_item_id, message):
+def log_repair_issue(main_item_id, message, username):
 	item = BaseItem(CustomLogger(), main_item_id)
 	message_fr = f"******* REPAIR ISSUE RAISED *******\n\nTechnician Notes:\n{message}"
 	item.add_update(message_fr)
@@ -14,13 +15,14 @@ def log_repair_issue(main_item_id, message):
 		actions_dict={
 			"move_item": "client_services",
 			"notify": "client_services"
-		}
+		},
+		username=username
 	)
 	item.moncli_obj.move_to_group("new_group6580")
-	process_repair_phase_completion([], item.mon_id, get_timestamp(), status="client")
+	process_repair_phase_completion([], item.mon_id, get_timestamp(), username, status="client")
 
 
-def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"):
+def process_repair_phase_completion(part_ids, main_id, timestamp, username, status="pause"):
 	if part_ids:
 		parts = clients.monday.system.get_items('name', ids=part_ids)
 	else:
@@ -41,7 +43,8 @@ def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"
 		timestamp=timestamp,
 		summary=f"Ending Repair Phase {repair_phase}",
 		actions_dict=f"repair_phase_{repair_phase}",
-		actions_status="No Actions Required"
+		actions_status="No Actions Required",
+		username=username
 	)
 
 	main.repair_phase.value = repair_phase
@@ -60,7 +63,8 @@ def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"
 			event_type='Parts Consumption',
 			timestamp=timestamp,
 			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
-			actions_dict={'inventory.adjust_stock_level': part.id}
+			actions_dict={'inventory.adjust_stock_level': part.id},
+			username=username
 		)
 
 	if status == "complete":
@@ -110,9 +114,3 @@ def rq_item_adjustment(item_id, columns=(), move_item='', update=''):
 
 	item.commit()
 
-
-def add_to_brick_chain(event_id):
-	event = BaseItem(CustomLogger(), event_id)
-	blank_brick = BaseItem(event.logger, board_id=2593044634)
-	new_item = blank_brick.new_item(event.name)
-	event.bricks_link.value = [new_item.id]

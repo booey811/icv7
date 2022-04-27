@@ -1122,13 +1122,16 @@ def process_walkin_submission(body, client, ack):
 		}
 
 	)
-
-	add_repair_event(
-		main_item_or_id=main.moncli_obj,
-		timestamp=get_timestamp(),
-		event_name="Received Device",
-		event_type="Device Received",
-		summary=f"Device Received\n\n{intake_notes}",
+	q_def.enqueue(
+		add_repair_event,
+		kwargs={
+			'main_item_or_id': main.moncli_obj,
+			'timestamp': get_timestamp(),
+			'event_name': "Received Device",
+			'event_type': "Device Received",
+			'summary': f"Device Received\n\n{intake_notes}",
+			"username": slack_config.get_username(body["user"]["id"])
+		}
 	)
 
 
@@ -1214,6 +1217,7 @@ def begin_specific_slack_repair(body, client, ack):
 		}
 	)
 
+	p(body)
 	q_lo.enqueue(
 		f=add_repair_event,
 		kwargs={
@@ -1223,7 +1227,8 @@ def begin_specific_slack_repair(body, client, ack):
 			"event_type": "Repair Phase Start",
 			"summary": f"Begin Repair Phase {repair_phase}",
 			"actions_dict": f"repair_phase_{repair_phase}",
-			"actions_status": "No Actions Required"
+			"actions_status": "No Actions Required",
+			"username": slack_config.get_username(body["user"]["id"])
 		}
 	)
 
@@ -1238,12 +1243,13 @@ def abort_repair_phase(body):
 			"event_name": "Repair Phase Aborted",
 			"event_type": "Aborted Process",
 			"summary": "User Exited the Repair Process",
-			"actions_status": "No Actions Required"
+			"actions_status": "No Actions Required",
+			"username": slack_config.get_username(body["user"]["id"])
 		}
 	)
 	q_def.enqueue(
 		tasks.process_repair_phase_completion,
-		args=([], meta["main"], get_timestamp(), 'pause')
+		args=([], meta["main"], get_timestamp(), slack_config.get_username(body["view"]), 'pause')
 	)
 
 
@@ -1269,7 +1275,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 		view = views.error(f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and Products' Board\n\nPlease Let Seb & Gabe know.")
 		q_lo.enqueue(
 			tasks.process_repair_phase_completion,
-			args=([], metadata["main"], get_timestamp(), "pause")
+			args=([], metadata["main"], get_timestamp(), slack_config.get_username(body["user"]["id"]), "pause")
 		)
 	resp = client.views_update(
 		external_id=external_id,
@@ -1366,7 +1372,7 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 
 	q_hi.enqueue(
 		tasks.process_repair_phase_completion,
-		args=(metadata["parts"], metadata["main"], get_timestamp(), "complete")
+		args=(metadata["parts"], metadata["main"], get_timestamp(), slack_config.get_username(body["user"]["id"]), "complete")
 	)
 
 
@@ -1439,7 +1445,8 @@ def handle_urgent_repair(body, client, ack):
 			"timestamp": get_timestamp(),
 			"summary": "Moving Item to Client Services to Be Re-queued",
 			"actions_dict": [],
-			"actions_status": "No Actions Required"
+			"actions_status": "No Actions Required",
+			"username": slack_config.get_username(body["user"]["id"])
 		}
 	)
 
@@ -1449,7 +1456,8 @@ def handle_urgent_repair(body, client, ack):
 			"part_ids": [],
 			"main_id": meta["main"],
 			"timestamp": get_timestamp(),
-			"status": "urgent"
+			"status": "urgent",
+			"username": slack_config.get_username(body["user"]["id"])
 		},
 		depends_on=abort
 	)
@@ -1570,7 +1578,8 @@ def emit_waste_events(body, client, ack):
 							"summary": f"Wasting {quantity}  x  {info[part_id]}",
 							"actions_dict": {
 								"inventory.adjust_stock_level": [part_id, quantity]
-							}
+							},
+							"username": slack_config.get_username(body["user"]["id"])
 						}
 					)
 		ack({"response_action": "clear"})

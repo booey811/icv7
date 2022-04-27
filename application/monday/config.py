@@ -433,11 +433,12 @@ BOARD_MAPPING_DICT = {
 			'connect_boards': 'related_items',  # board-relation
 			'numbers': 'repair_minutes',  # numeric,
 			"text": "parent_id",  # text
-			"connect_boards9": "bricks_link"
+			"connect_boards9": "bricks_link",  # board-relation
+			"people": "owner"  # people
 		}
 	},
 	'2593044634': {
-		'name': 'Repairs Brick Chain',
+		'name': 'bricks',
 		'columns': {
 			'person': 'person',  # multiple-person
 			'status': 'status',  # color
@@ -495,13 +496,14 @@ ACCOUNT_SHORTCODES = [
 	"reiss"
 ]
 
-USER_IDS = {
+_USER_IDS = {
 	'1034434': 'meesha',
 	'11140118': 'mike',
 	'1034414': 'ricky',
 	'25304513': 'safan',
 	'27932864': 'seb',
-	'4251271': 'gabe'
+	'4251271': 'gabe',
+	'12304876': 'systems'
 }
 
 _MAINBOARD_GROUP_IDS = {
@@ -541,3 +543,4 @@ class TwoWayDict(dict):
 
 
 MAINBOARD_GROUP_IDS = TwoWayDict(_MAINBOARD_GROUP_IDS)
+USER_IDS = TwoWayDict(_USER_IDS)
