@@ -1249,7 +1249,7 @@ def abort_repair_phase(body):
 	)
 	q_def.enqueue(
 		tasks.process_repair_phase_completion,
-		args=([], meta["main"], get_timestamp(), slack_config.get_username(body["view"]), 'pause')
+		args=([], meta["main"], get_timestamp(), slack_config.get_username(body["user"]["id"]), 'pause')
 	)
 
 

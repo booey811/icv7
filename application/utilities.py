@@ -73,7 +73,7 @@ def add_repair_event(
 	# add to brick chain
 	board = data.BLOCKS_BOARD
 	block_item = board.add_item(
-		event_name.name
+		event_name
 	)
 	connect_val = sub.get_column_value(id="connect_boards9")
 	connect_val.value = [block_item.id]

@@ -1263,7 +1263,7 @@ def repair_phase_view(main_item, body, external_id):
 
 	metadata = helper.get_metadata(body)
 	metadata["device"]["model"] = device
-
+	metadata["general"]["repair_type"] = repair_type
 	view = get_base_modal(f"{main_item.name}")
 
 	add_header_block(view['blocks'], f"{device}  |  {repair_type}")
@@ -1274,28 +1274,41 @@ def repair_phase_view(main_item, body, external_id):
 	add_header_block(view["blocks"], "Client Notes:")
 	add_markdown_block(view['blocks'], intake_notes)
 	add_divider_block(view["blocks"])
+
+	dropdown_options = []
+	if repair_type == "Repair":
+		dropdown_options = [[":ok_hand:  The repair has been completed", "repaired"]]
+		optional_notes = True
+	elif repair_type == "Diagnostic":
+		dropdown_options = [[":gear:  I've finished the diagnostic", "diagnosed"]]
+		optional_notes = False
+	else:
+		raise Exception(f"Unrecognised Repair Type: {repair_type}")
+
+	dropdown_options += [
+			[":eyes:  I've received a more urgent repair request", "urgent"],
+			[":warning:  I can't complete this repair", "client"],
+		]
+
 	add_multiline_text_input(
 		title="Repair Notes",
 		placeholder="Anything to add?",
 		block_id="repair_notes",
 		blocks=view["blocks"],
-		optional=True,
+		optional=optional_notes,
 		action_id="repair_notes"
 	)
+
 	add_dropdown_ui_input(
 		title="Have you finished?",
 		placeholder="Let us know what happened",
-		options=[
-			[":ok_hand:  The repair has been completed", "repaired"],
-			[":eyes:  I've received a more urgent repair request", "urgent"],
-			[":warning:  I can't complete this repair", "client"],
-			[":wave:  I need help", "other"]
-		],
+		options=dropdown_options,
 		block_id="repair_result_select",
 		blocks=view["blocks"],
 		optional=False,
 		action_id="repair_result_select"
 	)
+
 	view["private_metadata"] = json.dumps(metadata)
 	return view
 
