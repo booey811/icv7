@@ -1374,7 +1374,7 @@ def repair_issue_form(body, more_info=False):
 	return view
 
 
-def initial_parts_search_box(body, external_id, initial: bool, remove=False):
+def initial_parts_search_box(body, external_id, initial: bool, remove=False, diag=False):
 	def get_base_modal():
 		search = {
 			'type': "modal",
@@ -1426,9 +1426,10 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 			)
 
 		return blocks
+
 	metadata = helper.get_metadata(body)
 	metadata["external_id"] = external_id
-	p(body)
+
 	try:
 		data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
 	except KeyError:
@@ -1457,7 +1458,12 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False):
 					add_selected_parts_block(repair_info, view["blocks"])
 		add_divider_block(view["blocks"])
 
-	add_header_block(view["blocks"], "Add Parts to Repair")
+	if diag:
+		header = "Add Required Repairs"
+	else:
+		header = "Add Parts to Repair"
+
+	add_header_block(view["blocks"], header)
 	add_parts_list(device_repairs.get_slack_repair_options_data(), view["blocks"])
 
 	view["private_metadata"] = json.dumps(metadata)

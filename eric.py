@@ -1253,7 +1253,7 @@ def abort_repair_phase(body):
 	)
 
 
-def add_parts_to_repair(body, client, initial, ack, remove=False):
+def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
 
 	metadata = s_help.get_metadata(body)
 
@@ -1270,7 +1270,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False):
 		external_id = body["view"]["external_id"]
 
 	try:
-		view = views.initial_parts_search_box(body, external_id, initial, remove)
+		view = views.initial_parts_search_box(body, external_id, initial, remove, diag=diag)
 	except slack_ex.DeviceProductNotFound as e:
 		view = views.error(f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and Products' Board\n\nPlease Let Seb & Gabe know.")
 		q_lo.enqueue(

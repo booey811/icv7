@@ -318,6 +318,8 @@ def _add_routing(app):
 			if selected == 'repaired':
 				# eric.begin_parts_attachment(ack, body, client)
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
+			elif selected == "diagnosed":
+				eric.add_parts_to_repair(body, client, initial=True, ack=ack, diag=True)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client, ack, initial=True, more_info=False)
 			elif selected == "urgent":
