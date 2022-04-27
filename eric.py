@@ -1207,6 +1207,7 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 			except slack_ex.SlackUserError as e:
 				view = e.view
 
+	p(view)
 	client.views_update(
 		external_id=external_id,
 		view=view
@@ -1264,7 +1265,7 @@ def begin_specific_slack_repair(body, client, ack):
 	)
 
 
-def abort_repair_phase(body):
+def abort_repair_phase(body, client):
 	meta = s_help.get_metadata(body)
 	q_def.enqueue(
 		add_repair_event,
@@ -1282,6 +1283,14 @@ def abort_repair_phase(body):
 		tasks.process_repair_phase_completion,
 		args=([], meta["main"], meta, get_timestamp(), slack_config.get_username(body["user"]["id"]), 'pause')
 	)
+	try:
+		raise slack_ex.SlackUserError(
+			client,
+			f"User closed a Repair Phase View: {slack_config.get_username(body['user']['id'])}",
+			["app metadata", str(meta), f"https://icorrect.monday.com/boards/349212843/pulses/{meta['main']}"]
+		)
+	except slack_ex.SlackUserError as e:
+		return True
 
 
 def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):

@@ -396,15 +396,11 @@ def _add_routing(app):
 		@app.view_closed("waste_quantity_submission")
 		@app.view_closed("waste_opt_in")
 		def abort_repair_phase(ack, body, logger, client):
-			p("================================= VIEW CLOSED ===================================")
-			if body["is_cleared"]:
-				logger.info("User Closed a Repair Phase Modal")
-				ack({
-					"response_action": "clear"
-				})
-				eric.abort_repair_phase(body)
-			else:
-				ack()
+			logger.info("User Closed a Repair Phase Modal")
+			ack({
+				"response_action": "clear"
+			})
+			eric.abort_repair_phase(body, client)
 
 	elif os.environ["SLACK"] == "OFF":
 		print("Slack has been turned off, not listening to events")
