@@ -1780,13 +1780,7 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 
 		return basic
 
-	if meta:
-		metadata = meta
-	else:
-		metadata = helper.get_metadata(body)
-
-	if external_id:
-		metadata["external_id"] = external_id
+	metadata = meta
 
 	if from_variants:
 		for repair_id in metadata["extra"]["selected_repairs"]:
@@ -1798,38 +1792,35 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		metadata["extra"]["selected_repairs"] = []
 
 	view = get_base_modal()
-	add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
-	if not metadata["extra"]["client_repairs"]:
-		add_context_block(view["blocks"], "No repairs explicitly requested")
-	else:
-		add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
-	add_divider_block(view['blocks'])
-	add_header_block(view["blocks"], "To resolve these faults, you have used:")
 
 	text_and_values = [[item.name, item.name] for item in
 	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
-	add_checkbox_section(
-		title="Please confirm",
-		options=text_and_values,
-		block_id="checkbox_parts_confirmation",
-		action_id="checkbox_parts_confirmation",
-		blocks=view['blocks'],
-		optional=False
-	)
+
+	if metadata["general"]["repair_type"] == "Repair":
+
+		add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
+		if not metadata["extra"]["client_repairs"]:
+			add_context_block(view["blocks"], "No repairs explicitly requested")
+		else:
+			add_context_block(view["blocks"], metadata["extra"]["client_repairs"])
+		add_divider_block(view['blocks'])
+		add_header_block(view["blocks"], "To resolve these faults, you have used:")
+
+		add_checkbox_section(
+			title="Please confirm",
+			options=text_and_values,
+			block_id="checkbox_parts_confirmation",
+			action_id="checkbox_parts_confirmation",
+			blocks=view['blocks'],
+			optional=False
+		)
+
+	elif metadata["general"]["repair_type"] == "Diagnostic":
+		add_header_block(view["blocks"], "The Client Requires The Following:")
+		for part in text_and_values:
+			add_markdown_block(view["blocks"], part[0])
 
 	add_divider_block(view["blocks"])
-
-	# text_and_values = [["Yes, I have damaged a part", "waste"], ["No, everything went smoothly", "no_waste"]]
-	# add_dropdown_ui_input(
-	# 	title="Were any parts damaged during the repair?",
-	# 	placeholder='Please choose a response',
-	# 	options=text_and_values,
-	# 	blocks=view['blocks'],
-	# 	block_id='select_waste_opt_in',
-	# 	optional=False,
-	# 	action_id='select_waste_opt_in',
-	# )
-
 	add_divider_block(view["blocks"])
 
 	add_multiline_text_input(
@@ -1841,7 +1832,7 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		blocks=view['blocks']
 	)
 	view["private_metadata"] = json.dumps(metadata)
-
+	p(view)
 	return view
 
 
