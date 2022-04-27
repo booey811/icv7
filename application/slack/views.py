@@ -1278,10 +1278,8 @@ def repair_phase_view(main_item, body, external_id):
 	dropdown_options = []
 	if repair_type == "Repair":
 		dropdown_options = [[":ok_hand:  The repair has been completed", "repaired"]]
-		optional_notes = True
 	elif repair_type == "Diagnostic":
 		dropdown_options = [[":gear:  I've finished the diagnostic", "diagnosed"]]
-		optional_notes = False
 	else:
 		raise Exception(f"Unrecognised Repair Type: {repair_type}")
 
@@ -1295,7 +1293,7 @@ def repair_phase_view(main_item, body, external_id):
 		placeholder="Anything to add?",
 		block_id="repair_notes",
 		blocks=view["blocks"],
-		optional=optional_notes,
+		optional=True,
 		action_id="repair_notes"
 	)
 
@@ -1445,7 +1443,9 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 		else:
 			metadata["extra"]["selected_repairs"].append(selected_repair_id)
 	else:
-		metadata["extra"]["notes"] = body['view']['state']['values']['repair_notes']['repair_notes']['value']
+		notes = body["view"]["state"]["values"]["repair_notes"]["repair_notes"]["value"]
+		if notes:
+			metadata["notes"] = notes + "\n\n"
 
 	view = get_base_modal()
 	if metadata["extra"]["selected_repairs"]:
@@ -1793,8 +1793,9 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 
 	view = get_base_modal()
 
-	text_and_values = [[item.name, item.name] for item in
-	                   clients.monday.system.get_items('name', ids=metadata['parts'])]
+	text_and_values = [
+		[item.name, item.name] for item in clients.monday.system.get_items('name', ids=metadata['parts'])
+	]
 
 	if metadata["general"]["repair_type"] == "Repair":
 
@@ -1832,7 +1833,6 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		blocks=view['blocks']
 	)
 	view["private_metadata"] = json.dumps(metadata)
-	p(view)
 	return view
 
 

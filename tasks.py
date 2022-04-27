@@ -57,23 +57,24 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 
 	main.repair_phase.value = repair_phase
 
-	for part in parts:
-		try:
-			current_quantity = int(part.get_column_value('quantity').value)
-		except TypeError:
-			current_quantity = 0
-		if not current_quantity:
-			current_quantity = 0
+	if status == "complete":
+		for part in parts:
+			try:
+				current_quantity = int(part.get_column_value('quantity').value)
+			except TypeError:
+				current_quantity = 0
+			if not current_quantity:
+				current_quantity = 0
 
-		add_repair_event(
-			main_item_or_id=main,
-			event_name=f"Consume: {part.name}",
-			event_type='Parts Consumption',
-			timestamp=timestamp,
-			summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
-			actions_dict={'inventory.adjust_stock_level': part.id},
-			username=username
-		)
+			add_repair_event(
+				main_item_or_id=main,
+				event_name=f"Consume: {part.name}",
+				event_type='Parts Consumption',
+				timestamp=timestamp,
+				summary=f"Adjusting Stock Level for {part.name} | {current_quantity} -> {current_quantity - 1}",
+				actions_dict={'inventory.adjust_stock_level': part.id},
+				username=username
+			)
 
 	if status == "complete":
 		main.repairs.value = []
@@ -88,6 +89,15 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 		main.repair_status.label = "Diagnostic Complete"
 		report = generate_diagnostic_report(parts, metadata["notes"])
 		main.add_update(report)
+		add_repair_event(
+			main,
+			"Diagnostic Complete",
+			"Diagnostic Complete",
+			get_timestamp(),
+			report,
+			actions_dict="No Actions Required",
+			username=username
+		)
 	else:
 		raise Exception(f"Invalid Status for Repair Phase Completion: {status}")
 

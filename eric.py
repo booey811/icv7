@@ -1217,7 +1217,6 @@ def begin_specific_slack_repair(body, client, ack):
 		}
 	)
 
-	p(body)
 	q_lo.enqueue(
 		f=add_repair_event,
 		kwargs={
@@ -1259,7 +1258,19 @@ def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
 
 	# push loading view (first boot for this process is slow)
 
+	p(body)
+
 	if initial:
+		if metadata["general"]["repair_type"] == "Diagnostic":
+			p("Checking against diag =========================================== ")
+			p(body['view']['state']['values']['repair_notes']['repair_notes']['value'])
+			if not body['view']['state']['values']['repair_notes']['repair_notes']['value']:
+				p("erroring")
+				ack({
+					"response_action": "errors",
+					"errors": {'repair_notes': "Please provide repair notes for a Diagnostic!"}
+				})
+				return
 		external_id = s_help.create_external_view_id(body, "add_parts_to_repair")
 		temp_load = views.loading(f"Getting Parts Data (This can take 30-40 seconds after an update is released!", external_id=external_id, metadata=metadata)
 		ack({
@@ -1367,6 +1378,10 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 	external_id = s_help.create_external_view_id(body, "waste_data_capture")
 
 	view = views.capture_waste_request(body, external_id)
+
+	notes = body["view"]["state"]["values"]["text_final_repair_notes"]["text_final_repair_notes"]["value"]
+	if notes:
+		metadata["notes"] += notes + "\n\n"
 
 	ack({"response_action": "update", "view": view})
 
