@@ -15,7 +15,7 @@ from moncli.api_v2.exceptions import MondayApiError
 import data
 import utils.tools
 from application import BaseItem, clients, phonecheck, inventory, CannotFindReportThroughIMEI, accounting, \
-	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event, get_timestamp
+	EricTicket, financial, CustomLogger, xero_ex, mon_ex, views, slack_config, s_help, add_repair_event, get_timestamp, slack_ex
 import tasks
 from utils.tools import refurbs
 from application.monday import config as mon_config
@@ -1162,11 +1162,19 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 				ids=[main_group_id]
 			)[0].items[0])
 	except IndexError:
-		client.views_update(
-			external_id=external_id,
-			view=views.error("There are no Repairs in Your Group, Please Ask Your Manager to Assign Some Repairs")
-		)
-		raise Exception(f"Cannot Begin Repairs: No Repairs Assigned to Technician's Group: {username}")
+		try:
+			raise slack_ex.SlackUserError(
+				client,
+				"There are no Repairs in Your Group, Please Ask Your Manager to Assign Some Repairs",
+				[username]
+			)
+
+		except slack_ex.SlackUserError as e:
+			client.views_update(
+				external_id=external_id,
+				view=e.view
+			)
+			raise Exception(f"Cannot Begin Repairs: No Repairs Assigned to Technician's Group: {username}")
 
 	if not next_repair.device.ids:
 		view = views.error(

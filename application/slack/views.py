@@ -439,49 +439,7 @@ def loading(footnotes='', external_id=False, metadata=None):
 	return view
 
 
-class SlackUserError(Exception):
 
-	def __init__(self, footnotes=''):
-		def generate_view():
-			view = {
-				"type": "modal",
-				"callback_id": "error_report",
-				"title": {
-					"type": "plain_text",
-					"text": "Error Reporting",
-					"emoji": True
-				},
-				"close": {
-					"type": "plain_text",
-					"text": "Cancel",
-					"emoji": True
-				},
-				"blocks": [
-					{
-						"type": "header",
-						"text": {
-							"type": "plain_text",
-							"text": "Uh Oh, We Ran Into A Problem",
-							"emoji": True
-						}
-					}
-				]
-			}
-			if footnotes:
-				secondary = {
-					"type": "context",
-					"elements": [
-						{
-							"type": "mrkdwn",
-							"text": footnotes
-						}
-					]
-				}
-				# noinspection PyTypeChecker
-				view['blocks'].append(secondary)
-			return view
-
-		self.view = generate_view()
 
 def error(footnotes=''):
 	view = {
