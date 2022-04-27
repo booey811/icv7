@@ -320,6 +320,8 @@ def _add_routing(app):
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == 'client':
 				eric.handle_other_repair_issue(body, client, ack, initial=True, more_info=False)
+			elif selected == "urgent":
+				eric.handle_urgent_repair(body, client, ack)
 			elif selected == 'other':
 				eric.handle_other_repair_issue(body, client, ack, initial=True, more_info=False)
 			else:

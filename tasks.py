@@ -70,6 +70,8 @@ def process_repair_phase_completion(part_ids, main_id, timestamp, status="pause"
 		main.repair_status.label = "Repair Paused"
 	elif status == "client":
 		main.repair_status.label = "Client Contact"
+	elif status == "urgent":
+		main.repair_status.label = "To Be Queued"
 	else:
 		raise Exception(f"Invalid Status for Repair Phase Completion: {status}")
 
@@ -99,6 +101,8 @@ def rq_item_adjustment(item_id, columns=(), move_item='', update=''):
 		attri.value = adjustment[1]
 
 	if move_item:
+		if move_item == "cs":
+			move_item = "new_group6580"
 		item.moncli_obj.move_to_group(group_id=move_item)
 
 	if update:

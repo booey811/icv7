@@ -1430,10 +1430,38 @@ def continue_parts_search(body, client):
 	)
 
 
-def handle_urgent_repair(body, client):
-	resp = client.views_push(
-		trigger_id=body['trigger_id'],
-		view=views.loading("We haven't developed this yet....... Nothing is loading")
+def handle_urgent_repair(body, client, ack):
+
+	meta = s_help.get_metadata(body)
+
+	# close modal
+	ack({"response_action": "clear"})
+
+	# adjust status
+	# move to client services
+
+	abort = q_def.enqueue(
+		add_repair_event,
+		kwargs={
+			"main_item_or_id": meta["main"],
+			"event_name": "More Urgent Repair Request Received",
+			"event_type": "Aborted Process",
+			"timestamp": get_timestamp(),
+			"summary": "Moving Item to Client Services to Be Re-queued",
+			"actions_dict": [],
+			"actions_status": "No Actions Required"
+		}
+	)
+
+	q_def.enqueue(
+		tasks.process_repair_phase_completion,
+		kwargs={
+			"part_ids": [],
+			"main_id": meta["main"],
+			"timestamp": get_timestamp(),
+			"status": "urgent"
+		},
+		depends_on=abort
 	)
 
 

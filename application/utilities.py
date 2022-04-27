@@ -8,6 +8,7 @@ from zenpy import Zenpy
 
 import settings
 
+
 def get_timestamp():
 	return datetime.now(timezone.utc).strftime("%Y-%m-%d %X")
 

@@ -1246,7 +1246,6 @@ def repair_phase_view(main_item, body, external_id):
 		}
 		return basic
 
-
 	item_id = main_item.mon_id
 
 	try:
@@ -1288,6 +1287,7 @@ def repair_phase_view(main_item, body, external_id):
 		placeholder="Let us know what happened",
 		options=[
 			[":ok_hand:  The repair has been completed", "repaired"],
+			[":eyes:  I've received a more urgent repair request", "urgent"],
 			[":warning:  I can't complete this repair", "client"],
 			[":wave:  I need help", "other"]
 		],
