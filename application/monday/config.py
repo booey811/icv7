@@ -433,7 +433,16 @@ BOARD_MAPPING_DICT = {
 			'connect_boards': 'related_items',  # board-relation
 			'numbers': 'repair_minutes',  # numeric,
 			"text": "parent_id",  # text
-			"text0": "rq_job_id"  # text
+			"connect_boards9": "bricks_link"
+		}
+	},
+	'2593044634': {
+		'name': 'Repairs Brick Chain',
+		'columns': {
+			'person': 'person',  # multiple-person
+			'status': 'status',  # color
+			'date4': 'date',  # date
+			'link_to_subitems_of_icorrect_main_board': 'events_link',  # board-relation
 		}
 	}
 }

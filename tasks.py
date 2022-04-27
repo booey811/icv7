@@ -109,3 +109,10 @@ def rq_item_adjustment(item_id, columns=(), move_item='', update=''):
 		item.add_update(message_body=update)
 
 	item.commit()
+
+
+def add_to_brick_chain(event_id):
+	event = BaseItem(CustomLogger(), event_id)
+	blank_brick = BaseItem(event.logger, board_id=2593044634)
+	new_item = blank_brick.new_item(event.name)
+	event.bricks_link.value = [new_item.id]

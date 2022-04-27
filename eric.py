@@ -62,14 +62,21 @@ def log_catcher_decor(eric_function):
 
 @log_catcher_decor
 def handle_repair_events(webhook, logger, test=None):
+
 	if test:
 		event_id = test
 	else:
 		event_id = webhook["pulseId"]
 	eric_event = BaseItem(logger, event_id)
 
+	columns = [["chain_trigger", "Connected"]]
+
 	if eric_event.actions_status.label == "No Actions Required":
-		# No Actions Required - Ignore
+		# Adjust Chain Trigger to add to Brick Chain
+		q_lo.enqueue(
+			tasks.add_to_brick_chain,
+			eric_event.mon_id
+		)
 		return True
 
 	event_type = eric_event.event_type.label
@@ -89,14 +96,16 @@ def handle_repair_events(webhook, logger, test=None):
 		while not job.result:
 			time.sleep(0.5)
 
+		columns += [
+					["actions_status", "Complete"],
+					["related_items", [job.result, actions['inventory.adjust_stock_level']]]
+				]
+
 		job_2 = q_lo.enqueue(
 			tasks.rq_item_adjustment,
 			kwargs={
 				"item_id": str(eric_event.mon_id),
-				"columns": [
-					["actions_status", "Complete"],
-					["related_items", [job.result, actions['inventory.adjust_stock_level']]]
-				]
+				"columns": columns
 			},
 			depends_on=job,
 			retry=rq.Retry(max=5, interval=20)
@@ -116,6 +125,11 @@ def handle_repair_events(webhook, logger, test=None):
 		while not job.result:
 			time.sleep(0.5)
 
+		columns += [
+					["actions_status", "Complete"],
+					["related_items", [job.result, actions['inventory.adjust_stock_level'][0]]]
+				]
+
 		job_2 = q_lo.enqueue(
 			tasks.rq_item_adjustment,
 			kwargs={
@@ -127,30 +141,6 @@ def handle_repair_events(webhook, logger, test=None):
 			},
 			depends_on=job,
 			retry=rq.Retry(max=5, interval=20)
-		)
-
-	elif event_type == "Repair Issue":
-		main_item = BaseItem(eric_event.logger, eric_event.parent_id.value)
-		main_item.moncli_obj.move_to_group("new_group6580")
-		main_item.repair_status.label = "Client Contact"
-		q_lo.enqueue(
-			tasks.rq_item_adjustment,
-			kwargs={
-				"item_id": str(eric_event.mon_id),
-				"columns": [
-					["actions_status", "Complete"],
-				]
-			},
-			retry=rq.Retry(max=5, interval=20)
-		)
-		q_lo.enqueue(
-			tasks.rq_item_adjustment,
-			kwargs={
-				"item_id": main_item.mon_id,
-				"columns": [
-					["repair_status", "Client Contact"]
-				]
-			}
 		)
 
 	else:

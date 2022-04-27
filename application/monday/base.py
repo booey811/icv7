@@ -104,7 +104,7 @@ class BaseItem(BaseItemStructure):
                 completed_columns.append(column.id)
                 self.log('Column Processing Finished\n')
 
-            except KeyError:
+            except KeyError as e:
                 # Occurs when id is not found in the config file
                 if mon_col.id == 'name':
                     # Ignore the 'name' column as this would be the name of the item
