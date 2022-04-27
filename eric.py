@@ -1258,12 +1258,8 @@ def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
 
 	# push loading view (first boot for this process is slow)
 
-	p(body)
-
 	if initial:
 		if metadata["general"]["repair_type"] == "Diagnostic":
-			p("Checking against diag =========================================== ")
-			p(body['view']['state']['values']['repair_notes']['repair_notes']['value'])
 			if not body['view']['state']['values']['repair_notes']['repair_notes']['value']:
 				p("erroring")
 				ack({
