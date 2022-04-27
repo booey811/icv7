@@ -95,7 +95,8 @@ def _init_metadata():
 			"ticket": {
 				'id': ''
 			}
-		}
+		},
+		"notes": ''
 	}
 
 	return dct

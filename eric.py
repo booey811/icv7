@@ -1249,7 +1249,7 @@ def abort_repair_phase(body):
 	)
 	q_def.enqueue(
 		tasks.process_repair_phase_completion,
-		args=([], meta["main"], get_timestamp(), slack_config.get_username(body["user"]["id"]), 'pause')
+		args=([], meta["main"], meta, get_timestamp(), slack_config.get_username(body["user"]["id"]), 'pause')
 	)
 
 
@@ -1275,7 +1275,7 @@ def add_parts_to_repair(body, client, initial, ack, remove=False, diag=False):
 		view = views.error(f"The {e.device} is not supported by Slack UI Repairs, as it has not bee programmed on the 'Parts and Products' Board\n\nPlease Let Seb & Gabe know.")
 		q_lo.enqueue(
 			tasks.process_repair_phase_completion,
-			args=([], metadata["main"], get_timestamp(), slack_config.get_username(body["user"]["id"]), "pause")
+			args=([], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "pause")
 		)
 	resp = client.views_update(
 		external_id=external_id,
@@ -1370,9 +1370,16 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 
 	ack({"response_action": "update", "view": view})
 
+	if metadata["general"]["repair_type"] == "Repair":
+		args = (metadata["parts"], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "complete")
+	elif metadata["general"]["repair_type"] == "Diagnostic":
+		args = (metadata["parts"], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "diagnostic")
+	else:
+		raise Exception(f"Unrecognised Repair Type {metadata['general']['repair_type']}")
+
 	q_hi.enqueue(
 		tasks.process_repair_phase_completion,
-		args=(metadata["parts"], metadata["main"], get_timestamp(), slack_config.get_username(body["user"]["id"]), "complete")
+		args=args
 	)
 
 
@@ -1457,7 +1464,8 @@ def handle_urgent_repair(body, client, ack):
 			"main_id": meta["main"],
 			"timestamp": get_timestamp(),
 			"status": "urgent",
-			"username": slack_config.get_username(body["user"]["id"])
+			"username": slack_config.get_username(body["user"]["id"]),
+			"metadata": meta
 		},
 		depends_on=abort
 	)

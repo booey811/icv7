@@ -19,10 +19,18 @@ def log_repair_issue(main_item_id, message, username):
 		username=username
 	)
 	item.moncli_obj.move_to_group("new_group6580")
-	process_repair_phase_completion([], item.mon_id, get_timestamp(), username, status="client")
+	process_repair_phase_completion([], item.mon_id, {}, get_timestamp(), username, status="client")
 
 
-def process_repair_phase_completion(part_ids, main_id, timestamp, username, status="pause"):
+def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, username, status="pause"):
+
+	def generate_diagnostic_report(parts_list, notes):
+		basic = "***** DIAGNOSTIC REPORT *****\n\nRepairs Required:\n"
+		for part_item in parts_list:
+			line = f"-  {part_item.name}\n"
+		basic += f"\n TECHNICIAN'S NOTES\n{notes}"
+		return basic
+
 	if part_ids:
 		parts = clients.monday.system.get_items('name', ids=part_ids)
 	else:
@@ -76,6 +84,10 @@ def process_repair_phase_completion(part_ids, main_id, timestamp, username, stat
 		main.repair_status.label = "Client Contact"
 	elif status == "urgent":
 		main.repair_status.label = "To Be Queued"
+	elif status == "diagnostic":
+		main.repair_status.label = "Diagnostic Complete"
+		report = generate_diagnostic_report(parts, metadata["notes"])
+		main.add_update(report)
 	else:
 		raise Exception(f"Invalid Status for Repair Phase Completion: {status}")
 
