@@ -1449,7 +1449,6 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 
 	view = get_base_modal()
 	if metadata["extra"]["selected_repairs"]:
-
 		add_header_block(view["blocks"], "Selected Parts")
 		for repair_id in metadata["extra"]["selected_repairs"]:
 			for repair_info in device_repairs.get_slack_repair_options_data():
@@ -1573,7 +1572,6 @@ def parts_search_results(resp_body):
 			results.append(item)
 
 	if not results:
-		print("============================ NO RESULTS FOUND =======================================================")
 		basic = {
 			"type": "modal",
 			"private_metadata": json.dumps(metadata),

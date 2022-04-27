@@ -28,7 +28,8 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 		basic = "***** DIAGNOSTIC REPORT *****\n\nRepairs Required:\n"
 		for part_item in parts_list:
 			line = f"-  {part_item.name}\n"
-		basic += f"\n TECHNICIAN'S NOTES\n{notes}"
+			basic += line
+		basic += f"\n TECHNICIAN NOTES\n{notes}"
 		return basic
 
 	if part_ids:
@@ -56,7 +57,6 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 	)
 
 	main.repair_phase.value = repair_phase
-
 	if status == "complete":
 		for part in parts:
 			try:
@@ -65,7 +65,6 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 				current_quantity = 0
 			if not current_quantity:
 				current_quantity = 0
-
 			add_repair_event(
 				main_item_or_id=main,
 				event_name=f"Consume: {part.name}",
@@ -75,8 +74,6 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 				actions_dict={'inventory.adjust_stock_level': part.id},
 				username=username
 			)
-
-	if status == "complete":
 		main.repairs.value = []
 		main.repair_status.label = "Repaired"
 	elif status == "pause":

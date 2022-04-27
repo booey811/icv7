@@ -1381,6 +1381,8 @@ def finalise_repair_data_and_request_waste(body, client, ack):
 
 	ack({"response_action": "update", "view": view})
 
+	p(metadata)
+
 	if metadata["general"]["repair_type"] == "Repair":
 		args = (metadata["parts"], metadata["main"], metadata, get_timestamp(), slack_config.get_username(body["user"]["id"]), "complete")
 	elif metadata["general"]["repair_type"] == "Diagnostic":
