@@ -37,6 +37,8 @@ class SlackUserError(Exception):
 	def __init__(self, client, footnotes='', data_points: list = None):
 		if data_points is None:
 			data_points = []
+		self.footnotes = footnotes,
+		self.data_points = data_points
 
 		def generate_view():
 			view = {
@@ -79,18 +81,19 @@ class SlackUserError(Exception):
 
 		self.view = generate_view()
 
-		message = f"Repair Process Aborted\nUser Saw:\n\n{footnotes}\n\nExtra Data:\n\n"
+		if client:
 
-		for item in data_points:
-			message += item + "\n"
+			message = f"Repair Process Aborted\nUser Saw:\n\n{footnotes}\n\nExtra Data:\n\n"
 
-		if os.environ["ENV"] == 'devlocal':
-			print('DEVLOCAL')
-			channel = "C03D7ET6EFM"
-		else:
-			channel = "C03D4B8P42H"
+			for item in data_points:
+				message += item + "\n"
 
-		client.chat_postMessage(
-			channel=channel,
-			text=message
-		)
+			if os.environ["ENV"] == 'devlocal':
+				channel = "C03D7ET6EFM"
+			else:
+				channel = "C03D4B8P42H"
+
+			client.chat_postMessage(
+				channel=channel,
+				text=message
+			)

@@ -1203,6 +1203,7 @@ def pre_repair_info(main_item, resp_body):
 
 	view = get_base_modal(main_item.name)
 	add_header_block(view['blocks'], f"{device_label}  |  {repair_type}")
+	view["private_metadata"] = json.dumps(metadata)
 
 	if repair_type == "Repair":
 		add_markdown_block(view["blocks"], "Repairs Requested:")
@@ -1213,9 +1214,8 @@ def pre_repair_info(main_item, resp_body):
 		add_markdown_block(view["blocks"], ":nerd_face:  Please diagnose the device, paying attention to the following parts:")
 		add_context_block(view["blocks"], repairs_string)
 	else:
-		view = error(f"A Repair Has Been Submitted with an Unknown Repair Type: {repair_type}\nPlease let Gabe know")
+		raise exceptions.SlackUserError(None, f"A Repair Has Been Submitted with an Unknown Repair Type: {repair_type}\nPlease let Gabe know")
 
-	view["private_metadata"] = json.dumps(metadata)
 	return view
 
 

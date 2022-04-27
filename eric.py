@@ -973,14 +973,20 @@ def show_walk_in_info(body, client, from_search=False, from_booking=False, from_
 	if from_booking:
 		item = BaseItem(CustomLogger(), body['actions'][0]['value'])
 		if not item.zendesk_id.value:
-			client.views_update(
-				external_id=ext_id,
-				view=views.error(f"{item.name}[{item.mon_id}] has no Zendesk ticket linked to it, meaning we are "
-				                 f"unable to contact the client (and the booking was taken incorrectly). In future, "
-				                 f"we'll create the ticket here, but for now you'll need to go back and use the "
-				                 f"'/users' command to book this repair in")
-			)
-			raise Exception(f"No Zendesk Ticket Associated with Booking: {item.name}")
+			try:
+				raise slack_ex.SlackUserError(
+					client,
+					f"{item.name}[{item.mon_id}] has no Zendesk ticket linked to it, meaning we are "
+					f"unable to contact the client (and the booking was taken incorrectly). In future, "
+					f"we'll create the ticket here, but for now you'll need to go back and use the "
+					f"'/users' command to book this repair in"
+				)
+			except slack_ex.SlackUserError as e:
+				client.views_update(
+					external_id=ext_id,
+					view=e.view
+				)
+				return
 		else:
 			ticket = EricTicket(item.logger, item.zendesk_id.value)
 			user = ticket.zenpy_ticket.requester
@@ -1177,11 +1183,29 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 			raise Exception(f"Cannot Begin Repairs: No Repairs Assigned to Technician's Group: {username}")
 
 	if not next_repair.device.ids:
-		view = views.error(
-			f"{next_repair.name}[{next_repair.mon_id}] Has No Device Assigned To It - Please let Gabe Know and Try Again"
-		)
+		try:
+			raise slack_ex.SlackUserError(
+				client,
+				f"{next_repair.name}[{next_repair.mon_id}] Has No Device Assigned To It - Please let Gabe Know and Try Again",
+				[f"username: {username}"]
+			)
+		except slack_ex.SlackUserError as e:
+			view = e.view
+
 	else:
-		view = views.pre_repair_info(next_repair, body)
+		try:
+			view = views.pre_repair_info(next_repair, body)
+		except slack_ex.SlackUserError as e:
+			try:
+				raise slack_ex.SlackUserError(
+					client,
+					footnotes=e.footnotes,
+					data_points=[
+						f"username: {username}",
+					]
+				)
+			except slack_ex.SlackUserError as e:
+				view = e.view
 
 	client.views_update(
 		external_id=external_id,
