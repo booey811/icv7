@@ -1010,6 +1010,10 @@ def process_walkin_submission(body, client, ack):
 	data_dict = s_help.convert_walkin_submission_to_dict(body)
 	intake_notes = data_dict['notes']
 
+	meta = s_help.get_metadata(body)
+	meta["device"]["eric_id"] = \
+		body["view"]["state"]["values"]['select_device']["select_accept_device"]["selected_option"]['value']
+
 	ticket = None
 
 	cuslog = CustomLogger()
@@ -1062,6 +1066,7 @@ def process_walkin_submission(body, client, ack):
 			]
 			blank.phone.value = eric_ticket.user["phone"]
 			blank.email.value = eric_ticket.user["email"]
+			blank.select_device.value = meta["device"]["eric_id"]
 			blank.notifications_status.label = "ON"
 			if data_dict["pc"]:
 				blank.passcode.value = data_dict["pc"]
@@ -1097,9 +1102,10 @@ def process_walkin_submission(body, client, ack):
 		)
 
 		main = BaseItem(cuslog, data_dict["main_id"])
-		main.device.replace(data_dict["device_str"])
+		# main.device.replace(data_dict["device_str"])
 		main.repair_type.label = data_dict["repair_type_str"]
 		main.repair_status.label = "Received"
+		main.device_eric_id.value = meta["device"]["eric_id"]
 		if data_dict["pc"]:
 			main.passcode.value = data_dict["pc"]
 		main.commit()
@@ -1119,7 +1125,7 @@ def process_walkin_submission(body, client, ack):
 	q_def.enqueue(
 		add_repair_event,
 		kwargs={
-			'main_item_or_id': main.moncli_obj,
+			'main_item_or_id': main.moncli_obj.id,
 			'timestamp': get_timestamp(),
 			'event_name': "Received Device",
 			'event_type': "Device Received",

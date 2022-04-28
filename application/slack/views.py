@@ -40,14 +40,14 @@ def add_context_block(blocks, text):
 
 
 def add_dropdown_ui_section(title, placeholder, options, blocks, block_id, selection_action_id):
-	def get_option(text):
+	def get_option(text_and_value):
 		option = {
 			"text": {
 				"type": "plain_text",
-				"text": text,
+				"text": text_and_value[0],
 				"emoji": True
 			},
-			"value": text
+			"value": text_and_value[1]
 		}
 		return option
 
@@ -1025,10 +1025,18 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 
 		add_header("Confirmations", view['blocks'])
 
+		d_type_options = [
+			['iPhone', 'iphone'],
+			['iPad', 'ipad'],
+			['Apple Watch', 'watch'],
+			['MacBook', 'macbook'],
+			['Other', 'other']
+		]
+
 		add_dropdown_ui_section(
 			title="Device Type",
 			placeholder="Select a device type",
-			options=['iPhone', 'iPad', 'MacBook', 'Apple Watch', 'Other'],
+			options=d_type_options,
 			blocks=view['blocks'],
 			block_id="select_device_type",
 			selection_action_id='select_accept_device_type'
@@ -1041,10 +1049,14 @@ def walkin_booking_info(body, zen_user=None, phase="init", monday_item: BaseItem
 			body['view']['state']['values']['select_device_type']['select_accept_device_type']['selected_option'][
 				'value']
 
+		devices = data.repairs.get_devices(device_type)
+
+		device_options = [[item.info["display_name"], item.info['eric_id']] for item in devices]
+
 		add_dropdown_ui_section(
 			title="Device",
 			placeholder="Select device",
-			options=[item for item in data.MAIN_DEVICE if device_type in item],
+			options=device_options,
 			blocks=view['blocks'],
 			block_id="select_device",
 			selection_action_id="select_accept_device"
@@ -1367,13 +1379,9 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 
 	metadata = helper.get_metadata(body)
 
-	try:
-		data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
-	except KeyError:
-		raise exceptions.DeviceProductNotFound(metadata["device"]["model"])
-	metadata['device']['eric_id'] = data_repairs_id
+	p(metadata)
 
-	device_repairs = getattr(data.repairs, data_repairs_id)
+	device_repairs = data.repairs.get_devices(metadata["extra"]["device_type"])
 
 	if not initial:
 		selected_repair_id = body['actions'][0]["value"]
@@ -1411,7 +1419,6 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 		repairs_info.append({"name": "No Parts Used", "mon_id": "no_parts"})
 	add_parts_list(repairs_info, view["blocks"])
 
-	p(metadata)
 	view["private_metadata"] = json.dumps(metadata)
 
 	return view

@@ -63,7 +63,8 @@ BOARD_MAPPING_DICT = {
 			'link1': 'ticket_url',
 			"text15": "company_name",
 			"numbers5": "repair_phase",
-			"text3": "intake_notes"
+			"text3": "intake_notes",
+			"text05": "device_eric_id"
 		},
 		"zendesk": [
 			'status4',  # Status

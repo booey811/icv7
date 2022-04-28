@@ -13,13 +13,15 @@ def add_device_type_metadata(main_item, custom_metadata):
 
 	else:
 		if 'iPhone' in main_item.device.labels[0]:
-			custom_metadata['extra']['device_type'] = "iPhone"
+			custom_metadata['extra']['device_type'] = "iphone"
 		elif 'iPad' in main_item.device.labels[0]:
-			custom_metadata['extra']['device_type'] = "iPad"
+			custom_metadata['extra']['device_type'] = "ipad"
 		elif 'Watch' in main_item.device.labels[0]:
-			custom_metadata['extra']['device_type'] = "Apple Watch"
+			custom_metadata['extra']['device_type'] = "watch"
+		elif "MacBook" in main_item.device.labels[0]:
+			custom_metadata['extra']['device_type'] = "macbook"
 		else:
-			custom_metadata['extra']['device_type'] = "MacBook"
+			custom_metadata['extra']['device_type'] = "other"
 
 
 def get_refurb_request_markdown(main_item, repairs):
