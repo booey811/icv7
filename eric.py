@@ -1555,8 +1555,10 @@ def handle_urgent_repair(body, client, ack):
 
 def handle_other_repair_issue(body, client, ack, initial=False, more_info=False):
 	meta = s_help.get_metadata(body)
-
 	if initial:
+		notes = body["view"]["state"]["values"]["repair_notes"]["repair_notes"]['value']
+		if notes:
+			meta["notes"] = notes
 		external_id = s_help.create_external_view_id(body, "handle_other_repair_issue")
 		loading_view = views.loading(
 			"This Screen Is Just For Improving Stability :)",
@@ -1574,6 +1576,7 @@ def handle_other_repair_issue(body, client, ack, initial=False, more_info=False)
 
 	view = views.repair_issue_form(body, more_info=more_info)
 	view["external_id"] = external_id
+	view["private_metadata"] = json.dumps(meta)
 
 	resp = client.views_update(
 		external_id=external_id,
@@ -1599,7 +1602,7 @@ def process_repair_issue(body, client, ack):
 
 	q_hi.enqueue(
 		tasks.log_repair_issue,
-		args=(meta["main"], message)
+		args=(meta["main"], message, slack_config.get_username(body["user"]["id"]), meta)
 	)
 
 

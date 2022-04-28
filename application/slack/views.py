@@ -1212,7 +1212,6 @@ def repair_phase_view(main_item, body, external_id):
 	except IndexError:
 		device = "Unconfirmed Device (this is bad)"
 	repair_type = main_item.repair_type.label
-	start_time = datetime.datetime.now().strftime("%X")
 	pc = main_item.passcode.value
 	if not pc:
 		pc = "No Access Granted :white_frowning_face:"
@@ -1265,7 +1264,6 @@ def repair_phase_view(main_item, body, external_id):
 		optional=False,
 		action_id="repair_result_select"
 	)
-
 	view["private_metadata"] = json.dumps(metadata)
 	return view
 

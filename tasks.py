@@ -1,10 +1,17 @@
+from pprint import pprint as p
+
 from application import BaseItem, CustomLogger, add_repair_event, clients, get_timestamp
 import data
 
 
-def log_repair_issue(main_item_id, message, username):
+def log_repair_issue(main_item_id, message, username, metadata: dict = None):
+	if metadata is None:
+		metadata = {}
 	item = BaseItem(CustomLogger(), main_item_id)
-	message_fr = f"******* REPAIR ISSUE RAISED *******\n\nTechnician Notes:\n{message}"
+	message_fr = f"******* REPAIR ISSUE RAISED *******\n\nIssue:\n{message}"
+	if metadata:
+		if metadata["notes"]:
+			message_fr += f"\n\nTechnician Notes:\n{metadata['notes']}"
 	item.add_update(message_fr)
 	add_repair_event(
 		item.mon_id,
@@ -19,7 +26,7 @@ def log_repair_issue(main_item_id, message, username):
 		username=username
 	)
 	item.moncli_obj.move_to_group("new_group6580")
-	process_repair_phase_completion([], item.mon_id, {}, get_timestamp(), username, status="client")
+	process_repair_phase_completion([], item.mon_id, metadata, get_timestamp(), username, status="client")
 
 
 def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, username, status="pause"):
@@ -45,17 +52,18 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 
 	repair_phase += 1
 
-	if metadata["notes"]:
-		add_repair_event(
-			main_item_or_id=main,
-			event_name=f"Technician Notes",
-			event_type="Tech Note",
-			timestamp=timestamp,
-			summary=metadata["notes"],
-			actions_dict=f"repair_phase_{repair_phase}",
-			actions_status="No Actions Required",
-			username=username
-		)
+	if metadata:
+		if metadata["notes"]:
+			add_repair_event(
+				main_item_or_id=main,
+				event_name=f"Technician Notes",
+				event_type="Tech Note",
+				timestamp=timestamp,
+				summary=metadata["notes"],
+				actions_dict=f"repair_phase_{repair_phase}",
+				actions_status="No Actions Required",
+				username=username
+			)
 
 	add_repair_event(
 		main_item_or_id=main,
