@@ -1201,7 +1201,6 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 			except slack_ex.SlackUserError as e:
 				view = e.view
 
-	p(view)
 	client.views_update(
 		external_id=external_id,
 		view=view

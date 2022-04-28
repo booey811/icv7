@@ -1139,10 +1139,6 @@ def pre_repair_info(main_item, resp_body):
 		return basic
 
 	repair_type = main_item.repair_type.label
-	try:
-		device_label = main_item.device.labels[0]
-	except IndexError:
-		device_label = "Unconfirmed"
 	repairs_string = ", ".join(main_item.repairs.labels)
 	if not repairs_string:
 		repairs_string = 'No Repairs Requested'
@@ -1151,6 +1147,12 @@ def pre_repair_info(main_item, resp_body):
 	metadata['main'] = main_item.mon_id
 	metadata["general"]["repair_type"] = repair_type
 	metadata["extra"]["client_repairs"] = repairs_string
+	metadata["device"]["eric_id"] = main_item.device_eric_id.value
+
+	device = getattr(data.repairs, metadata["device"]["eric_id"])
+
+	device_label = device.info["display_name"]
+
 	helper.add_device_type_metadata(main_item, metadata)
 
 	view = get_base_modal(main_item.name)
@@ -1200,12 +1202,9 @@ def repair_phase_view(main_item, body, external_id):
 		}
 		return basic
 
-	item_id = main_item.mon_id
+	metadata = helper.get_metadata(body)
 
-	try:
-		device = main_item.device.labels[0]
-	except IndexError:
-		device = "Unconfirmed Device (this is bad)"
+	device = getattr(data.repairs, metadata["device"]["eric_id"])
 	repair_type = main_item.repair_type.label
 	pc = main_item.passcode.value
 	if not pc:
@@ -1214,12 +1213,11 @@ def repair_phase_view(main_item, body, external_id):
 	if not intake_notes:
 		intake_notes = ":sob:  None Taken"
 
-	metadata = helper.get_metadata(body)
-	metadata["device"]["model"] = device
+	metadata["device"]["model"] = device.info["display_name"]
 	metadata["general"]["repair_type"] = repair_type
 	view = get_base_modal(f"{main_item.name}")
 
-	add_header_block(view['blocks'], f"{device}  |  {repair_type}")
+	add_header_block(view['blocks'], f"{metadata['device']['model']}  |  {repair_type}")
 	add_divider_block(view["blocks"])
 	add_markdown_block(view["blocks"], _get_repairs_string(main_item))
 	add_context_block(view["blocks"], pc)
@@ -1228,7 +1226,6 @@ def repair_phase_view(main_item, body, external_id):
 	add_markdown_block(view['blocks'], intake_notes)
 	add_divider_block(view["blocks"])
 
-	dropdown_options = []
 	if repair_type == "Repair":
 		dropdown_options = [[":ok_hand:  The repair has been completed", "repaired"]]
 	elif repair_type == "Diagnostic":
@@ -1379,9 +1376,7 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 
 	metadata = helper.get_metadata(body)
 
-	p(metadata)
-
-	device_repairs = data.repairs.get_devices(metadata["extra"]["device_type"])
+	device_repairs = getattr(data.repairs, metadata["device"]["eric_id"])
 
 	if not initial:
 		selected_repair_id = body['actions'][0]["value"]
@@ -1733,7 +1728,6 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		return basic
 
 	metadata = meta
-	p(metadata)
 
 	if 'no_parts' in metadata["extra"]["selected_repairs"]:
 		metadata["parts"].append("no_parts")
