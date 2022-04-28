@@ -489,7 +489,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 	def get_base_modal_view():
 		return {
 			"type": "modal",
-			"private_metadata": json.dumps(metadata),
 			"title": {
 				"type": "plain_text",
 				"text": "Stock Checker",
@@ -522,7 +521,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 							"text": "iPhone",
 							"emoji": True
 						},
-						"value": "iPhone"
+						"value": "iphone"
 					},
 					{
 						"text": {
@@ -530,7 +529,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 							"text": "iPad",
 							"emoji": True
 						},
-						"value": "iPad"
+						"value": "ipad"
 					},
 					{
 						"text": {
@@ -538,7 +537,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 							"text": "MacBook",
 							"emoji": True
 						},
-						"value": "MacBook"
+						"value": "macbook"
 					},
 					{
 						"text": {
@@ -546,7 +545,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 							"text": "Apple Watch",
 							"emoji": True
 						},
-						"value": "Apple Watch"
+						"value": "watch"
 					},
 					{
 						"text": {
@@ -554,7 +553,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 							"text": "Other Device",
 							"emoji": True
 						},
-						"value": "Other Device"
+						"value": "other"
 					}
 				],
 				"action_id": "stock_device_type"
@@ -606,21 +605,6 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		return blocks
 
 	def add_repair_options(device_object: data.DeviceRepairsObject, blocks):
-
-		def query_monday_for_products(device_name: str):
-
-			try:
-				group_id = str(data.PRODUCT_GROUPS[device_name])
-			except KeyError:
-				raise exceptions.ProductGroupNameError(device_name)
-
-			options = clients.monday.system.get_boards(
-				"id",
-				"groups.items.[id, name]",
-				ids=[2477699024],
-				groups={"ids": [group_id]}
-			)[0].groups[0].items
-			return options
 
 		def get_repair_options():
 			repairs_info = device_object.get_slack_repair_options_data()
@@ -715,10 +699,9 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 		return view
 
 	elif get_level:
-		chosen = body['actions'][0]['selected_option']['value']
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
-		add_device_options(view['blocks'], data.DEVICE_TYPES[metadata["extra"]["device_type"]])
+		add_device_options(view['blocks'], data.repairs.get_devices(metadata["extra"]["device_type"]))
 		add_repair_options(getattr(data.repairs, metadata["device"]["eric_id"]), view['blocks'])
 		add_divider_block(view["blocks"])
 		add_stock_level_block(view['blocks'], get_level)
@@ -726,7 +709,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 	elif fetching_stock_levels:
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
-		add_device_options(view['blocks'], data.DEVICE_TYPES[metadata["extra"]["device_type"]])
+		add_device_options(view['blocks'], data.repairs.get_devices(metadata["extra"]["device_type"]))
 		add_repair_options(getattr(data.repairs, metadata["device"]["eric_id"]), view['blocks'])
 		add_divider_block(view["blocks"])
 		add_micro_loader(view['blocks'])
@@ -734,7 +717,7 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 	elif repair_not_found:
 		view = get_base_modal_view()
 		add_device_type_options(view['blocks'])
-		add_device_options(view['blocks'], data.DEVICE_TYPES[metadata["extra"]["device_type"]])
+		add_device_options(view['blocks'], data.repairs.get_devices(metadata["extra"]["device_type"]))
 		add_repair_options(getattr(data.repairs, metadata["device"]["eric_id"]), view['blocks'])
 		add_divider_block(view["blocks"])
 		add_no_results_block(view['blocks'])
@@ -747,20 +730,20 @@ def stock_check_flow_maker(body, initial=False, get_level=None, fetching_stock_l
 			metadata['extra']['device_type'] = chosen.strip()
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
-			add_device_options(view['blocks'], data.DEVICE_TYPES[chosen])
+			add_device_options(view['blocks'], data.repairs.get_devices(metadata["extra"]["device_type"]))
 		elif phase == "select_stock_device":
 			device = getattr(data.repairs, chosen)
 			metadata["device"]["model"] = device.info["device_type"]
 			metadata["device"]["eric_id"] = device.info["eric_id"]
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
-			add_device_options(view['blocks'], data.DEVICE_TYPES[metadata['extra']['device_type']])
+			add_device_options(view['blocks'], data.repairs.get_devices(metadata["extra"]["device_type"]))
 			add_repair_options(device, view['blocks'])
 		elif phase == 'select_stock_repair':
 			metadata['repairs']['eric_ids'].append(chosen.strip())
 			view = get_base_modal_view()
 			add_device_type_options(view['blocks'])
-			add_device_options(view['blocks'], data.DEVICE_TYPES[chosen])
+			add_device_options(view['blocks'], data.repairs.get_devices(metadata["extra"]["device_type"]))
 			add_repair_options(device_object=getattr(data.repairs, metadata["device"]["eric_id"]),
 			                   blocks=view['blocks'])
 		else:

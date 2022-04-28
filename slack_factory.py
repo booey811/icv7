@@ -315,7 +315,6 @@ def _add_routing(app):
 				raise Exception(
 					f"Unexpected Action ID in 'actions' object after end_repair_phase, could not find: 'end_repair_phase'")
 			if selected == 'repaired':
-				# eric.begin_parts_attachment(ack, body, client)
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack)
 			elif selected == "diagnosed":
 				eric.add_parts_to_repair(body, client, initial=True, ack=ack, diag=True)

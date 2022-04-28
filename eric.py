@@ -875,34 +875,6 @@ def check_and_create_new_user(body, client, ack):
 
 
 def check_stock(body, client, initial=False, get_level=False):
-	def get_stock_level(metadata, repair_selection):
-
-		def get_search_term_from_metadata(meta):
-			device_label = meta['extra']['device']
-			repair_label = repair_selection
-			device_id = data.MAIN_DEVICE[device_label]
-			repair_id = data.MAIN_REPAIRS[repair_label]
-			term = f"{device_id}-{repair_id}"
-			meta['extra']['dual_id'] = term
-			return term
-
-		term = get_search_term_from_metadata(metadata)
-		board = clients.monday.system.get_boards(ids=[984924063])[0]
-		col_val = board.get_column_value('dual_only_id')
-		col_val.value = str(term)
-		try:
-			item = board.get_items_by_column_values(
-				column_value=col_val,
-				limit=1
-			)[0]
-		except IndexError as e:
-			# no repairs found
-			raise IndexError(f"Cannot Find Item on Repairs Board with Dual Only ID: {term}")
-
-		val = item.get_column_value("quantity")
-		stock_level = val.text
-		return [repair_selection, stock_level]
-
 	meta = s_help.get_metadata(body)
 	if initial:
 		# send loading view
@@ -922,15 +894,31 @@ def check_stock(body, client, initial=False, get_level=False):
 		)
 		device = getattr(data.repairs, meta["device"]["eric_id"])
 		repair = getattr(device, body['actions'][0]['selected_option']['value'])
-		parts = clients.monday.system.get_items(ids=repair.part_ids)
+		if not repair.part_ids:
+			try:
+				raise slack_ex.SlackUserError(
+					client,
+					f"This Product {repair.display_name} Has No Parts Linked To It, So We Cannot Provide A Stock Level",
+					data_points=[
+						"Issue: Product Not Linked to a Part on Products Board",
+						f"https://icorrect.monday.com/boards/2477699024/pulses/{repair.mon_id}"
+					]
+				)
+			except slack_ex.SlackUserError as e:
+				client.views_update(
+					view_id=body['view']['id'],
+					view=e.view
+				)
+				return
+
+		parts = clients.monday.system.get_items('id', ids=repair.part_ids)
+
 		info = []
 		for part in parts:
 			stock_level = part.get_column_value(id="quantity").value
 			info.append([part.name, stock_level])
 
 		get_level = info
-
-		meta_info = s_help.get_metadata(body)
 
 		view_id = resp['view']['id']
 		hash_val = resp['view']['hash']
