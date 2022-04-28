@@ -112,7 +112,8 @@ BOARD_MAPPING_DICT = {
 			'connect_boards18': 'connect_supplier_orders',
 			"status13": "function",
 			"sale_price": 'sale_price',
-			'supply_price': "supply_price"
+			'supply_price': "supply_price",
+			'link_to_products___pricing': 'connect_products'
 		}
 	},
 	"989490856": {
@@ -445,6 +446,19 @@ BOARD_MAPPING_DICT = {
 			'status': 'status',  # color
 			'date4': 'date',  # date
 			'link_to_subitems_of_icorrect_main_board': 'events_link',  # board-relation
+		}
+	},
+	'2477699024': {
+	    'name': 'products',
+	    'columns': {
+		    'numbers': 'icorrect_(website)',  # numeric
+			'text': 'panrix_(corporate)',  # text
+			'text7': 'jll',  # text
+			'text9': 'oktra',  # text
+			'connect_boards8': 'parts',  # board-relation
+			'mirror': 'price_from_parts',  # lookup
+			'mirror2': 'stock_level',  # lookup
+			'text4': 'device_eric_id',  # text
 		}
 	}
 }
