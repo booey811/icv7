@@ -1366,7 +1366,6 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 		return blocks
 
 	metadata = helper.get_metadata(body)
-	metadata["external_id"] = external_id
 
 	try:
 		data_repairs_id = data.PRODUCT_GROUPS[metadata["device"]["model"]]
@@ -1391,9 +1390,11 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 	if metadata["extra"]["selected_repairs"]:
 		add_header_block(view["blocks"], "Selected Parts")
 		for repair_id in metadata["extra"]["selected_repairs"]:
+			if repair_id == "no_parts":
+				add_selected_parts_block({"name": "No Parts Used", 'mon_id': 'no_parts'}, view["blocks"])
+				continue
 			for repair_info in device_repairs.get_slack_repair_options_data():
 				if str(repair_id) == repair_info["mon_id"]:
-					name = repair_info["name"].replace(metadata["device"]["model"], "")
 					add_selected_parts_block(repair_info, view["blocks"])
 		add_divider_block(view["blocks"])
 
@@ -1403,8 +1404,14 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 		header = "Add Parts to Repair"
 
 	add_header_block(view["blocks"], header)
-	add_parts_list(device_repairs.get_slack_repair_options_data(), view["blocks"])
+	repairs_info = device_repairs.get_slack_repair_options_data()
+	if "no_parts" in metadata["extra"]['selected_repairs']:
+		pass
+	else:
+		repairs_info.append({"name": "No Parts Used", "mon_id": "no_parts"})
+	add_parts_list(repairs_info, view["blocks"])
 
+	p(metadata)
 	view["private_metadata"] = json.dumps(metadata)
 
 	return view
@@ -1719,6 +1726,11 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		return basic
 
 	metadata = meta
+	p(metadata)
+
+	if 'no_parts' in metadata["extra"]["selected_repairs"]:
+		metadata["parts"].append("no_parts")
+		metadata["extra"]["selected_repairs"].remove("no_parts")
 
 	if from_variants:
 		for repair_id in metadata["extra"]["selected_repairs"]:
@@ -1729,14 +1741,16 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 			metadata["parts"].append(part_id)
 		metadata["extra"]["selected_repairs"] = []
 
+
 	view = get_base_modal()
 
+	part_ids = [item for item in metadata["parts"] if item != "no_parts"]
+
 	text_and_values = [
-		[item.name, item.name] for item in clients.monday.system.get_items('name', ids=metadata['parts'])
+		[item.name, item.name] for item in clients.monday.system.get_items('name', ids=part_ids)
 	]
 
 	if metadata["general"]["repair_type"] == "Repair":
-
 		add_header_block(view["blocks"], "The Client Requested the Following Repairs:")
 		if not metadata["extra"]["client_repairs"]:
 			add_context_block(view["blocks"], "No repairs explicitly requested")
@@ -1758,6 +1772,16 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		add_header_block(view["blocks"], "The Client Requires The Following:")
 		for part in text_and_values:
 			add_markdown_block(view["blocks"], part[0])
+
+	if "no_parts" in metadata["parts"]:
+		add_multiline_text_input(
+			"No Parts Used Explanation",
+			"Please explain how you resolved the fault without using any parts",
+			"text_no_parts_explanation",
+			view["blocks"],
+			"text_no_parts_explanation_action",
+			optional=False
+		)
 
 	add_divider_block(view["blocks"])
 	add_divider_block(view["blocks"])
