@@ -1408,9 +1408,11 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 	if metadata["extra"]["selected_repairs"]:
 		add_header_block(view["blocks"], "Selected Parts")
 		for repair_id in metadata["extra"]["selected_repairs"]:
+			if repair_id == "no_parts":
+				add_selected_parts_block({"name": "No Parts Used", 'mon_id': 'no_parts'}, view["blocks"])
+				continue
 			for repair_info in device_repairs.get_slack_repair_options_data():
 				if str(repair_id) == repair_info["mon_id"]:
-					name = repair_info["name"].replace(metadata["device"]["model"], "")
 					add_selected_parts_block(repair_info, view["blocks"])
 		add_divider_block(view["blocks"])
 
@@ -1420,7 +1422,13 @@ def initial_parts_search_box(body, external_id, initial: bool, remove=False, dia
 		header = "Add Parts to Repair"
 
 	add_header_block(view["blocks"], header)
-	add_parts_list(device_repairs.get_slack_repair_options_data(), view["blocks"])
+	repairs_info = device_repairs.get_slack_repair_options_data()
+	if "no_parts" in metadata["extra"]['selected_repairs']:
+		pass
+	else:
+		print("ADDING NO PARTS")
+		repairs_info.append({"name": "No Parts Used", "mon_id": "no_parts"})
+	add_parts_list(repairs_info, view["blocks"])
 
 	view["private_metadata"] = json.dumps(metadata)
 
