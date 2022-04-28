@@ -1745,17 +1745,19 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 	metadata = meta
 	p(metadata)
 
+	if 'no_parts' in metadata["extra"]["selected_repairs"]:
+		metadata["parts"].append("no_parts")
+		metadata["extra"]["selected_repairs"].remove("no_parts")
+
 	if from_variants:
 		for repair_id in metadata["extra"]["selected_repairs"]:
-			if repair_id == "no_parts":
-				metadata["parts"].append("no_parts")
-				continue
 			part_id = \
 				body["view"]["state"]["values"][f"variant_selection_{repair_id}"][
 					f"radio_variant_selection_{repair_id}"][
 					"selected_option"]["value"]
 			metadata["parts"].append(part_id)
 		metadata["extra"]["selected_repairs"] = []
+
 
 	view = get_base_modal()
 
@@ -1787,8 +1789,6 @@ def repair_completion_confirmation_view(body, from_variants, external_id='', met
 		add_header_block(view["blocks"], "The Client Requires The Following:")
 		for part in text_and_values:
 			add_markdown_block(view["blocks"], part[0])
-
-	p(metadata)
 
 	if "no_parts" in metadata["parts"]:
 		add_multiline_text_input(

@@ -1363,7 +1363,11 @@ def show_variant_selections(body, client, ack):
 
 	meta = s_help.get_metadata(body)
 	repair_ids = [item for item in meta["extra"]["selected_repairs"] if item != "no_parts"]
-	selected_repairs = clients.monday.system.get_items('id', ids=repair_ids)
+	if repair_ids:
+		selected_repairs = clients.monday.system.get_items('id', ids=repair_ids)
+	else:
+		selected_repairs = []
+
 	variants = {}
 	unprocessed_repair_ids = []
 	if "no_parts" in meta["extra"]["selected_repairs"]:
