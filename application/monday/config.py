@@ -449,9 +449,9 @@ BOARD_MAPPING_DICT = {
 		}
 	},
 	'2477699024': {
-	    'name': 'products',
-	    'columns': {
-		    'numbers': 'icorrect_(website)',  # numeric
+		'name': 'products',
+		'columns': {
+			'numbers': 'icorrect_(website)',  # numeric
 			'text': 'panrix_(corporate)',  # text
 			'text7': 'jll',  # text
 			'text9': 'oktra',  # text

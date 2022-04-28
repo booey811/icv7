@@ -1188,7 +1188,45 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 
 	else:
 		try:
+			if not next_repair.device_eric_id.value:
+
+				client.views_update(
+					external_id=external_id,
+					view=views.loading(
+						"Converting OLD REPAIRS/PARTS data into NEW PRODUCTS data (can take a while)",
+						external_id=external_id
+					)
+				)
+				try:
+					product = utils.tools.convert_device_id_to_product(next_repair.device.ids[0])
+				except utils.tools.ProductConversionError as convert_error:
+					try:
+						raise slack_ex.SlackUserError(
+							client,
+							"Cannot Convert Old Inv Data to New Inv Data",
+							[
+								f"Parts: {convert_error.tried_parts}"
+							]
+						)
+					except slack_ex.SlackUserError as slack_error:
+						client.views_update(
+							external_id=external_id,
+							view=slack_error.view
+						)
+						raise slack_error
+
+				next_repair.device_eric_id.value = product.device_eric_id.value
+				next_repair.commit()
+				client.views_update(
+					external_id=external_id,
+					view=views.loading(
+						"Update Successful. Getting Repair Data",
+						external_id=external_id
+					)
+				)
+
 			view = views.pre_repair_info(next_repair, body)
+
 		except slack_ex.SlackUserError as e:
 			try:
 				raise slack_ex.SlackUserError(
