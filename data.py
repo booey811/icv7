@@ -710,8 +710,13 @@ def get_device_type_data_for_slack():
 
 class RepairOptionsObject:
 	def __init__(self):
-		for group in _PRODUCT_BOARD.groups:
+		self._iphone = []
+		self._ipad = []
+		self._watch = []
+		self._macbook = []
+		self._other = []
 
+		for group in _PRODUCT_BOARD.groups:
 			if "cts_upl" in group.id or "ew_gro" in group.id:
 				from moncli.api_v2.exceptions import MondayApiError as api_err
 				print(f"creating {group.title}")
@@ -725,12 +730,36 @@ class RepairOptionsObject:
 				for item in items:
 					print(f'moving {item.name}')
 					item.move_to_group(new_group.id)
-
 				group.archive('id')
 
 			repair_obj_id = group.title.replace(' ', '_').lower()
-
 			setattr(self, repair_obj_id, DeviceRepairsObject(group, repair_obj_id))
+
+			if "iphone" in repair_obj_id:
+				self._iphone.append(getattr(self, repair_obj_id))
+			elif "ipad" in repair_obj_id:
+				self._ipad.append(getattr(self, repair_obj_id))
+			elif "watch" in repair_obj_id:
+				self._watch.append(getattr(self, repair_obj_id))
+			elif "macbook" in repair_obj_id:
+				self._macbook.append(getattr(self, repair_obj_id))
+			else:
+				self._other.append(getattr(self, repair_obj_id))
+
+	def get_devices(self, device_type):
+		if device_type == "iphone":
+			return self._iphone
+		elif device_type == "ipad":
+			return self._ipad
+		elif device_type == "watch":
+			return self._watch
+		elif self._macbook == 'macbook':
+			return self._macbook
+		elif device_type == "other":
+			return self._other
+		else:
+			raise Exception(f"Unrecognised Device Type: {device_type}")
+
 
 
 _PRODUCT_BOARD = clients.monday.system.get_boards(
