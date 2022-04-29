@@ -1,5 +1,7 @@
 import os
 
+import moncli.entities
+
 from application import clients
 
 _MAIN_REPAIRS = {
@@ -590,6 +592,17 @@ def get_product_repairs(group_id_or_name):
 	return group
 
 
+def get_device_eric_id(group):
+
+	if type(group) is moncli.entities.Group:
+		return group.title.replace(' ', '_').replace(".", '_').replace("(", '').replace(")", '').lower()
+	elif type(group) is str:
+		return group.replace(' ', '_').replace(".", '_').replace("(", '').replace(")", '').lower()
+	else:
+		raise Exception(f"Cannot Get Device Eric ID using {group} ({type(group)})")
+
+
+
 class TwoWayDict(dict):
 
 	def __setitem__(self, key, value):
@@ -723,7 +736,7 @@ class RepairOptionsObject:
 					item.move_to_group(new_group.id)
 				group.archive('id')
 
-			repair_obj_id = group.title.replace(' ', '_').replace(".", '_').lower()
+			repair_obj_id = get_device_eric_id(group)
 			setattr(self, repair_obj_id, DeviceRepairsObject(group, repair_obj_id))
 
 			if "iphone" in repair_obj_id:

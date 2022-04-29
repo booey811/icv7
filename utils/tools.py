@@ -55,12 +55,12 @@ def convert_device_id_to_product(device_id):
 
 	if product.device_eric_id.value == "NDNDND":
 		group = product.moncli_obj.get_group()
-		product.device_eric_id.value = group.id
+		product.device_eric_id.value = data.get_device_eric_id(group)
 		product.commit()
 
 	if not product.device_eric_id.value:
 		group = product.moncli_obj.get_group()
-		product.device_eric_id.value = group.id
+		product.device_eric_id.value = data.get_device_eric_id(group)
 		product.commit()
 
 	return product

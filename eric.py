@@ -1217,8 +1217,10 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 						)
 						raise Exception
 
-				next_repair.device_eric_id.value = product.device_eric_id.value
-				next_repair.device_eric_name.value = data.PRODUCT_GROUPS[next_repair.device_eric_id.value]
+				device_eric_id = data.get_device_eric_id(product.moncli_obj.get_group())
+
+				next_repair.device_eric_id.value = device_eric_id
+				next_repair.device_eric_name.value = getattr(data.repairs, device_eric_id).info["display_name"]
 				next_repair.commit()
 				client.views_update(
 					external_id=external_id,
