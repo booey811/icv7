@@ -573,14 +573,6 @@ _DEVICE_TYPE = {  # device type, conversion to Repairs Board (Device Type Status
 }
 
 
-def _get_product_groups():
-	basic = {}
-	groups = clients.monday.system.get_boards('groups.[id, title]', ids=[2477699024])[0].groups
-	for group in groups:
-		basic[str(group.id)] = str(group.title)
-	return TwoWayDict(basic)
-
-
 def get_product_repairs(group_id_or_name):
 	try:
 		if ' ' in group_id_or_name:
@@ -625,7 +617,6 @@ class TwoWayDict(dict):
 
 class RepairsObject:
 	def __init__(self, repair_item, repair_obj_id):
-
 		self.item = repair_item
 		self.repair_obj_id = repair_obj_id
 		self.display_name = repair_item.name
@@ -687,7 +678,7 @@ class DeviceRepairsObject:
 				"name": repair.display_name,
 				"repair_obj_id": repair.repair_obj_id,
 				"mon_id": repair.mon_id,
-				"part_ids":  repair.part_ids,
+				"part_ids": repair.part_ids,
 				"item": repair.item
 			})
 		return data
@@ -761,12 +752,22 @@ class RepairOptionsObject:
 			raise Exception(f"Unrecognised Device Type: {device_type}")
 
 
-
 _PRODUCT_BOARD = clients.monday.system.get_boards(
 	'id',
 	'groups.[id, title, items]',
 	'groups.items.[id, name]',
 	ids=[2477699024])[0]
+
+
+def _get_product_groups():
+	basic = {}
+	groups = _PRODUCT_BOARD.groups
+	for group in groups:
+		basic[str(group.id)] = str(group.title)
+	return TwoWayDict(basic)
+
+
+PRODUCT_GROUPS = _get_product_groups()
 
 MAIN_DEVICE = TwoWayDict(_MAIN_DEVICE)
 MAIN_REPAIRS = TwoWayDict(_MAIN_REPAIRS)
@@ -774,7 +775,7 @@ MAIN_SERVICE = TwoWayDict(_MAIN_SERVICE)
 MAIN_REPAIR_TYPE = TwoWayDict(_MAIN_REPAIR_TYPE)
 DEVICE_TYPE = TwoWayDict(_DEVICE_TYPE)
 MAIN_CLIENT = TwoWayDict(_MAIN_CLIENT)
-PRODUCT_GROUPS = _get_product_groups()
+
 BLOCKS_BOARD = clients.monday.system.get_board_by_id("2593044634")
 
 DEVICE_TYPES = {

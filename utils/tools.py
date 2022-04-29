@@ -14,16 +14,18 @@ class ProductConversionError(Exception):
 
 
 def convert_device_id_to_product(device_id):
+	print("convert_device_id_to_product")
 	parts_board = clients.monday.system.get_board_by_id(id=984924063)
 	col = parts_board.get_column_value(id="device_id")
 	col.value = device_id
-	try:
-		repairs = parts_board.get_items_by_column_values(column_value=col, get_column_values=False, limit=3)
-	except IndexError:
+
+	repairs = parts_board.get_items_by_column_values(column_value=col, get_column_values=False, limit=5)
+	if len(repairs) < 1:
 		raise ProductConversionError(
 			device_id=device_id,
 			message=f"Cannot Convert Repair Column Data to Products Board: No Repairs Found: Device ID: {device_id}"
 		)
+
 	prod_id = None
 	tried_repairs = []
 	for repair in repairs:
@@ -36,19 +38,25 @@ def convert_device_id_to_product(device_id):
 			)
 		part = clients.monday.system.get_items('id', ids=[part_id])[0]
 		tried_repairs.append(f"{part.name} ({part.id})")
-		product_id = part.get_column_value(id="link_to_products___pricing").value[0]
+		product_id = part.get_column_value(id="link_to_products___pricing").value
 		if product_id:
-			prod_id = product_id
+			prod_id = product_id[0]
 			break
+
 	if not prod_id:
 		string = "\n".join(tried_repairs)
 		raise ProductConversionError(
 			device_id=device_id,
-			message=f"Cannot convert Repairs to Products, No Products Connected: {string}",
+			message=f"Cannot convert Repairs to Products, No Parts Connected Connected: {string}",
 			tried_parts=tried_repairs
 		)
 
 	product = BaseItem(CustomLogger(), prod_id)
+
+	if product.device_eric_id.value == "NDNDND":
+		group = product.moncli_obj.get_group()
+		product.device_eric_id.value = group.id
+		product.commit()
 
 	if not product.device_eric_id.value:
 		group = product.moncli_obj.get_group()

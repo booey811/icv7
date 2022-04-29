@@ -64,7 +64,8 @@ BOARD_MAPPING_DICT = {
 			"text15": "company_name",
 			"numbers5": "repair_phase",
 			"text3": "intake_notes",
-			"text05": "device_eric_id"
+			"text05": "device_eric_id",
+			"text21": "device_eric_name"
 		},
 		"zendesk": [
 			'status4',  # Status
@@ -451,8 +452,8 @@ BOARD_MAPPING_DICT = {
 	'2477699024': {
 		'name': 'products',
 		'columns': {
-			'numbers': 'icorrect_(website)',  # numeric
-			'text': 'panrix_(corporate)',  # text
+			'numbers': 'web_price',  # numeric
+			'text': 'panrix_price',  # text
 			'text7': 'jll',  # text
 			'text9': 'oktra',  # text
 			'connect_boards8': 'parts',  # board-relation

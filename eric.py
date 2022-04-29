@@ -1154,6 +1154,8 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 
 	# Convert from Slack User to Monday User IDs, and get the relevant group
 	main_group_id = mon_config.MAINBOARD_GROUP_IDS[username]
+
+	# try for items in group, report if none
 	try:
 		next_repair = BaseItem(
 			CustomLogger(),
@@ -1168,7 +1170,6 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 				"There are no Repairs in Your Group, Please Ask Your Manager to Assign Some Repairs",
 				[username]
 			)
-
 		except slack_ex.SlackUserError as e:
 			client.views_update(
 				external_id=external_id,
@@ -1176,6 +1177,7 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 			)
 			raise Exception(f"Cannot Begin Repairs: No Repairs Assigned to Technician's Group: {username}")
 
+	# check item has device assigned
 	if not next_repair.device.ids:
 		try:
 			raise slack_ex.SlackUserError(
@@ -1202,9 +1204,9 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 				except utils.tools.ProductConversionError as convert_error:
 					try:
 						raise slack_ex.SlackUserError(
-							client,
-							"Cannot Convert Old Inv Data to New Inv Data",
-							[
+							client=client,
+							footnotes=convert_error.message,
+							data_points=[
 								f"Parts: {convert_error.tried_parts}"
 							]
 						)
@@ -1213,9 +1215,10 @@ def begin_slack_repair_process(body, client, ack, dev=False):
 							external_id=external_id,
 							view=slack_error.view
 						)
-						raise slack_error
+						raise Exception
 
 				next_repair.device_eric_id.value = product.device_eric_id.value
+				next_repair.device_eric_name.value = data.PRODUCT_GROUPS[next_repair.device_eric_id.value]
 				next_repair.commit()
 				client.views_update(
 					external_id=external_id,

@@ -40,7 +40,8 @@ def process_repair_phase_completion(part_ids, main_id, metadata, timestamp, user
 		return basic
 
 	if part_ids:
-		parts = clients.monday.system.get_items('name', ids=part_ids)
+		parts_ids = [item for item in part_ids if item != "no_parts"]
+		parts = clients.monday.system.get_items('name', ids=parts_ids)
 	else:
 		parts = []
 	main = BaseItem(CustomLogger(), main_id)
