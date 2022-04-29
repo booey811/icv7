@@ -1877,6 +1877,13 @@ def show_device_logging_form(ack, body, client, phase):
 		)
 		return True
 
+	device = body["actions"][0]["selected_option"]["value"]
+	meta["device_eric_id"] = device
+
+	repairs = getattr(devices, device)
+
+	
+
 
 def test_user_init(body, client):
 	"""loads loading screen for user and returns slack response for manipulation in console"""

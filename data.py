@@ -628,12 +628,26 @@ class TwoWayDict(dict):
 			self[item] = dictionary[item]
 
 
+class PricesObject:
+
+	def __init__(self, product_item):
+		self._item = product_item
+		self._web = None
+
+	@property
+	def web(self):
+		if not self._web:
+			self._web = self._item.get_column_value("numbers").value
+		return self._web
+
+
 class RepairsObject:
 	def __init__(self, repair_item, repair_obj_id):
 		self.item = repair_item
 		self.repair_obj_id = repair_obj_id
 		self.display_name = repair_item.name.replace('"', ' ').strip()
 		self.mon_id = repair_item.id
+		self.prices = PricesObject(repair_item)
 		self._part_ids = []
 		self._parts = []
 
