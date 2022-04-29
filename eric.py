@@ -1771,6 +1771,7 @@ def begin_repair_logging(body, client):
 
 
 def show_device_logging_form(ack, body, client, phase):
+	raise Exception("DEV FROM HERE")
 	def get_base_modal(title):
 		basic = {
 			"type": "modal",
@@ -1854,7 +1855,8 @@ def show_device_logging_form(ack, body, client, phase):
 		return True
 
 	device_type = body["actions"][0]["selected_option"]["value"]
-	meta["device_type"] = device_type
+	if not meta["device_type"]:
+		meta["device_type"] = device_type
 
 	devices = data.repairs.get_devices(device_type)
 
@@ -1877,12 +1879,33 @@ def show_device_logging_form(ack, body, client, phase):
 		)
 		return True
 
-	device = body["actions"][0]["selected_option"]["value"]
-	meta["device_eric_id"] = device
+	if not meta["device_eric_id"]:
+		device = body["actions"][0]["selected_option"]["value"]
+		meta["device_eric_id"] = device
+		repairs = getattr(devices, device)
+	else:
+		repairs = getattr(devices, meta["device_eric_id"])
 
-	repairs = getattr(devices, device)
+	repair_info = repairs.get_slack_repair_options_data()
 
-	
+	options = [[item["name"], item["repair_obj_id"]] for item in repairs.get_slack_repair_options_data()]
+
+	views.add_checkbox_section(
+		title="Requested Repairs",
+		options=options,
+		block_id="logging_repairs",
+		action_id="logging_repairs_checkbox",
+		blocks=blocks,
+		optional=True
+	)
+
+	if phase == "repairs_select":
+		client.views_update(
+			external_id=external_id,
+			view=view
+		)
+		return True
+
 
 
 def test_user_init(body, client):
