@@ -147,8 +147,6 @@ def _add_routing(app):
 
 		# =========== Action Block Submissions
 
-		# Stock Checking Routes
-
 		# stock checker routes
 		@app.action("stock_device_type")
 		def check_stock_device_type_entry(ack, body, logger, client):
@@ -169,10 +167,26 @@ def _add_routing(app):
 			eric.check_stock(body, client, get_level=True)
 
 		# device logging routes
+		# user selects repair - show initial form
 		@app.action("button_section_logging_repair")
 		def handle_some_action(ack, body, logger, client):
 			logger.info(body)
-			eric.show_device_logging_form(ack, body, client)
+			ack()
+			eric.show_device_logging_form(ack, body, client, phase='initial')
+
+		# user selects device type - add device selection
+		@app.action("logging_device_type_select")
+		def logging_device_type(ack, body, logger, client):
+			logger.info(body)
+			ack()
+			eric.show_device_logging_form(ack, body, client, phase='device_select')
+
+		# user selects device type - add device selection
+		@app.action("logging_device_select")
+		def logging_device_type(ack, body, logger, client):
+			logger.info(body)
+			ack()
+			eric.show_device_logging_form(ack, body, client, phase='repairs_select')
 
 		# Repair Issue Submit Routes
 		@app.action("dropdown_repair_issue_selector_action")

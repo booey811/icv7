@@ -39,6 +39,73 @@ def add_context_block(blocks, text):
 	return blocks
 
 
+def add_device_type_options(blocks):
+	blocks.append({
+		"type": "input",
+		"block_id": "stock_device_type",
+		"dispatch_action": True,
+		"element": {
+			"type": "static_select",
+			"placeholder": {
+				"type": "plain_text",
+				"text": "Select a type",
+				"emoji": True
+			},
+			"options": [
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "iPhone",
+						"emoji": True
+					},
+					"value": "iphone"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "iPad",
+						"emoji": True
+					},
+					"value": "ipad"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "MacBook",
+						"emoji": True
+					},
+					"value": "macbook"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "Apple Watch",
+						"emoji": True
+					},
+					"value": "watch"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "Other Device",
+						"emoji": True
+					},
+					"value": "other"
+				}
+			],
+			"action_id": "stock_device_type"
+
+		},
+		"label": {
+			"type": "plain_text",
+			"text": "Device Type",
+			"emoji": True
+		}
+	})
+	return blocks
+
+
+
 def add_dropdown_ui_section(title, placeholder, options, blocks, block_id, selection_action_id):
 	def get_option(text_and_value):
 		option = {

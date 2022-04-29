@@ -1715,7 +1715,6 @@ def emit_waste_events(body, client, ack):
 
 
 def begin_repair_logging(body, client):
-
 	def get_base_modal():
 		basic = {
 			"type": "modal",
@@ -1771,32 +1770,112 @@ def begin_repair_logging(body, client):
 	)
 
 
-def show_device_logging_form(ack, body, client):
+def show_device_logging_form(ack, body, client, phase):
+	def get_base_modal(title):
+		basic = {
+			"type": "modal",
+			"title": {
+				"type": "plain_text",
+				"text": title[:23],
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
 
-	try:
-		external_id = body["view"]["external_id"]
-	except KeyError as e:
-		external_id = s_help.create_external_view_id(body, "device_logging_form")
-		print("ASSIGNING EXTERNAL ID")
-		p(str(e))
+	def get_meta(req_body=None):
 
-	loading = views.loading(
-		"Collecting Data for Logging",
-		external_id
-	)
-	client.views_push(
-		trigger_id=body["trigger_id"],
-		view=loading
-	)
+		if req_body:
+			return s_help.get_metadata(req_body)
+		else:
+			return {
+				"main": '',
+				"main_name": '',
+				"device_eric_id": '',
+				'device_type': ''
+			}
 
-	meta = s_help.get_metadata(body)
-
-	selected = body["actions"][0]["value"]
+	def add_repair_picker():
+		pass
 
 	cuslog = CustomLogger()
-	main_item = BaseItem(cuslog, selected)
+	meta = get_meta(body)
 
+	if phase == 'initial':
+		external_id = s_help.create_external_view_id(body, "device_logging_form")
+		loading = views.loading(
+			"Collecting Data for Logging",
+			external_id=external_id
+		)
+		client.views_push(
+			trigger_id=body["trigger_id"],
+			view=loading
+		)
+		meta = get_meta()
+		main_item = BaseItem(cuslog, body["actions"][0]["value"])
+		meta["main"] = body["actions"][0]["value"]
+		meta["main_name"] = main_item.name
+	else:
+		external_id = body["view"]["external_id"]
 
+	view = get_base_modal(meta["main_name"])
+	view["external_id"] = external_id
+	blocks = view["blocks"]
+
+	options = [
+		["iPhone", "iphone"],
+		["iPad", "ipad"],
+		["Apple Watch", "watch"],
+		["MacBook", "macbook"],
+		["Other", "other"]
+	]
+
+	# add device type picker
+	views.add_dropdown_ui_section(
+		title="Device Type",
+		placeholder="Please select a device type",
+		options=options,
+		blocks=blocks,
+		block_id="logging_device_type",
+		selection_action_id="logging_device_type_select"
+	)
+
+	if phase == "initial":
+		view["private_metadata"] = json.dumps(meta)
+		client.views_update(
+			external_id=external_id,
+			view=view
+		)
+		return True
+
+	device_type = body["actions"][0]["selected_option"]["value"]
+	meta["device_type"] = device_type
+
+	devices = data.repairs.get_devices(device_type)
+
+	options = [[item.info["display_name"], item.info["eric_id"]] for item in devices]
+
+	views.add_dropdown_ui_section(
+		"Device",
+		"Please select a device",
+		options,
+		blocks,
+		block_id="logging_device",
+		selection_action_id="logging_device_select"
+	)
+
+	if phase == 'device_select':
+		view["private_metadata"] = json.dumps(meta)
+		client.views_update(
+			external_id=external_id,
+			view=view
+		)
+		return True
 
 
 def test_user_init(body, client):
