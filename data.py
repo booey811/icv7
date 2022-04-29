@@ -619,7 +619,7 @@ class RepairsObject:
 	def __init__(self, repair_item, repair_obj_id):
 		self.item = repair_item
 		self.repair_obj_id = repair_obj_id
-		self.display_name = repair_item.name
+		self.display_name = repair_item.name.replace('"', ' ').strip()
 		self.mon_id = repair_item.id
 		self._part_ids = []
 		self._parts = []
@@ -723,7 +723,7 @@ class RepairOptionsObject:
 					item.move_to_group(new_group.id)
 				group.archive('id')
 
-			repair_obj_id = group.title.replace(' ', '_').lower()
+			repair_obj_id = group.title.replace(' ', '_').replace(".", '_').lower()
 			setattr(self, repair_obj_id, DeviceRepairsObject(group, repair_obj_id))
 
 			if "iphone" in repair_obj_id:
