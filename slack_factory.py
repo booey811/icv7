@@ -139,10 +139,17 @@ def _add_routing(app):
 			ack()
 			eric.check_stock(body, client, initial=True)
 
+		@app.command('/test')
+		@app.command("/device")
+		def begin_device_logging(ack, client, body):
+			ack()
+			eric.begin_repair_logging(body, client)
+
 		# =========== Action Block Submissions
 
 		# Stock Checking Routes
 
+		# stock checker routes
 		@app.action("stock_device_type")
 		def check_stock_device_type_entry(ack, body, logger, client):
 			logger.info("Checking stock after device selection")
@@ -160,6 +167,12 @@ def _add_routing(app):
 			logger.info("Checking stock after repair selection")
 			ack()
 			eric.check_stock(body, client, get_level=True)
+
+		# device logging routes
+		@app.action("button_section_logging_repair")
+		def handle_some_action(ack, body, logger, client):
+			logger.info(body)
+			eric.show_device_logging_form(ack, body, client)
 
 		# Repair Issue Submit Routes
 		@app.action("dropdown_repair_issue_selector_action")
@@ -353,7 +366,8 @@ def _add_routing(app):
 		def validate_wasted_parts(ack, body, logger, client):
 			logger.info("Validating Wasted Repair Info")
 
-			selected = body["view"]["state"]["values"]["waste_opt_in"]["waste_opt_in_action"]["selected_option"]["value"]
+			selected = body["view"]["state"]["values"]["waste_opt_in"]["waste_opt_in_action"]["selected_option"][
+				"value"]
 
 			if selected == "waste":
 				eric.process_waste_entry(ack, body, client, initial=True)

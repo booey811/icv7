@@ -790,6 +790,7 @@ DEVICE_TYPE = TwoWayDict(_DEVICE_TYPE)
 MAIN_CLIENT = TwoWayDict(_MAIN_CLIENT)
 
 BLOCKS_BOARD = clients.monday.system.get_board_by_id("2593044634")
+MAIN_BOARD = clients.monday.system.get_board_by_id("349212843")
 
 DEVICE_TYPES = {
 	'iPhone': [],

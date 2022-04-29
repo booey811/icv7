@@ -738,11 +738,7 @@ def search_todays_repairs(body, client):
 		view=views.loading("Getting available bookings")
 	)
 	# get todays repair group from main board, query for name and id
-	bookings = clients.monday.system.get_boards(
-		'id',
-		'groups.items.[id, name]',
-		ids=[349212843],
-		groups={'ids': ['new_group70029']})[0].groups[0].items
+	bookings = data.MAIN_BOARD.groups[0].items
 	# get user search input
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
@@ -778,11 +774,7 @@ def show_todays_repairs_group(body, client, dev=False):
 	else:
 		group_id = 'new_group70029'
 
-	bookings = clients.monday.system.get_boards(
-		'id',
-		'groups.items.[id, name]',
-		ids=[349212843],
-		groups={'ids': [group_id]})[0].groups[0].items
+	bookings = data.MAIN_BOARD.groups[0].get_items()
 	# present name alongside 'select repair' button
 	resp = client.views_update(
 		view_id=resp["view"]["id"],
@@ -1721,6 +1713,94 @@ def emit_waste_events(body, client, ack):
 					)
 		ack({"response_action": "clear"})
 	ack({"response_action": "clear"})
+
+
+def begin_repair_logging(body, client):
+
+	def get_base_modal():
+		basic = {
+			"type": "modal",
+			"title": {
+				"type": "plain_text",
+				"text": "Device Logging",
+				"emoji": True
+			},
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": True
+			},
+			"blocks": []
+		}
+		return basic
+
+	external_id = s_help.create_external_view_id(body, "device_logging")
+	loading = views.loading(
+		"Searching for Repairs Marked as 'Received'",
+		external_id=external_id
+	)
+
+	client.views_open(
+		trigger_id=body["trigger_id"],
+		view=loading
+	)
+
+	view = get_base_modal()
+	blocks = view["blocks"]
+
+	main_board = data.MAIN_BOARD
+	val = main_board.get_column_value('status4')
+	val.label = "Received"
+	items = main_board.get_items_by_column_values(column_value=val)
+
+	for item in items:
+		views.add_button_section(
+			item.name,
+			"Add Info",
+			item.id,
+			block_id=f"button_section_{item.id}",
+			action_id="button_section_logging_repair",
+			blocks=blocks
+		)
+
+	views.add_header_block(blocks, "Can't Find Your Repair?")
+	views.add_context_block(blocks, "Make Sure The Repair has it's 'Status' set to 'Received'")
+
+	client.views_update(
+		external_id=external_id,
+		view=view
+	)
+
+
+def show_device_logging_form(ack, body, client):
+
+	try:
+		external_id = body["view"]["external_id"]
+	except KeyError as e:
+		external_id = s_help.create_external_view_id(body, "device_logging_form")
+		print("ASSIGNING EXTERNAL ID")
+		p(str(e))
+
+	loading = views.loading(
+		"Collecting Data for Logging",
+		external_id
+	)
+	client.views_push(
+		trigger_id=body["trigger_id"],
+		view=loading
+	)
+
+	p(body)
+
+	meta = s_help.get_metadata(body)
+
+	selected = body["actions"]
+
+	cuslog = CustomLogger()
+	raise Exception("DEV FROM HERE")
+	main_item = BaseItem(cuslog, )
+
+
 
 
 def test_user_init(body, client):
