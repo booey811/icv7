@@ -1066,7 +1066,8 @@ def process_walkin_submission(body, client, ack):
 			]
 			blank.phone.value = eric_ticket.user["phone"]
 			blank.email.value = eric_ticket.user["email"]
-			blank.select_device.value = meta["device"]["eric_id"]
+			blank.device_eric_id.value = meta["device"]["eric_id"]
+			blank.device_eric_name.value = getattr(data.repairs, meta["device"]["eric_id"]).info["display_name"]
 			blank.notifications_status.label = "ON"
 			if data_dict["pc"]:
 				blank.passcode.value = data_dict["pc"]
@@ -1106,6 +1107,7 @@ def process_walkin_submission(body, client, ack):
 		main.repair_type.label = data_dict["repair_type_str"]
 		main.repair_status.label = "Received"
 		main.device_eric_id.value = meta["device"]["eric_id"]
+		main.device_eric_name.value = getattr(data.repairs, meta["device"]["eric_id"]).info["display_name"]
 		if data_dict["pc"]:
 			main.passcode.value = data_dict["pc"]
 		main.commit()
