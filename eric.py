@@ -1789,15 +1789,12 @@ def show_device_logging_form(ack, body, client):
 		view=loading
 	)
 
-	p(body)
-
 	meta = s_help.get_metadata(body)
 
-	selected = body["actions"]
+	selected = body["actions"][0]["value"]
 
 	cuslog = CustomLogger()
-	raise Exception("DEV FROM HERE")
-	main_item = BaseItem(cuslog, )
+	main_item = BaseItem(cuslog, selected)
 
 
 
