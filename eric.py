@@ -1033,7 +1033,7 @@ def process_walkin_submission(body, client, ack):
 		eric_ticket = EricTicket(cuslog, zenp_ticket)
 
 		tags = [
-			f"device-{data.MAIN_DEVICE[data_dict['device_str']]}",
+			# f"device-{data.MAIN_DEVICE[data_dict['device_str']]}",
 			f"service-1",  # Walk-In Service (Has to be as this flow is only to be used upstairs)
 			f"repair_type-{data.MAIN_REPAIR_TYPE[data_dict['repair_type_str']]}",
 		]
@@ -1047,7 +1047,6 @@ def process_walkin_submission(body, client, ack):
 			client_label = 'End User'
 			blank = BaseItem(cuslog, board_id=349212843)  # Mainboard ID
 
-			blank.device.add(data_dict["device_str"])
 			blank.repair_type.label = data_dict["repair_type_str"]
 			blank.repair_status.label = "Received"
 			blank.service.label = "Walk-In"
