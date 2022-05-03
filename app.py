@@ -281,4 +281,6 @@ def generate_products_from_product_generator():
 
 
 if __name__ == '__main__':
+	print('name ========= main')
 	app.run()
+

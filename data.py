@@ -583,24 +583,17 @@ def get_product_repairs(group_id_or_name):
 			group_id = group_id_or_name
 	except KeyError:
 		raise Exception(f"Cannot Find Groups with ID or Name {group_id_or_name}")
-	group = clients.monday.system.get_boards(
-		'id',
-		'groups.items.[id, name]',
-		ids=[2477699024],
-		groups={"ids": [group_id]})[
-		0].groups[0]
+	group = _PRODUCT_BOARD.get_group(id=group_id)
 	return group
 
 
 def get_device_eric_id(group):
-
 	if type(group) is moncli.entities.Group:
 		return group.title.replace(' ', '_').replace(".", '_').replace("(", '').replace(")", '').lower()
 	elif type(group) is str:
 		return group.replace(' ', '_').replace(".", '_').replace("(", '').replace(")", '').lower()
 	else:
 		raise Exception(f"Cannot Get Device Eric ID using {group} ({type(group)})")
-
 
 
 class TwoWayDict(dict):
@@ -643,6 +636,7 @@ class PricesObject:
 
 class RepairsObject:
 	def __init__(self, repair_item, repair_obj_id):
+		print(f"Repair Init: {repair_item.name}")
 		self.item = repair_item
 		self.repair_obj_id = repair_obj_id
 		self.display_name = repair_item.name.replace('"', ' ').strip()
@@ -664,39 +658,51 @@ class RepairsObject:
 
 class DeviceRepairsObject:
 	def __init__(self, device_group, group_eric_id):
-
-		def _set_device_type():
-
-			if 'iPhone' in device_group.title:
-				DEVICE_TYPES['iPhone'].append(self)
-				return 'iPhone'
-			elif 'iPad' in device_group.title:
-				DEVICE_TYPES['iPad'].append(self)
-				return 'iPad'
-			elif 'Apple Watch' in device_group.title:
-				DEVICE_TYPES['Apple Watch'].append(self)
-				return 'iPad'
-			elif 'Macbook' in device_group.title or 'MacBook' in device_group.title:
-				DEVICE_TYPES['MacBook'].append(self)
-				return 'MacBook'
-			else:
-				DEVICE_TYPES['Other Device'].append(self)
-				return 'Other Device'
-
-		self.info = {
-			"group": device_group,
-			"mon_id": device_group.id,
-			"eric_id": group_eric_id,
-			"device_type": _set_device_type(),
-			"display_name": device_group.title
-		}
+		self._info = {}
+		self._mon_group = device_group
+		self._eric_id = group_eric_id
 
 		self._repairs = []
 
 		for repair in self.info['group'].items:
+			print("iterating repairs")
 			device_repairs_obj_id = repair.name.replace(device_group.title, '').strip().replace(' ', '_').lower()
 			setattr(self, device_repairs_obj_id, RepairsObject(repair, device_repairs_obj_id))
 			self._repairs.append(getattr(self, device_repairs_obj_id))
+
+	def _set_device_type(self):
+
+		if 'iPhone' in self._mon_group.title:
+			DEVICE_TYPES['iPhone'].append(self)
+			return 'iPhone'
+		elif 'iPad' in self._mon_group.title:
+			DEVICE_TYPES['iPad'].append(self)
+			return 'iPad'
+		elif 'Apple Watch' in self._mon_group.title:
+			DEVICE_TYPES['Apple Watch'].append(self)
+			return 'iPad'
+		elif 'Macbook' in self._mon_group.title or 'MacBook' in self._mon_group.title:
+			DEVICE_TYPES['MacBook'].append(self)
+			return 'MacBook'
+		else:
+			DEVICE_TYPES['Other Device'].append(self)
+			return 'Other Device'
+
+	@property
+	def info(self):
+		return self._info
+
+	@info.getter
+	def info(self):
+		if not self._info:
+			self._info = {
+				"group": self._mon_group,
+				"mon_id": self._mon_group.id,
+				"eric_id": self._eric_id,
+				"device_type": self._set_device_type(),
+				"display_name": self._mon_group.title
+			}
+		return self._info
 
 	def get_slack_repair_options_data(self):
 		data = []
@@ -779,11 +785,10 @@ class RepairOptionsObject:
 			raise Exception(f"Unrecognised Device Type: {device_type}")
 
 
-_PRODUCT_BOARD = clients.monday.system.get_boards(
-	'id',
-	'groups.[id, title, items]',
-	'groups.items.[id, name]',
-	ids=[2477699024])[0]
+print("getting prod board")
+_PRODUCT_BOARD = clients.monday.system.get_boards('groups.id', ids=[2477699024])[0]
+print("got prod board")
+raise Exception("Dev From HEre")
 
 
 def _get_product_groups():
