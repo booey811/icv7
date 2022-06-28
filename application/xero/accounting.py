@@ -319,7 +319,7 @@ def create_invoice(corporate_item, financial_item, line_items=(), monthly=False)
     month_str = issue_date.strftime("%B")
 
     if monthly:
-        issue_date = datetime.datetime(int(issue_year), int(issue_month), 31)
+        issue_date = datetime.datetime(int(issue_year), int(issue_month), 30)
         issue_day = issue_date.strftime("%d")
         issue_month = issue_date.strftime("%m")
         issue_year = issue_date.strftime("%Y")
