@@ -461,6 +461,64 @@ BOARD_MAPPING_DICT = {
 			'mirror2': 'stock_level',  # lookup
 			'text4': 'device_eric_id',  # text
 		}
+	},
+	'973467694': {
+		'name': 'web_bookings',
+		'columns': {
+			'invoiced': 'invoiced',  # boolean
+			'ticket': 'ticket',  # link
+			'stock': 'stock',  # boolean
+			'order_id': 'order_id',  # text
+			'payment_status': 'payment_status',  # color
+			'payment_method': 'payment_method',  # color
+			'notes': 'notes',  # text
+			'zenlink': 'zenlink',  # color
+			'status3': 'status',  # color
+			'service': 'service',  # color
+			'client': 'client',  # color
+			'type': 'type',  # color
+			'case': 'case',  # color
+			'booking_time': 'booking_time',  # date
+			'formula': 'formula',  # formula
+			'date': 'date',  # date
+			'enquiry': 'enquiry',  # long-text
+			'deadline': 'deadline',  # date
+			'time': 'time',  # numeric
+			'technician': 'technician',  # multiple-person
+			'device': 'device',  # dropdown
+			'repairs': 'repairs',  # dropdown
+			'device_colour': 'device_colour',  # color
+			'screen_condition': 'screen_condition',  # dropdown
+			'refurb_type': 'refurb_type',  # color
+			'imei_sn': 'imei/sn',  # text
+			'data': 'data',  # color
+			'passcode4': 'passcode',  # text
+			'post_code': 'post_code',  # text
+			'company_flat': 'company/flat',  # text
+			'street_name_number': 'street_name/number',  # text
+			'date_received': 'date_received',  # date
+			'phone_number': 'phone_number',  # text
+			'email': 'email',  # text
+			'repaired_date': 'repaired_date',  # date
+			'collection_date2': 'collection_date',  # date
+			'total_time': 'total_time',  # duration
+			'diagnostic_time': 'diagnostic_time',  # duration
+			'repair_time': 'repair_time',  # duration
+			'zendeskid': 'zendeskid',  # text
+			'vend_sale_id': 'vend_sale_id',  # text
+			'vend_eod': 'vend_eod',  # color
+			'eod': 'eod',  # color
+			'notifications': 'notifications',  # dropdown
+			'company': 'company',  # text
+			'refurb_id': 'refurb_id',  # text
+			'refurb_status': 'refurb_status',  # color
+			'connect_boards': 'mainlink',  # board-relation
+			'status_18': 'transfer_status',  # color
+			'mirror': 'mainboard_id',  # lookup
+			'creation_log': 'creation_log',  # pulse-log
+			'status_19': 'synv',  # color
+			'text9': 'point_of_collection',  # text
+		}
 	}
 }
 
