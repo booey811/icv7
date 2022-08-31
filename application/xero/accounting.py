@@ -254,7 +254,7 @@ def construct_repair_line_item(financial_item, subitems: list, main, ticket, cor
 
     line_total = 0
     for subitem in subitems:
-        if subitem.eod_status.value == "Admin":
+        if subitem.eod_status.value == "Admin" or subitem.eod_status.value == "Sale Item":
             continue
         line_amount = subitem.sale_price.value
         line_total += line_amount
